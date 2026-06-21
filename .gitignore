@@ -28,6 +28,10 @@ apps/mobile/android/app/build/
 apps/mobile/android/build/
 apps/mobile/android/.gradle/
 apps/mobile/android/local.properties
+# Native build intermediates (C++/CMake/ninja)
+**/.cxx/
+apps/mobile/android/app/.cxx/
+apps/mobile/android/.kotlin/
 apps/mobile/ios/build/
 apps/mobile/ios/Pods/
 apps/mobile/ios/*.xcworkspace
