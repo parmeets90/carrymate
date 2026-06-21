@@ -1,0 +1,35 @@
+{
+  "name": "carrymate",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CarryMate — cross-border peer-to-peer traveler delivery marketplace (India → UAE).",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "shared:build": "npm run build -w @carrymate/shared",
+    "backend:dev": "npm run dev -w @carrymate/backend",
+    "backend:build": "npm run build -w @carrymate/backend",
+    "backend:start": "npm run start -w @carrymate/backend",
+    "admin:dev": "npm run dev -w @carrymate/admin",
+    "admin:build": "npm run build -w @carrymate/admin",
+    "mobile:start": "npm run start -w @carrymate/mobile",
+    "mobile:android": "npm run android -w @carrymate/mobile",
+    "mobile:ios": "npm run ios -w @carrymate/mobile",
+    "db:migrate": "npm run migrate -w @carrymate/backend",
+    "db:generate": "npm run generate -w @carrymate/backend",
+    "db:seed": "npm run seed -w @carrymate/backend",
+    "db:studio": "npm run studio -w @carrymate/backend",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">= 20.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3"
+  }
+}
