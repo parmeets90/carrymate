@@ -12,6 +12,9 @@ import { BrowseScreen } from '@/screens/traveler/BrowseScreen';
 import { PlaceBidScreen } from '@/screens/traveler/PlaceBidScreen';
 import { MyBidsScreen } from '@/screens/traveler/MyBidsScreen';
 import { OrdersScreen } from '@/screens/orders/OrdersScreen';
+import { DeliverScreen } from '@/screens/fulfillment/DeliverScreen';
+import { DisputeScreen } from '@/screens/fulfillment/DisputeScreen';
+import { RateScreen } from '@/screens/fulfillment/RateScreen';
 import { ProfileTabScreen } from '@/screens/profile/ProfileTabScreen';
 
 const Tab = createBottomTabNavigator();
@@ -65,6 +68,9 @@ export function MainNavigator() {
       <Stack.Screen name="AddRoute" component={AddRouteScreen} options={{ title: 'Add trip' }} />
       <Stack.Screen name="Browse" component={BrowseScreen} options={{ title: 'Requests' }} />
       <Stack.Screen name="PlaceBid" component={PlaceBidScreen} options={{ title: 'Place bid' }} />
+      <Stack.Screen name="Deliver" component={DeliverScreen} options={{ title: 'Deliver' }} />
+      <Stack.Screen name="Dispute" component={DisputeScreen} options={{ title: 'Dispute' }} />
+      <Stack.Screen name="Rate" component={RateScreen} options={{ title: 'Rate' }} />
     </Stack.Navigator>
   );
 }

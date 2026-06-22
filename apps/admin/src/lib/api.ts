@@ -8,6 +8,7 @@ import type {
   AdminKycReviewItem,
   DeliveryRequestSummary,
   OrderView,
+  DisputeView,
 } from '@carrymate/shared';
 
 type AdminOrder = OrderView & { senderName: string | null; travelerName: string | null };
@@ -107,4 +108,10 @@ export const api = {
   orders: (page = 1) => authed<Paginated<AdminOrder>>(`/v1/admin/orders?page=${page}`),
   refundOrder: (orderId: string) =>
     authed<{ success: boolean }>(`/v1/admin/orders/${orderId}/refund`, { method: 'POST' }),
+  disputes: () => authed<DisputeView[]>('/v1/admin/disputes'),
+  resolveDispute: (id: string, decision: 'REFUND_SENDER' | 'RELEASE_TRAVELER', note: string) =>
+    authed<{ success: boolean }>(`/v1/admin/disputes/${id}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ decision, note }),
+    }),
 };

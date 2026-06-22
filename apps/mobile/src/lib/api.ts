@@ -86,4 +86,14 @@ export const api = {
   myOrders: () => get<OrderView[]>('/v1/orders'),
   payOrder: (orderId: string) => post<OrderView>(`/v1/orders/${orderId}/pay`),
   releaseOrder: (orderId: string) => post<OrderView>(`/v1/orders/${orderId}/release`),
+
+  // Fulfillment
+  openBox: (orderId: string, data: Record<string, unknown>) =>
+    post<OrderView>(`/v1/orders/${orderId}/open-box`, data),
+  deliverOrder: (orderId: string, data: Record<string, unknown>) =>
+    post<OrderView>(`/v1/orders/${orderId}/deliver`, data),
+  disputeOrder: (orderId: string, data: Record<string, unknown>) =>
+    post<{ id: string; status: string }>(`/v1/orders/${orderId}/dispute`, data),
+  rateOrder: (orderId: string, data: Record<string, unknown>) =>
+    post<{ success: boolean }>(`/v1/orders/${orderId}/rate`, data),
 };

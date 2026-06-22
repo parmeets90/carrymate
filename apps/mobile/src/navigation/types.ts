@@ -14,6 +14,9 @@ export type RootStackParamList = {
   AddRoute: undefined;
   Browse: { routeId: string };
   PlaceBid: { requestId: string; routeId: string; title: string };
+  Deliver: { orderId: string; title: string };
+  Dispute: { orderId: string; title: string };
+  Rate: { orderId: string; counterparty: string };
 };
 
 export type ScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<
