@@ -30,13 +30,22 @@ export const requireKyc: RequestHandler = (req, _res, next) => {
   next();
 };
 
-/** Require the user to hold one of the given roles (BOTH and ADMIN always pass). */
+/**
+ * Require one of the given roles. ADMIN passes everything; a BOTH user satisfies
+ * SENDER/TRAVELER requirements but never an ADMIN-only requirement.
+ */
 export function requireRole(...roles: UserRole[]): RequestHandler {
   return (req, _res, next) => {
     const role = req.user?.role as UserRole | undefined;
     if (!role) throw AppError.unauthorized();
-    const allowed = role === UserRole.ADMIN || role === UserRole.BOTH || roles.includes(role);
+    const satisfiesBoth =
+      role === UserRole.BOTH &&
+      roles.some((r) => r === UserRole.SENDER || r === UserRole.TRAVELER);
+    const allowed = role === UserRole.ADMIN || roles.includes(role) || satisfiesBoth;
     if (!allowed) throw AppError.forbidden('You do not have access to this resource');
     next();
   };
 }
+
+/** Convenience: admin-only guard. */
+export const requireAdmin: RequestHandler = requireRole(UserRole.ADMIN);

@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { ok } from '../utils/response';
 import { env } from '../config/env';
 import { authRouter } from '../modules/auth/auth.routes';
+import { kycRouter } from '../modules/kyc/kyc.routes';
+import { adminRouter } from '../modules/admin/admin.routes';
 
 /**
  * Versioned API router. All feature modules mount under /v1.
@@ -18,5 +20,5 @@ v1Router.get('/', (_req, res) => {
 });
 
 v1Router.use('/auth', authRouter);
-// Feature modules are mounted here per phase, e.g.:
-// v1Router.use('/kyc', kycRouter);
+v1Router.use('/kyc', kycRouter);
+v1Router.use('/admin', adminRouter);

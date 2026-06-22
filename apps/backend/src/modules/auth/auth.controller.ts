@@ -1,8 +1,13 @@
 import type { RequestHandler } from 'express';
 import { ok } from '../../utils/response';
 import { toPublicUser } from '../users/user.serializer';
-import { sendLoginOtp, verifyLoginOtp, refreshSession, logout } from './auth.service';
-import type { SendOtpInput, VerifyOtpInput, RefreshInput } from './auth.validators';
+import { sendLoginOtp, verifyLoginOtp, refreshSession, logout, updateProfile } from './auth.service';
+import type {
+  SendOtpInput,
+  VerifyOtpInput,
+  RefreshInput,
+  UpdateProfileInput,
+} from './auth.validators';
 
 /** Mask a phone for display, keeping country code + last 2 digits. */
 function maskPhone(phone: string): string {
@@ -36,4 +41,10 @@ export const postLogout: RequestHandler = async (req, res) => {
 
 export const getMe: RequestHandler = (req, res) => {
   ok(res, toPublicUser(req.user!));
+};
+
+export const patchProfile: RequestHandler = async (req, res) => {
+  const input = req.body as UpdateProfileInput;
+  const user = await updateProfile(req.user!.id, input);
+  ok(res, user);
 };

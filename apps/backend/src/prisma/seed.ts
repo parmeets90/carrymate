@@ -18,8 +18,46 @@ async function main(): Promise<void> {
       kycStatus: 'VERIFIED',
     },
   });
-
   logger.info(`Seeded admin user: ${admin.id}`);
+
+  // A sender awaiting KYC review (populates the admin queue).
+  const sender = await prisma.user.upsert({
+    where: { phone: '+919876500001' },
+    update: {},
+    create: {
+      phone: '+919876500001',
+      fullName: 'Anjali Sharma',
+      role: 'SENDER',
+      kycStatus: 'IN_REVIEW',
+      phoneVerified: true,
+    },
+  });
+  await prisma.kycDocument.upsert({
+    where: { userId_docType: { userId: sender.id, docType: 'AADHAAR' } },
+    update: {},
+    create: {
+      userId: sender.id,
+      docType: 'AADHAAR',
+      docNumberMasked: '********1234',
+      status: 'PENDING',
+      provider: 'manual',
+    },
+  });
+
+  // A verified traveler.
+  await prisma.user.upsert({
+    where: { phone: '+919876500002' },
+    update: {},
+    create: {
+      phone: '+919876500002',
+      fullName: 'Vikram Rao',
+      role: 'TRAVELER',
+      kycStatus: 'VERIFIED',
+      phoneVerified: true,
+    },
+  });
+
+  logger.info('Seed complete: 1 admin, 1 sender (in review), 1 traveler.');
 }
 
 main()

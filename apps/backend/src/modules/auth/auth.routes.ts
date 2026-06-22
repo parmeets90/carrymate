@@ -2,13 +2,14 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { validateBody } from '../../middleware/validate';
 import { authenticate } from '../../middleware/auth.middleware';
-import { sendOtpSchema, verifyOtpSchema, refreshSchema } from './auth.validators';
+import { sendOtpSchema, verifyOtpSchema, refreshSchema, updateProfileSchema } from './auth.validators';
 import {
   postSendOtp,
   postVerifyOtp,
   postRefresh,
   postLogout,
   getMe,
+  patchProfile,
 } from './auth.controller';
 
 export const authRouter = Router();
@@ -27,3 +28,4 @@ authRouter.post('/verify-otp', validateBody(verifyOtpSchema), postVerifyOtp);
 authRouter.post('/refresh', validateBody(refreshSchema), postRefresh);
 authRouter.post('/logout', validateBody(refreshSchema), postLogout);
 authRouter.get('/me', authenticate, getMe);
+authRouter.patch('/profile', authenticate, validateBody(updateProfileSchema), patchProfile);

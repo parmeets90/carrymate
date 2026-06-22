@@ -20,6 +20,17 @@ export const refreshSchema = z.object({
   refreshToken: z.string().trim().min(1, 'refreshToken is required'),
 });
 
+export const updateProfileSchema = z
+  .object({
+    fullName: z.string().trim().min(2).max(100).optional(),
+    email: z.string().trim().email().max(255).optional(),
+    role: z.enum(['SENDER', 'TRAVELER', 'BOTH']).optional(),
+  })
+  .refine((v) => v.fullName !== undefined || v.email !== undefined || v.role !== undefined, {
+    message: 'Provide at least one field to update',
+  });
+
 export type SendOtpInput = z.infer<typeof sendOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type RefreshInput = z.infer<typeof refreshSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

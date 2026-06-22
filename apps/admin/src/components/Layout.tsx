@@ -7,8 +7,10 @@ import {
   Users,
   AlertTriangle,
   Plane,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 import type { ReactNode } from 'react';
 
 const NAV = [
@@ -21,6 +23,7 @@ const NAV = [
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
+  const { user, signOut } = useAuth();
   return (
     <div className="flex min-h-screen bg-muted/30">
       <aside className="hidden w-64 flex-col border-r bg-card md:flex">
@@ -60,8 +63,16 @@ export function Layout({ children }: { children: ReactNode }) {
         <header className="flex h-14 items-center justify-between border-b bg-card px-6">
           <h1 className="text-sm font-semibold text-muted-foreground">India → UAE corridor</h1>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">admin@carrymate.in</span>
+            <span className="text-sm text-muted-foreground">
+              {user?.fullName ?? user?.phone ?? 'admin'}
+            </span>
             <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent" />
+            <button
+              onClick={signOut}
+              className="flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Sign out
+            </button>
           </div>
         </header>
         <main className="flex-1 p-6">{children}</main>

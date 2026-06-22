@@ -60,6 +60,29 @@ export interface AuthResult {
   isNewUser: boolean;
 }
 
+/** A KYC document as exposed to clients (no hashes). */
+export interface KycDocumentDto {
+  id: string;
+  docType: string;
+  status: string;
+  rejectReason: string | null;
+  fileKey: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+}
+
+/** A user's KYC state plus their submitted documents. */
+export interface KycStatusResult {
+  kycStatus: string;
+  documents: KycDocumentDto[];
+}
+
+/** A user + their documents, for the admin KYC review queue / detail view. */
+export interface AdminKycReviewItem {
+  user: PublicUser;
+  documents: KycDocumentDto[];
+}
+
 /** Health-check payload. */
 export interface HealthStatus {
   status: 'healthy' | 'degraded';

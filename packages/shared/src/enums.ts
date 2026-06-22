@@ -31,6 +31,12 @@ export enum KycDocType {
   FLIGHT_TICKET = 'FLIGHT_TICKET',
 }
 
+export enum KycDocStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
 export enum RequestCategory {
   FOOD = 'FOOD',
   DOCUMENTS = 'DOCUMENTS',

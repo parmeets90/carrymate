@@ -39,6 +39,15 @@ export async function verifyLoginOtp(
   return { user: toPublicUser(user), tokens, isNewUser };
 }
 
+/** Update the current user's profile (name, email, role). */
+export async function updateProfile(
+  userId: string,
+  data: { fullName?: string; email?: string; role?: 'SENDER' | 'TRAVELER' | 'BOTH' },
+): Promise<ReturnType<typeof toPublicUser>> {
+  const user = await prisma.user.update({ where: { id: userId }, data });
+  return toPublicUser(user);
+}
+
 /** Rotate tokens using a valid refresh token. */
 export async function refreshSession(refreshToken: string): Promise<AuthTokens> {
   return rotateRefreshToken(refreshToken);

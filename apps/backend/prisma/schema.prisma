@@ -33,6 +33,20 @@ enum KycStatus {
   REJECTED
 }
 
+enum KycDocType {
+  AADHAAR
+  PAN
+  PASSPORT
+  SELFIE
+  FLIGHT_TICKET
+}
+
+enum KycDocStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id           String     @id @default(uuid()) @db.Uuid
   phone        String     @unique @db.VarChar(15) // E.164, e.g. +919876543210
@@ -51,6 +65,7 @@ model User {
   updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz
 
   refreshTokens RefreshToken[]
+  kycDocuments  KycDocument[]
 
   @@index([kycStatus])
   @@index([status])
@@ -70,6 +85,32 @@ model PhoneOtp {
 
   @@index([phone, createdAt])
   @@map("phone_otps")
+}
+
+/// A submitted identity document, reviewed manually (Phase 1) or via IDFY (later).
+model KycDocument {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  docType        KycDocType   @map("doc_type")
+  docNumberMasked String?     @map("doc_number_masked") @db.VarChar(32)
+  docNumberHash  String?      @map("doc_number_hash")
+  fileKey        String?      @map("file_key") // storage object key (S3), never a public URL
+  status         KycDocStatus @default(PENDING)
+  rejectReason   String?      @map("reject_reason")
+  reviewedById   String?      @map("reviewed_by_id") @db.Uuid
+  reviewedAt     DateTime?    @map("reviewed_at") @db.Timestamptz
+  provider       String?      // "manual" | "idfy"
+  providerRef    String?      @map("provider_ref")
+  meta           Json?
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, docType])
+  @@index([userId])
+  @@index([status])
+  @@map("kyc_documents")
 }
 
 /// Hashed refresh tokens for rotation + revocation (no Redis in this stack).
