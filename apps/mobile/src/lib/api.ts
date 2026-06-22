@@ -5,6 +5,11 @@ import type {
   AuthTokens,
   PublicUser,
   KycStatusResult,
+  TravelRouteDto,
+  DeliveryRequestDto,
+  DeliveryRequestSummary,
+  BidDto,
+  OrderDto,
 } from '@carrymate/shared';
 import { API_BASE_URL } from '../config';
 import { tokenStorage } from './storage';
@@ -57,4 +62,22 @@ export const api = {
   submitKyc: (data: { docType: string; fileKey?: string; docNumber?: string }) =>
     post<KycStatusResult>('/v1/kyc/submit', data),
   kycStatus: () => get<KycStatusResult>('/v1/kyc/status'),
+
+  // Trips (traveler)
+  createRoute: (data: Record<string, unknown>) => post<TravelRouteDto>('/v1/routes', data),
+  myRoutes: () => get<TravelRouteDto[]>('/v1/routes'),
+  availableForRoute: (routeId: string) =>
+    get<DeliveryRequestSummary[]>(`/v1/requests/available?routeId=${routeId}`),
+
+  // Requests (sender)
+  createRequest: (data: Record<string, unknown>) =>
+    post<DeliveryRequestDto>('/v1/requests', data),
+  myRequests: () => get<DeliveryRequestDto[]>('/v1/requests'),
+  requestBids: (requestId: string) => get<BidDto[]>(`/v1/requests/${requestId}/bids`),
+  acceptBid: (requestId: string, bidId: string) =>
+    post<OrderDto>(`/v1/requests/${requestId}/bids/${bidId}/accept`),
+
+  // Bids (traveler)
+  createBid: (data: Record<string, unknown>) => post<BidDto>('/v1/bids', data),
+  myBids: () => get<BidDto[]>('/v1/bids/mine'),
 };

@@ -6,37 +6,48 @@ import { PhoneScreen } from '@/screens/auth/PhoneScreen';
 import { OtpScreen } from '@/screens/auth/OtpScreen';
 import { ProfileScreen } from '@/screens/onboarding/ProfileScreen';
 import { KycScreen } from '@/screens/kyc/KycScreen';
-import { HomeScreen } from '@/screens/main/HomeScreen';
+import { MainNavigator } from './MainNavigator';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const baseOptions = {
+  headerShadowVisible: false,
+  headerTitle: '',
+  headerTintColor: colors.navyDark,
+  contentStyle: { backgroundColor: colors.bgApp },
+};
 
 export function RootNavigator() {
   const user = useAuth((s) => s.user);
 
-  const needsProfile = user && !user.fullName;
-  const needsKyc = user && user.kycStatus !== 'VERIFIED';
+  // Not signed in → phone + OTP.
+  if (!user) {
+    return (
+      <Stack.Navigator screenOptions={baseOptions}>
+        <Stack.Screen name="Phone" component={PhoneScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Otp" component={OtpScreen} />
+      </Stack.Navigator>
+    );
+  }
 
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShadowVisible: false,
-        headerTitle: '',
-        headerTintColor: colors.navyDark,
-        contentStyle: { backgroundColor: colors.bgApp },
-      }}
-    >
-      {!user ? (
-        <Stack.Group>
-          <Stack.Screen name="Phone" component={PhoneScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Otp" component={OtpScreen} />
-        </Stack.Group>
-      ) : needsProfile ? (
+  // Signed in but no profile yet → onboarding.
+  if (!user.fullName) {
+    return (
+      <Stack.Navigator screenOptions={baseOptions}>
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
-      ) : needsKyc ? (
+      </Stack.Navigator>
+    );
+  }
+
+  // Not yet verified → KYC.
+  if (user.kycStatus !== 'VERIFIED') {
+    return (
+      <Stack.Navigator screenOptions={baseOptions}>
         <Stack.Screen name="Kyc" component={KycScreen} options={{ headerShown: false }} />
-      ) : (
-        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-      )}
-    </Stack.Navigator>
-  );
+      </Stack.Navigator>
+    );
+  }
+
+  // Verified → marketplace.
+  return <MainNavigator />;
 }
