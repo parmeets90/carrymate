@@ -12,6 +12,8 @@ build/
 .env
 .env.*
 !.env.example
+# Admin prod build config holds only the public API URL (safe to commit).
+!apps/admin/.env.production
 
 # Logs
 logs/
