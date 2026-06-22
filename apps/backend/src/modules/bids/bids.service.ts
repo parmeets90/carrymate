@@ -5,6 +5,7 @@ import { AppError } from '../../utils/errors';
 import { computeFees } from '../../utils/marketplace';
 import { NotificationType } from '@carrymate/shared';
 import { createNotification } from '../notifications/notifications.service';
+import { scoreOrder } from '../fraud/fraud.service';
 import { toBidDto, toOrderDto } from '../marketplace/serializers';
 import type { CreateBidInput } from './bids.validators';
 
@@ -165,7 +166,21 @@ export async function acceptBid(
       },
     });
 
-    return { dto: toOrderDto(order), travelerId: bid.travelerId, title: request.title, amountInr: bid.carryFeeInr };
+    return {
+      dto: toOrderDto(order),
+      travelerId: bid.travelerId,
+      title: request.title,
+      amountInr: bid.carryFeeInr,
+      declaredValueInr: request.declaredValueInr,
+    };
+  });
+
+  // Risk-score the new order (off the hot path of the transaction).
+  await scoreOrder({
+    orderId: result.dto.id,
+    senderId,
+    travelerId: result.travelerId,
+    declaredValueInr: result.declaredValueInr,
   });
 
   await createNotification({

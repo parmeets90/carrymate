@@ -265,6 +265,36 @@ export interface NotificationDto {
   createdAt: string;
 }
 
+// ── Phase 6: Safety, Fraud & Admin ────────────────────────────
+
+/** Ops dashboard KPIs. */
+export interface AdminMetrics {
+  users: number;
+  kycBacklog: number;
+  suspended: number;
+  requestsTotal: number;
+  requestsMatched: number;
+  /** Matched-or-beyond requests as a % of all requests. */
+  matchRate: number;
+  ordersTotal: number;
+  escrowHeld: number;
+  completed: number;
+  /** Gross merchandise value (sum of completed order amounts), in INR. */
+  gmvInr: number;
+  disputesOpen: number;
+  disputeRate: number;
+  fraudHolds: number;
+}
+
+/** An order in the admin risk/fraud queue. */
+export interface FraudQueueItem extends OrderView {
+  senderName: string | null;
+  travelerName: string | null;
+  riskScore: number;
+  riskFactors: string[];
+  fraudHold: boolean;
+}
+
 /** Health-check payload. */
 export interface HealthStatus {
   status: 'healthy' | 'degraded';

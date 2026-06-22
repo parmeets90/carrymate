@@ -6,9 +6,11 @@ import type {
   PublicUser,
   Paginated,
   AdminKycReviewItem,
+  AdminMetrics,
   DeliveryRequestSummary,
   OrderView,
   DisputeView,
+  FraudQueueItem,
 } from '@carrymate/shared';
 
 type AdminOrder = OrderView & { senderName: string | null; travelerName: string | null };
@@ -114,4 +116,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ decision, note }),
     }),
+
+  // Phase 6 — safety & ops
+  metrics: () => authed<AdminMetrics>('/v1/admin/metrics'),
+  fraudQueue: () => authed<FraudQueueItem[]>('/v1/admin/fraud/queue'),
+  clearHold: (orderId: string) =>
+    authed<{ success: boolean }>(`/v1/admin/orders/${orderId}/clear-hold`, { method: 'POST' }),
 };

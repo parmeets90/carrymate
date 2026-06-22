@@ -1,13 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { Activity, TrendingUp, Package, ShieldCheck } from 'lucide-react';
+import { Activity, TrendingUp, Package, ShieldCheck, IndianRupee, Lock, Scale, ShieldAlert } from 'lucide-react';
 import { api } from '@/lib/api';
 
-const KPIS = [
-  { label: 'Successful Deliveries / mo', value: '—', hint: 'North Star (SVD/mo)', icon: TrendingUp },
-  { label: 'Active Requests', value: '—', hint: 'Awaiting match', icon: Package },
-  { label: 'Pending KYC', value: '—', hint: 'In review queue', icon: ShieldCheck },
-  { label: 'Match Rate', value: '—', hint: 'Matched / posted', icon: Activity },
-];
+const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
 export function Dashboard() {
   const health = useQuery({
@@ -15,6 +10,24 @@ export function Dashboard() {
     queryFn: api.health,
     refetchInterval: 15_000,
   });
+  const metrics = useQuery({
+    queryKey: ['admin-metrics'],
+    queryFn: api.metrics,
+    refetchInterval: 30_000,
+  });
+
+  const m = metrics.data;
+  const dash = (v: number | string | undefined) => (v === undefined ? '—' : String(v));
+  const KPIS = [
+    { label: 'Completed Deliveries', value: dash(m?.completed), hint: 'North Star (SVD)', icon: TrendingUp },
+    { label: 'Active Requests', value: dash(m ? m.requestsTotal - m.requestsMatched : undefined), hint: 'Awaiting match', icon: Package },
+    { label: 'Pending KYC', value: dash(m?.kycBacklog), hint: 'In review queue', icon: ShieldCheck },
+    { label: 'Match Rate', value: m ? `${m.matchRate}%` : '—', hint: 'Matched / posted', icon: Activity },
+    { label: 'GMV', value: m ? inr(m.gmvInr) : '—', hint: 'Completed order value', icon: IndianRupee },
+    { label: 'Escrow Held', value: dash(m?.escrowHeld), hint: 'Funds in escrow', icon: Lock },
+    { label: 'Open Disputes', value: m ? `${m.disputesOpen} (${m.disputeRate}%)` : '—', hint: 'Of all orders', icon: Scale },
+    { label: 'Fraud Holds', value: dash(m?.fraudHolds), hint: 'Awaiting review', icon: ShieldAlert },
+  ];
 
   const dbUp = health.data?.checks.database;
   const statusLabel = health.isLoading
@@ -36,7 +49,7 @@ export function Dashboard() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
           <p className="text-sm text-muted-foreground">
-            Marketplace health at a glance. Metrics wire up in later phases.
+            Marketplace health, funnel and trust signals — live.
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm">

@@ -301,6 +301,12 @@ model Order {
   escrowHeldAt  DateTime?   @map("escrow_held_at") @db.Timestamptz
   releasedAt    DateTime?   @map("released_at") @db.Timestamptz
   refundedAt    DateTime?   @map("refunded_at") @db.Timestamptz
+  // Risk / fraud (Phase 6)
+  riskScore        Int       @default(0) @map("risk_score")
+  riskFactors      String[]  @default([]) @map("risk_factors")
+  fraudHold        Boolean   @default(false) @map("fraud_hold") // blocks escrow release until an admin clears it
+  fraudClearedAt   DateTime? @map("fraud_cleared_at") @db.Timestamptz
+  fraudClearedById String?   @map("fraud_cleared_by_id") @db.Uuid
   // Fulfillment (Phase 4)
   openBox       Json?       @map("open_box") // checklist + photo keys + gps + ts
   openBoxAt     DateTime?   @map("open_box_at") @db.Timestamptz
@@ -444,6 +450,36 @@ model Message {
 
   @@index([conversationId, createdAt])
   @@map("messages")
+}
+
+// ── Phase 6: Safety, Fraud & Admin Hardening ──────────────────
+
+enum AuditAction {
+  KYC_APPROVED
+  KYC_REJECTED
+  KYC_DUPLICATE_FLAGGED
+  DISPUTE_RESOLVED
+  ORDER_REFUNDED
+  ORDER_FRAUD_HOLD
+  ORDER_HOLD_CLEARED
+  USER_STATUS_CHANGED
+  USER_AUTO_SUSPENDED
+}
+
+/// Immutable trail of sensitive admin + system actions, for ops & compliance.
+model AuditLog {
+  id         String      @id @default(uuid()) @db.Uuid
+  actorId    String?     @map("actor_id") @db.Uuid // admin user; null = system/automated
+  action     AuditAction
+  entityType String      @map("entity_type") @db.VarChar(40)
+  entityId   String?     @map("entity_id") @db.Uuid
+  meta       Json?
+  ip         String?     @db.VarChar(64)
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([entityType, entityId])
+  @@index([action, createdAt])
+  @@map("audit_logs")
 }
 
 /// An in-app notification. External channels (PUSH/SMS/EMAIL) are dispatched best-effort

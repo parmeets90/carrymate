@@ -4,7 +4,11 @@ import { NotificationType } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import { logger } from '../../utils/logger';
+import { writeAudit } from '../../utils/audit';
 import { createNotification } from '../notifications/notifications.service';
+
+/** Auto-suspend a user once they're found at fault in this many disputes. */
+const DISPUTE_FAULT_SUSPEND_THRESHOLD = 2;
 
 /** Either party opens a dispute while escrow is held → freezes the order. */
 export async function raiseDispute(
@@ -45,6 +49,31 @@ export async function raiseDispute(
     data: { orderId, disputeId: dispute.id },
   });
   return { id: dispute.id, status: dispute.status };
+}
+
+/**
+ * Suspend a user once they've been found at fault in too many disputes.
+ * "At fault" = traveler on a RESOLVED_SENDER order, or sender on a RESOLVED_TRAVELER one.
+ */
+async function maybeAutoSuspend(userId: string): Promise<void> {
+  const [asTraveler, asSender, user] = await Promise.all([
+    prisma.dispute.count({ where: { order: { travelerId: userId }, status: 'RESOLVED_SENDER' } }),
+    prisma.dispute.count({ where: { order: { senderId: userId }, status: 'RESOLVED_TRAVELER' } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { status: true, role: true } }),
+  ]);
+  const faults = asTraveler + asSender;
+  if (faults < DISPUTE_FAULT_SUSPEND_THRESHOLD) return;
+  if (!user || user.role === 'ADMIN' || user.status !== 'ACTIVE') return;
+
+  await prisma.user.update({ where: { id: userId }, data: { status: 'SUSPENDED' } });
+  await prisma.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });
+  await writeAudit({
+    action: 'USER_AUTO_SUSPENDED',
+    entityType: 'user',
+    entityId: userId,
+    meta: { reason: 'dispute_fault_threshold', faults },
+  });
+  logger.warn(`[fraud] auto-suspended user ${userId} (${faults} at-fault disputes)`);
 }
 
 export async function listOpenDisputes(): Promise<DisputeView[]> {
@@ -106,6 +135,18 @@ export async function resolveDispute(
     }),
   ]);
   logger.info(`[dispute] ${disputeId} resolved → ${decision}`);
+  await writeAudit({
+    actorId: adminId,
+    action: 'DISPUTE_RESOLVED',
+    entityType: 'dispute',
+    entityId: disputeId,
+    meta: { orderId: order.id, decision },
+  });
+
+  // The party found at fault: refund ⇒ traveler at fault; release ⇒ sender at fault.
+  const atFaultId = refund ? order.travelerId : order.senderId;
+  await maybeAutoSuspend(atFaultId);
+
   const outcome = refund
     ? 'resolved in the sender’s favour (refund issued).'
     : 'resolved in the traveler’s favour (payout released).';

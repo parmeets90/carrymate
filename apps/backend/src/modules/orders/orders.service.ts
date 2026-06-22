@@ -7,6 +7,8 @@ import { logger } from '../../utils/logger';
 import { generateNumericOtp } from '../../utils/crypto';
 import { NotificationType } from '@carrymate/shared';
 import { createNotification } from '../notifications/notifications.service';
+import { writeAudit } from '../../utils/audit';
+import { RISK_FLAG_THRESHOLD } from '../fraud/fraud.service';
 import { toOrderView } from './orders.serializer';
 
 const withRelations = { request: true, sender: true, traveler: true, dispute: true } as const;
@@ -153,6 +155,9 @@ export async function releaseOrder(orderId: string, senderId: string): Promise<O
   if (order.status === 'DISPUTED') {
     throw new AppError(409, 'ORDER_DISPUTED', 'This order is under dispute.');
   }
+  if (order.fraudHold) {
+    throw new AppError(409, 'FRAUD_HOLD', 'This order is under a safety review. Our team will resolve it shortly.');
+  }
   if (order.status !== 'ESCROW_HELD' || order.request.status !== 'DELIVERED') {
     throw new AppError(409, 'NOT_DELIVERED', 'You can release escrow only after delivery.');
   }
@@ -188,6 +193,7 @@ export async function runAutoConfirm(): Promise<number> {
       autoConfirmAt: { lte: new Date() },
       request: { status: 'DELIVERED' },
       dispute: null,
+      fraudHold: false,
     },
     select: { id: true, senderId: true },
   });
@@ -223,7 +229,45 @@ export async function listAllOrders(
   };
 }
 
-export async function refundOrder(orderId: string): Promise<void> {
+/** Admin clears a fraud hold so escrow can be released/auto-confirmed normally. */
+export async function clearFraudHold(orderId: string, adminId: string): Promise<void> {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw AppError.notFound('Order not found');
+  if (!order.fraudHold) throw new AppError(409, 'NOT_HELD', 'This order is not under a fraud hold.');
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { fraudHold: false, fraudClearedAt: new Date(), fraudClearedById: adminId },
+  });
+  await writeAudit({
+    actorId: adminId,
+    action: 'ORDER_HOLD_CLEARED',
+    entityType: 'order',
+    entityId: orderId,
+    meta: { riskScore: order.riskScore, riskFactors: order.riskFactors },
+  });
+  logger.info(`[fraud] hold cleared on order ${orderId} by admin ${adminId}`);
+}
+
+/** Orders flagged by the risk engine (score ≥ flag threshold) or currently held. */
+export async function listFraudQueue(): Promise<
+  (OrderView & { senderName: string | null; travelerName: string | null; riskScore: number; riskFactors: string[]; fraudHold: boolean })[]
+> {
+  const orders = await prisma.order.findMany({
+    where: { OR: [{ riskScore: { gte: RISK_FLAG_THRESHOLD } }, { fraudHold: true }] },
+    include: withRelations,
+    orderBy: [{ fraudHold: 'desc' }, { riskScore: 'desc' }, { createdAt: 'desc' }],
+  });
+  return orders.map((o) => ({
+    ...toOrderView(o, o.senderId),
+    senderName: o.sender.fullName,
+    travelerName: o.traveler.fullName,
+    riskScore: o.riskScore,
+    riskFactors: o.riskFactors,
+    fraudHold: o.fraudHold,
+  }));
+}
+
+export async function refundOrder(orderId: string, adminId?: string): Promise<void> {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) throw AppError.notFound('Order not found');
   if (!['PENDING_PAYMENT', 'ESCROW_HELD', 'DISPUTED'].includes(order.status)) {
@@ -236,5 +280,12 @@ export async function refundOrder(orderId: string): Promise<void> {
     }),
     prisma.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'CANCELLED' } }),
   ]);
+  await writeAudit({
+    actorId: adminId ?? null,
+    action: 'ORDER_REFUNDED',
+    entityType: 'order',
+    entityId: orderId,
+    meta: { amountInr: order.amountInr },
+  });
   logger.info(`[escrow] refunded order ${orderId}`);
 }

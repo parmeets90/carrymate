@@ -9,8 +9,9 @@ import {
   setUserStatus,
   listRequests,
   forceExpireRequest,
+  getMetrics,
 } from './admin.service';
-import { listAllOrders, refundOrder } from '../orders/orders.service';
+import { listAllOrders, refundOrder, listFraudQueue, clearFraudHold } from '../orders/orders.service';
 import { listOpenDisputes, resolveDispute } from '../disputes/disputes.service';
 import { listUsersSchema, listRequestsSchema, resolveDisputeSchema } from './admin.validators';
 import type { ResolveDisputeInput } from './admin.validators';
@@ -42,7 +43,20 @@ export const getUser: RequestHandler = async (req, res) => {
 
 export const postSetStatus: RequestHandler = async (req, res) => {
   const { status } = req.body as SetStatusInput;
-  ok(res, await setUserStatus(req.params.userId!, status));
+  ok(res, await setUserStatus(req.params.userId!, status, req.user!.id));
+};
+
+export const getMetrics_: RequestHandler = async (_req, res) => {
+  ok(res, await getMetrics());
+};
+
+export const getFraudQueue: RequestHandler = async (_req, res) => {
+  ok(res, await listFraudQueue());
+};
+
+export const postClearHold: RequestHandler = async (req, res) => {
+  await clearFraudHold(req.params.orderId!, req.user!.id);
+  ok(res, { success: true });
 };
 
 export const getRequests: RequestHandler = async (req, res) => {
@@ -61,7 +75,7 @@ export const getOrders: RequestHandler = async (req, res) => {
 };
 
 export const postRefundOrder: RequestHandler = async (req, res) => {
-  await refundOrder(req.params.orderId!);
+  await refundOrder(req.params.orderId!, req.user!.id);
   ok(res, { success: true });
 };
 

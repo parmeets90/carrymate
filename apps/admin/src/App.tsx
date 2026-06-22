@@ -7,6 +7,7 @@ import { Users } from './pages/Users';
 import { Requests } from './pages/Requests';
 import { Transactions } from './pages/Transactions';
 import { Disputes } from './pages/Disputes';
+import { Risk } from './pages/Risk';
 import { Placeholder } from './pages/Placeholder';
 import { Login } from './pages/Login';
 import { useAuth } from './lib/auth';
@@ -33,7 +34,7 @@ export function App() {
         <Route path="/disputes" element={<Disputes />} />
         <Route path="/requests" element={<Requests />} />
         <Route path="/transactions" element={<Transactions />} />
-        <Route path="/risk" element={<Placeholder title="Risk & Fraud" phase="Phase 6" />} />
+        <Route path="/risk" element={<Risk />} />
         <Route path="*" element={<Placeholder title="Not found" phase="—" />} />
       </Routes>
     </Layout>

@@ -4,6 +4,7 @@ import { prisma } from '../../lib/prisma';
 import { env } from '../../config/env';
 import { hmac } from '../../utils/crypto';
 import { logger } from '../../utils/logger';
+import { writeAudit } from '../../utils/audit';
 import { toKycDocumentDto } from './kyc.serializer';
 
 interface SubmitDocInput {
@@ -40,6 +41,12 @@ export async function submitKycDocument(
     });
     if (clash) {
       logger.warn(`KYC duplicate doc number attempt by user ${userId} (${input.docType})`);
+      await writeAudit({
+        action: 'KYC_DUPLICATE_FLAGGED',
+        entityType: 'user',
+        entityId: userId,
+        meta: { docType: input.docType },
+      });
     }
   }
 

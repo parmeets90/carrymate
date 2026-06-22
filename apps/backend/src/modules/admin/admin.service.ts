@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import type {
   AdminKycReviewItem,
+  AdminMetrics,
   PublicUser,
   Paginated,
   DeliveryRequestSummary,
@@ -8,6 +9,7 @@ import type {
 import { NotificationType } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
+import { writeAudit } from '../../utils/audit';
 import { createNotification } from '../notifications/notifications.service';
 import { toPublicUser } from '../users/user.serializer';
 import { toKycDocumentDto } from '../kyc/kyc.serializer';
@@ -38,6 +40,7 @@ export async function approveKyc(userId: string, adminId: string): Promise<void>
     }),
     prisma.user.update({ where: { id: userId }, data: { kycStatus: 'VERIFIED' } }),
   ]);
+  await writeAudit({ actorId: adminId, action: 'KYC_APPROVED', entityType: 'user', entityId: userId });
   await createNotification({
     userId,
     type: NotificationType.KYC_VERIFIED,
@@ -57,6 +60,7 @@ export async function rejectKyc(userId: string, adminId: string, reason: string)
     }),
     prisma.user.update({ where: { id: userId }, data: { kycStatus: 'REJECTED' } }),
   ]);
+  await writeAudit({ actorId: adminId, action: 'KYC_REJECTED', entityType: 'user', entityId: userId, meta: { reason } });
   await createNotification({
     userId,
     type: NotificationType.KYC_REJECTED,
@@ -136,6 +140,7 @@ export async function forceExpireRequest(requestId: string): Promise<void> {
 export async function setUserStatus(
   userId: string,
   status: 'ACTIVE' | 'SUSPENDED' | 'BANNED',
+  adminId?: string,
 ): Promise<PublicUser> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw AppError.notFound('User not found');
@@ -151,5 +156,63 @@ export async function setUserStatus(
     });
   }
 
+  await writeAudit({
+    actorId: adminId ?? null,
+    action: 'USER_STATUS_CHANGED',
+    entityType: 'user',
+    entityId: userId,
+    meta: { from: user.status, to: status },
+  });
+
   return toPublicUser(updated);
+}
+
+/** Ops dashboard KPIs (North-Star + funnel + trust health). */
+export async function getMetrics(): Promise<AdminMetrics> {
+  const [
+    users,
+    kycBacklog,
+    suspended,
+    requestsTotal,
+    requestsMatched,
+    ordersTotal,
+    escrowHeld,
+    completed,
+    fraudHolds,
+    disputesOpen,
+    gmv,
+  ] = await Promise.all([
+    prisma.user.count({ where: { role: { not: 'ADMIN' } } }),
+    prisma.user.count({ where: { kycStatus: 'IN_REVIEW' } }),
+    prisma.user.count({ where: { status: { in: ['SUSPENDED', 'BANNED'] } } }),
+    prisma.deliveryRequest.count(),
+    prisma.deliveryRequest.count({
+      where: { status: { in: ['MATCHED', 'IN_TRANSIT', 'DELIVERED', 'CONFIRMED'] } },
+    }),
+    prisma.order.count(),
+    prisma.order.count({ where: { status: 'ESCROW_HELD' } }),
+    prisma.order.count({ where: { status: 'COMPLETED' } }),
+    prisma.order.count({ where: { fraudHold: true } }),
+    prisma.dispute.count({ where: { status: { in: ['OPEN', 'UNDER_REVIEW'] } } }),
+    prisma.order.aggregate({ where: { status: 'COMPLETED' }, _sum: { amountInr: true } }),
+  ]);
+
+  const matchRate = requestsTotal ? Math.round((requestsMatched / requestsTotal) * 100) : 0;
+  const disputeRate = ordersTotal ? Math.round((disputesOpen / ordersTotal) * 100) : 0;
+
+  return {
+    users,
+    kycBacklog,
+    suspended,
+    requestsTotal,
+    requestsMatched,
+    matchRate,
+    ordersTotal,
+    escrowHeld,
+    completed,
+    gmvInr: gmv._sum.amountInr ?? 0,
+    disputesOpen,
+    disputeRate,
+    fraudHolds,
+  };
 }
