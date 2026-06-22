@@ -8,7 +8,8 @@ services:
     region: singapore
     branch: main
     # Free tier doesn't support preDeployCommand, so migrations run at the end of build.
-    buildCommand: npm install && npm run shared:build && npm run db:generate && npm run backend:build && npm run migrate:deploy -w @carrymate/backend
+    # --include=dev: NODE_ENV=production would otherwise skip devDeps (typescript, @types, prisma) needed to build.
+    buildCommand: npm install --include=dev && npm run shared:build && npm run db:generate && npm run backend:build && npm run migrate:deploy -w @carrymate/backend
     startCommand: npm run backend:start
     healthCheckPath: /health
     envVars:
@@ -41,7 +42,7 @@ services:
     name: carrymate-admin
     runtime: static
     branch: main
-    buildCommand: npm install && npm run shared:build && npm run admin:build
+    buildCommand: npm install --include=dev && npm run shared:build && npm run admin:build
     staticPublishPath: apps/admin/dist
     envVars:
       - key: VITE_API_BASE_URL
