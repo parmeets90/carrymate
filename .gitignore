@@ -53,3 +53,7 @@ coverage/
 # Misc
 .cache/
 tmp/
+
+# Admin tsc -b emits (kept out of source)
+apps/admin/vite.config.js
+apps/admin/vite.config.d.ts
