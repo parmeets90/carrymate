@@ -64,3 +64,36 @@ export const shadow = {
   shadowRadius: 8,
   shadowOffset: { width: 0, height: 2 },
 } as const;
+
+/** Layered shadow presets (cross-platform). */
+export const shadows = {
+  sm: {
+    shadowColor: '#0F1629',
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#0F1629',
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+  lg: {
+    shadowColor: '#0F1629',
+    shadowOpacity: 0.16,
+    shadowRadius: 28,
+    shadowOffset: { width: 0, height: 14 },
+    elevation: 12,
+  },
+} as const;
+
+/** Brand gradients (use with react-native-linear-gradient). */
+export const gradients = {
+  brand: ['#0F1629', '#16213E', '#0F3460'], // deep navy header
+  sky: ['#5BB0EC', '#3E8BC9'], // primary CTA
+  gold: ['#F5B93A', '#E0931A'], // trust / verified
+  mint: ['#1DB574', '#0FA968'], // money / escrow
+} as const;

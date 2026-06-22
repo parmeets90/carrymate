@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing } from '@/theme';
 import { Card, Badge, statusTone } from '@/components/Card';
+import { EmptyState } from '@/components/widgets';
 import { api } from '@/lib/api';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -35,10 +36,7 @@ export function TripsScreen() {
           refreshing={isRefetching}
           contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.md }}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>No trips yet</Text>
-              <Text style={styles.emptyBody}>Add a flight to start carrying items.</Text>
-            </View>
+            <EmptyState icon="✈️" title="No trips yet" body="Add a flight to start carrying items." />
           }
           renderItem={({ item }) => {
             const remaining = item.capacityKg - item.capacityUsedKg;

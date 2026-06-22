@@ -1,7 +1,8 @@
+import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './types';
-import { colors, typography } from '@/theme';
+import { colors, typography, shadows } from '@/theme';
 import { useAuth } from '@/store/auth';
 import { MyRequestsScreen } from '@/screens/sender/MyRequestsScreen';
 import { CreateRequestScreen } from '@/screens/sender/CreateRequestScreen';
@@ -26,8 +27,29 @@ const tabScreenOptions = {
   tabBarActiveTintColor: colors.skyBlue,
   tabBarInactiveTintColor: colors.textHint,
   tabBarLabelStyle: { ...typography.caption, fontWeight: '600' as const },
-  tabBarStyle: { height: 60, paddingBottom: 8, paddingTop: 6 },
+  tabBarStyle: {
+    height: 64,
+    paddingBottom: 10,
+    paddingTop: 8,
+    backgroundColor: colors.bgCard,
+    borderTopColor: colors.borderLight,
+    ...shadows.md,
+  },
 };
+
+const ICONS: Record<string, string> = {
+  Requests: '📦',
+  Post: '➕',
+  Trips: '✈️',
+  Bids: '🏷️',
+  Orders: '🧾',
+  Profile: '👤',
+};
+
+const tabIcon =
+  (name: string) =>
+  ({ focused }: { focused: boolean }) =>
+    <Text style={{ fontSize: 18, opacity: focused ? 1 : 0.45 }}>{ICONS[name]}</Text>;
 
 function RoleTabs() {
   const role = useAuth((s) => s.user?.role);
@@ -36,10 +58,10 @@ function RoleTabs() {
   if (isTraveler) {
     return (
       <Tab.Navigator screenOptions={tabScreenOptions}>
-        <Tab.Screen name="Trips" component={TripsScreen} />
-        <Tab.Screen name="Bids" component={MyBidsScreen} />
-        <Tab.Screen name="Orders" component={OrdersScreen} />
-        <Tab.Screen name="Profile" component={ProfileTabScreen} />
+        <Tab.Screen name="Trips" component={TripsScreen} options={{ tabBarIcon: tabIcon('Trips') }} />
+        <Tab.Screen name="Bids" component={MyBidsScreen} options={{ tabBarIcon: tabIcon('Bids') }} />
+        <Tab.Screen name="Orders" component={OrdersScreen} options={{ tabBarIcon: tabIcon('Orders') }} />
+        <Tab.Screen name="Profile" component={ProfileTabScreen} options={{ tabBarIcon: tabIcon('Profile') }} />
       </Tab.Navigator>
     );
   }
@@ -47,10 +69,10 @@ function RoleTabs() {
   // SENDER or BOTH
   return (
     <Tab.Navigator screenOptions={tabScreenOptions}>
-      <Tab.Screen name="Requests" component={MyRequestsScreen} />
-      <Tab.Screen name="Post" component={CreateRequestScreen} />
-      <Tab.Screen name="Orders" component={OrdersScreen} />
-      <Tab.Screen name="Profile" component={ProfileTabScreen} />
+      <Tab.Screen name="Requests" component={MyRequestsScreen} options={{ tabBarIcon: tabIcon('Requests') }} />
+      <Tab.Screen name="Post" component={CreateRequestScreen} options={{ tabBarIcon: tabIcon('Post') }} />
+      <Tab.Screen name="Orders" component={OrdersScreen} options={{ tabBarIcon: tabIcon('Orders') }} />
+      <Tab.Screen name="Profile" component={ProfileTabScreen} options={{ tabBarIcon: tabIcon('Profile') }} />
     </Tab.Navigator>
   );
 }

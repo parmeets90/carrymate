@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, radius, typography, sizing } from '@/theme';
-import { PrimaryButton, Field } from '@/components/ui';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { colors, spacing, radius, typography, shadows } from '@/theme';
+import { Screen, ScreenHeader } from '@/components/Screen';
+import { PrimaryButton, SecondaryButton, Field } from '@/components/ui';
+import { Card, Badge } from '@/components/Card';
 import { PhotoButton } from '@/components/PhotoButton';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
@@ -16,7 +17,6 @@ const DOC_OPTIONS: Record<string, { value: string; label: string }[]> = {
 };
 
 export function KycScreen() {
-  const insets = useSafeAreaInsets();
   const { user, setUser, signOut } = useAuth();
   const options = DOC_OPTIONS[user?.role === 'TRAVELER' ? 'TRAVELER' : 'SENDER']!;
 
@@ -29,18 +29,11 @@ export function KycScreen() {
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    api
-      .kycStatus()
-      .then((r) => setStatus(r.kycStatus))
-      .catch(() => undefined)
-      .finally(() => setLoading(false));
+    api.kycStatus().then((r) => setStatus(r.kycStatus)).catch(() => undefined).finally(() => setLoading(false));
   }, []);
 
   const submit = async () => {
-    if (docNumber.trim().length < 4) {
-      setError('Enter a valid document number.');
-      return;
-    }
+    if (docNumber.trim().length < 4) return setError('Enter a valid document number.');
     setBusy(true);
     setError(undefined);
     try {
@@ -57,7 +50,7 @@ export function KycScreen() {
     setBusy(true);
     try {
       const me = await api.me();
-      setUser(me); // if VERIFIED, the navigator advances to Home
+      setUser(me);
       setStatus(me.kycStatus);
     } finally {
       setBusy(false);
@@ -66,137 +59,71 @@ export function KycScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={colors.skyBlue} />
-      </View>
+      <Screen>
+        <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing['3xl'] }} />
+      </Screen>
     );
   }
 
   const pending = status === 'IN_REVIEW';
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingTop: insets.top + spacing.xl, paddingBottom: spacing['3xl'] }}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>{pending ? 'Verification in progress' : 'Verify your identity'}</Text>
-        <Text style={styles.sub}>
-          {pending
-            ? "We're reviewing your documents. This usually takes a little while — we'll let you know."
-            : 'CarryMate is a trust-first marketplace. Verify your ID to send or carry items.'}
-        </Text>
-      </View>
+    <Screen scroll>
+      <ScreenHeader
+        title={pending ? 'Verification in progress' : 'Verify your identity'}
+        subtitle={
+          pending
+            ? "We're reviewing your documents — we'll let you know."
+            : 'CarryMate is trust-first. Verify your ID to send or carry.'
+        }
+      />
 
       {pending ? (
-        <View style={styles.pendingCard}>
-          <Text style={styles.pendingBadge}>UNDER REVIEW</Text>
-          <Text style={styles.sub}>You can check back here once your ID is approved.</Text>
+        <Card style={{ gap: spacing.md }}>
+          <Badge label="Under review" tone="amber" />
+          <Text style={styles.body}>Check back here once your ID is approved.</Text>
           <PrimaryButton label="Check status" onPress={refreshStatus} loading={busy} />
-        </View>
+        </Card>
       ) : (
         <>
           {status === 'REJECTED' && (
-            <Text style={styles.rejected}>
-              Your previous submission was rejected. Please re-submit a valid document.
-            </Text>
+            <Card style={{ borderColor: '#F2C0C0', backgroundColor: colors.dangerLight }}>
+              <Text style={styles.rejected}>Previous submission was rejected. Please re-submit a valid document.</Text>
+            </Card>
           )}
           <Text style={styles.sectionLabel}>Document type</Text>
           <View style={styles.docs}>
             {options.map((o) => {
               const active = docType === o.value;
               return (
-                <Pressable
-                  key={o.value}
-                  onPress={() => setDocType(o.value)}
-                  style={[styles.doc, active && styles.docActive]}
-                >
-                  <Text style={[styles.docText, active && styles.docTextActive]}>{o.label}</Text>
+                <Pressable key={o.value} onPress={() => setDocType(o.value)} style={[styles.doc, active && styles.docActive]}>
+                  <Text style={[styles.docText, active && { color: colors.navyMid }]}>{o.label}</Text>
                 </Pressable>
               );
             })}
           </View>
 
-          <Field
-            label="Document number"
-            value={docNumber}
-            onChangeText={setDocNumber}
-            autoCapitalize="characters"
-            placeholder="Enter number"
-            error={error}
-          />
-
-          <View style={{ marginTop: spacing.md }}>
-            <PhotoButton
-              purpose="kyc"
-              label={fileKey ? 'Document photo added' : 'Upload document photo'}
-              count={fileKey ? 1 : 0}
-              onUploaded={setFileKey}
-            />
-          </View>
-
-          <View style={styles.footer}>
+          <Field label="Document number" value={docNumber} onChangeText={setDocNumber} autoCapitalize="characters" placeholder="Enter number" error={error} />
+          <PhotoButton purpose="kyc" label={fileKey ? 'Document photo added ✓' : 'Upload document photo'} count={fileKey ? 1 : 0} onUploaded={setFileKey} />
+          <View style={{ marginTop: spacing.sm }}>
             <PrimaryButton label="Submit for verification" onPress={submit} loading={busy} />
           </View>
         </>
       )}
 
-      <Pressable onPress={signOut} style={styles.signOut}>
-        <Text style={styles.signOutText}>Sign out</Text>
-      </Pressable>
-    </ScrollView>
+      <View style={{ marginTop: spacing.xl }}>
+        <SecondaryButton label="Sign out" onPress={signOut} />
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgApp },
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgApp,
-    paddingHorizontal: sizing.screenPaddingX,
-  },
-  header: { gap: spacing.sm, marginBottom: spacing.lg },
-  title: { ...typography.display, color: colors.textPrimary },
-  sub: { ...typography.bodyM, color: colors.textSecondary },
-  sectionLabel: {
-    ...typography.label,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  docs: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
-  doc: {
-    borderWidth: 0.5,
-    borderColor: colors.borderLight,
-    borderRadius: radius.chip,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: colors.bgCard,
-  },
-  docActive: { borderColor: colors.skyBlue, backgroundColor: colors.skyLight },
+  body: { ...typography.bodyM, color: colors.textSecondary },
+  sectionLabel: { ...typography.label, color: colors.textSecondary },
+  docs: { flexDirection: 'row', gap: spacing.sm },
+  doc: { borderWidth: 1, borderColor: colors.borderLight, borderRadius: radius.chip, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg, backgroundColor: colors.bgCard },
+  docActive: { borderColor: colors.skyBlue, backgroundColor: colors.skyLight, ...shadows.sm },
   docText: { ...typography.bodyM, fontWeight: '600', color: colors.textPrimary },
-  docTextActive: { color: colors.navyMid },
-  note: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.sm },
-  rejected: { ...typography.bodyM, color: colors.dangerRed, marginBottom: spacing.md },
-  footer: { marginTop: spacing.xl },
-  pendingCard: {
-    borderWidth: 0.5,
-    borderColor: colors.borderLight,
-    borderRadius: radius.card,
-    padding: spacing.lg,
-    gap: spacing.md,
-    backgroundColor: colors.bgCard,
-  },
-  pendingBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.cautionLight,
-    color: colors.cautionAmber,
-    ...typography.label,
-    fontWeight: '700',
-    paddingVertical: 4,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.input,
-    overflow: 'hidden',
-  },
-  signOut: { marginTop: spacing.xl, alignItems: 'center' },
-  signOutText: { ...typography.bodyM, color: colors.textSecondary },
+  rejected: { ...typography.bodyM, color: '#921010' },
 });

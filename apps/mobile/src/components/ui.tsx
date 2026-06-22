@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import {
   Text,
   TextInput,
@@ -5,9 +6,41 @@ import {
   View,
   ActivityIndicator,
   StyleSheet,
+  Animated,
   type TextInputProps,
+  type ViewStyle,
+  type StyleProp,
 } from 'react-native';
-import { colors, spacing, radius, typography, sizing } from '@/theme';
+import LinearGradient from 'react-native-linear-gradient';
+import { colors, spacing, radius, typography, sizing, gradients, shadows } from '@/theme';
+import type { ReactNode } from 'react';
+
+/** Pressable with a subtle scale-down on press (premium tactile feel). */
+export function Pressable3D({
+  onPress,
+  disabled,
+  children,
+  style,
+}: {
+  onPress?: () => void;
+  disabled?: boolean;
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const to = (v: number) =>
+    Animated.spring(scale, { toValue: v, useNativeDriver: true, speed: 50, bounciness: 0 }).start();
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      onPressIn={() => to(0.97)}
+      onPressOut={() => to(1)}
+    >
+      <Animated.View style={[{ transform: [{ scale }] }, style]}>{children}</Animated.View>
+    </Pressable>
+  );
+}
 
 export function PrimaryButton({
   label,
@@ -22,21 +55,40 @@ export function PrimaryButton({
 }) {
   const isDisabled = disabled || loading;
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={isDisabled}
-      style={({ pressed }) => [
-        styles.btn,
-        pressed && styles.btnPressed,
-        isDisabled && styles.btnDisabled,
-      ]}
-    >
-      {loading ? (
-        <ActivityIndicator color={colors.white} />
-      ) : (
-        <Text style={styles.btnLabel}>{label}</Text>
-      )}
-    </Pressable>
+    <Pressable3D onPress={onPress} disabled={isDisabled}>
+      <LinearGradient
+        colors={isDisabled ? ['#A9C7E2', '#A9C7E2'] : [...gradients.sky]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.btn, !isDisabled && shadows.sm]}
+      >
+        {loading ? (
+          <ActivityIndicator color={colors.white} />
+        ) : (
+          <Text style={styles.btnLabel}>{label}</Text>
+        )}
+      </LinearGradient>
+    </Pressable3D>
+  );
+}
+
+export function SecondaryButton({
+  label,
+  onPress,
+  tone = 'neutral',
+}: {
+  label: string;
+  onPress: () => void;
+  tone?: 'neutral' | 'danger';
+}) {
+  return (
+    <Pressable3D onPress={onPress}>
+      <View style={[styles.secondaryBtn, tone === 'danger' && styles.secondaryDanger]}>
+        <Text style={[styles.secondaryLabel, tone === 'danger' && { color: colors.dangerRed }]}>
+          {label}
+        </Text>
+      </View>
+    </Pressable3D>
   );
 }
 
@@ -45,12 +97,20 @@ export function Field({
   error,
   ...props
 }: TextInputProps & { label: string; error?: string }) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.fieldLabel}>{label}</Text>
       <TextInput
         placeholderTextColor={colors.textHint}
-        style={[styles.input, error ? styles.inputError : null]}
+        style={[
+          styles.input,
+          focused && styles.inputFocused,
+          error ? styles.inputError : null,
+          props.multiline ? styles.inputMultiline : null,
+        ]}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         {...props}
       />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -60,27 +120,37 @@ export function Field({
 
 const styles = StyleSheet.create({
   btn: {
-    backgroundColor: colors.skyBlue,
     height: sizing.buttonPrimary,
     borderRadius: radius.button,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  btnPressed: { opacity: 0.9 },
-  btnDisabled: { opacity: 0.5 },
-  btnLabel: { ...typography.bodyL, fontWeight: '600', color: colors.white },
+  btnLabel: { ...typography.bodyL, fontWeight: '700', color: colors.white, letterSpacing: 0.2 },
+  secondaryBtn: {
+    height: sizing.buttonSecondary,
+    borderRadius: radius.button,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    backgroundColor: colors.bgCard,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  secondaryDanger: { borderColor: '#F2C0C0', backgroundColor: colors.dangerLight },
+  secondaryLabel: { ...typography.bodyM, fontWeight: '700', color: colors.textPrimary },
   fieldWrap: { gap: spacing.xs },
   fieldLabel: { ...typography.label, color: colors.textSecondary },
   input: {
     height: sizing.input,
-    borderWidth: 0.5,
+    borderWidth: 1,
     borderColor: colors.borderLight,
     borderRadius: radius.input,
     paddingHorizontal: spacing.md,
     fontSize: 16,
     color: colors.textPrimary,
-    backgroundColor: colors.bgSecondary,
+    backgroundColor: colors.bgCard,
   },
+  inputFocused: { borderColor: colors.skyBlue, backgroundColor: colors.white, ...shadows.sm },
+  inputMultiline: { height: 96, paddingTop: spacing.md, textAlignVertical: 'top' },
   inputError: { borderColor: colors.dangerRed },
   errorText: { ...typography.caption, color: colors.dangerRed },
 });

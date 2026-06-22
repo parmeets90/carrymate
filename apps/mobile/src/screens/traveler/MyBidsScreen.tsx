@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing } from '@/theme';
 import { Card, Badge, statusTone } from '@/components/Card';
+import { EmptyState } from '@/components/widgets';
 import { api } from '@/lib/api';
 
 export function MyBidsScreen() {
@@ -25,7 +26,7 @@ export function MyBidsScreen() {
           refreshing={isRefetching}
           contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.md }}
           ListEmptyComponent={
-            <Text style={styles.empty}>No bids yet. Browse requests from your trips.</Text>
+            <EmptyState icon="🏷️" title="No bids yet" body="Browse requests from your trips to place a bid." />
           }
           renderItem={({ item }) => (
             <Card>

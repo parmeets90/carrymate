@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing } from '@/theme';
 import { Card, Badge, statusTone } from '@/components/Card';
+import { EmptyState } from '@/components/widgets';
 import { api } from '@/lib/api';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -30,10 +31,7 @@ export function MyRequestsScreen() {
           refreshing={isRefetching}
           contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.md }}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>No requests yet</Text>
-              <Text style={styles.emptyBody}>Use the Post tab to send your first item.</Text>
-            </View>
+            <EmptyState icon="📦" title="No requests yet" body="Use the Post tab to send your first item." />
           }
           renderItem={({ item }) => (
             <Card onPress={() => nav.navigate('RequestDetail', { requestId: item.id })}>

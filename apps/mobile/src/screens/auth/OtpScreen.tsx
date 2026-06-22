@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing } from '@/theme';
+import { GradientHero } from '@/components/Screen';
 import { PrimaryButton, Field } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
 import type { ScreenProps } from '@/navigation/types';
 
 export function OtpScreen({ route }: ScreenProps<'Otp'>) {
-  const insets = useSafeAreaInsets();
   const { phone } = route.params;
   const completeLogin = useAuth((s) => s.completeLogin);
   const [code, setCode] = useState('');
@@ -20,7 +19,7 @@ export function OtpScreen({ route }: ScreenProps<'Otp'>) {
     setError(undefined);
     try {
       const result = await api.verifyOtp(phone, code.trim());
-      await completeLogin(result); // navigator switches stacks based on the new user
+      await completeLogin(result);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -29,43 +28,28 @@ export function OtpScreen({ route }: ScreenProps<'Otp'>) {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={[styles.container, { paddingTop: insets.top + spacing['3xl'] }]}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>Enter the code</Text>
-        <Text style={styles.sub}>
-          Sent to {phone}. In dev, the code is printed in the API server console.
-        </Text>
-      </View>
-
-      <Field
-        label="6-digit code"
-        value={code}
-        onChangeText={setCode}
-        keyboardType="number-pad"
-        autoFocus
-        maxLength={6}
-        placeholder="000000"
-        error={error}
-      />
-
-      <View style={styles.footer}>
-        <PrimaryButton label="Verify" onPress={onVerify} loading={busy} />
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
+      <GradientHero eyebrow="Verify" title="Enter the code" subtitle={`Sent to ${phone}`} />
+      <View style={styles.body}>
+        <Field
+          label="6-digit code"
+          value={code}
+          onChangeText={setCode}
+          keyboardType="number-pad"
+          autoFocus
+          maxLength={6}
+          placeholder="••••••"
+          error={error}
+        />
+        <PrimaryButton label="Verify & continue" onPress={onVerify} loading={busy} />
+        <Text style={styles.note}>In dev, the code prints in the API server console.</Text>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bgApp,
-    paddingHorizontal: sizing.screenPaddingX,
-  },
-  header: { gap: spacing.sm, marginBottom: spacing.xl },
-  title: { ...typography.display, color: colors.textPrimary },
-  sub: { ...typography.bodyM, color: colors.textSecondary },
-  footer: { marginTop: spacing.xl },
+  flex: { flex: 1, backgroundColor: colors.bgApp },
+  body: { paddingHorizontal: sizing.screenPaddingX, paddingTop: spacing.xl, gap: spacing.lg },
+  note: { ...typography.caption, color: colors.textHint, textAlign: 'center' },
 });
