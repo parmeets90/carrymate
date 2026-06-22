@@ -21,6 +21,7 @@
   "dependencies": {
     "@carrymate/shared": "*",
     "@prisma/client": "^5.22.0",
+    "@supabase/supabase-js": "^2.46.1",
     "compression": "^1.7.5",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

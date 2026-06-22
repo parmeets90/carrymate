@@ -30,14 +30,12 @@ services:
         sync: false
       - key: TWILIO_FROM_NUMBER
         sync: false
-      - key: AWS_ACCESS_KEY_ID
+      - key: SUPABASE_URL
         sync: false
-      - key: AWS_SECRET_ACCESS_KEY
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
-      - key: AWS_REGION
-        value: ap-south-1
-      - key: AWS_S3_BUCKET
-        sync: false
+      - key: STORAGE_BUCKET
+        value: carrymate
 
   - type: web
     name: carrymate-admin

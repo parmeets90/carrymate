@@ -7,6 +7,7 @@ import { adminRouter } from '../modules/admin/admin.routes';
 import { routesRouter } from '../modules/routes/routes.routes';
 import { requestsRouter } from '../modules/requests/requests.routes';
 import { bidsRouter } from '../modules/bids/bids.routes';
+import { uploadsRouter } from '../modules/uploads/uploads.routes';
 
 /**
  * Versioned API router. All feature modules mount under /v1.
@@ -27,4 +28,5 @@ v1Router.use('/kyc', kycRouter);
 v1Router.use('/routes', routesRouter);
 v1Router.use('/requests', requestsRouter);
 v1Router.use('/bids', bidsRouter);
+v1Router.use('/uploads', uploadsRouter);
 v1Router.use('/admin', adminRouter);

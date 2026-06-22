@@ -30,6 +30,11 @@ const envSchema = z.object({
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_FROM_NUMBER: z.string().optional(),
 
+  // Storage (Supabase Storage). Provider-abstracted; Azure can replace it later.
+  SUPABASE_URL: z.string().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  STORAGE_BUCKET: z.string().default('carrymate'),
+
   // Feature flags (off by default; flipped per phase)
   ENABLE_REAL_PAYMENTS: z.coerce.boolean().default(false),
   ENABLE_AUTO_KYC: z.coerce.boolean().default(false),
@@ -79,4 +84,9 @@ export const jwtConfig = {
 /** True when real SMS delivery is configured; otherwise OTPs are logged. */
 export const isTwilioConfigured = Boolean(
   env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_FROM_NUMBER,
+);
+
+/** True when object storage (Supabase) is configured. */
+export const isStorageConfigured = Boolean(
+  env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY,
 );
