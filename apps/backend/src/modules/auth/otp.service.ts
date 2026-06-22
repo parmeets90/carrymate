@@ -9,12 +9,23 @@ const MAX_SENDS_PER_WINDOW = 3;
 const SEND_WINDOW_MINUTES = 10;
 const MAX_VERIFY_ATTEMPTS = 5;
 
+/** Numbers that bypass Twilio and accept a fixed code — for demos/testing only. */
+const TEST_NUMBERS = new Set(
+  (env.OTP_TEST_NUMBERS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
+);
+const isTestNumber = (phone: string): boolean => TEST_NUMBERS.has(phone);
+
 /**
  * Issue a login OTP.
  * - Twilio Verify (when configured): Twilio generates + delivers the code.
  * - Local fallback (dev): generate, store hashed, and log to the console.
  */
 export async function requestOtp(phone: string): Promise<{ expiresInSeconds: number }> {
+  // Test numbers never hit Twilio — the code is fixed (OTP_TEST_CODE).
+  if (isTestNumber(phone)) return { expiresInSeconds: 10 * 60 };
   if (isTwilioVerifyConfigured) {
     await startVerification(phone);
     return { expiresInSeconds: 10 * 60 };
@@ -24,6 +35,10 @@ export async function requestOtp(phone: string): Promise<{ expiresInSeconds: num
 
 /** Verify a submitted OTP. Throws on invalid/expired/locked. */
 export async function verifyOtp(phone: string, code: string): Promise<void> {
+  if (isTestNumber(phone)) {
+    if (code.trim() !== env.OTP_TEST_CODE) throw new AppError(400, 'OTP_INVALID', 'Invalid or expired code.');
+    return;
+  }
   if (isTwilioVerifyConfigured) {
     const approved = await checkVerification(phone, code);
     if (!approved) throw new AppError(400, 'OTP_INVALID', 'Invalid or expired code.');

@@ -27,6 +27,12 @@ const envSchema = z.object({
   OTP_EXPIRY_MINUTES: z.coerce.number().int().positive().default(10),
   OTP_LENGTH: z.coerce.number().int().min(4).max(8).default(6),
 
+  // Test-number bypass: comma-separated E.164 numbers that skip Twilio and accept
+  // OTP_TEST_CODE (default 000000). Lets you sign in as demo users without SMS.
+  // Only numbers explicitly listed here are affected; everything else uses Twilio.
+  OTP_TEST_NUMBERS: z.string().optional(),
+  OTP_TEST_CODE: z.string().default('000000'),
+
   // OTP via Twilio Verify. Blank in dev → OTPs are logged to the console instead of sent.
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
