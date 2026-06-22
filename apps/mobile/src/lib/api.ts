@@ -10,6 +10,7 @@ import type {
   DeliveryRequestSummary,
   BidDto,
   OrderDto,
+  OrderView,
 } from '@carrymate/shared';
 import { API_BASE_URL } from '../config';
 import { tokenStorage } from './storage';
@@ -80,4 +81,9 @@ export const api = {
   // Bids (traveler)
   createBid: (data: Record<string, unknown>) => post<BidDto>('/v1/bids', data),
   myBids: () => get<BidDto[]>('/v1/bids/mine'),
+
+  // Orders / escrow
+  myOrders: () => get<OrderView[]>('/v1/orders'),
+  payOrder: (orderId: string) => post<OrderView>(`/v1/orders/${orderId}/pay`),
+  releaseOrder: (orderId: string) => post<OrderView>(`/v1/orders/${orderId}/release`),
 };

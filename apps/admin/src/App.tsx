@@ -5,6 +5,7 @@ import { Dashboard } from './pages/Dashboard';
 import { KycReview } from './pages/KycReview';
 import { Users } from './pages/Users';
 import { Requests } from './pages/Requests';
+import { Transactions } from './pages/Transactions';
 import { Placeholder } from './pages/Placeholder';
 import { Login } from './pages/Login';
 import { useAuth } from './lib/auth';
@@ -30,6 +31,7 @@ export function App() {
         <Route path="/users" element={<Users />} />
         <Route path="/disputes" element={<Placeholder title="Disputes" phase="Phase 4" />} />
         <Route path="/requests" element={<Requests />} />
+        <Route path="/transactions" element={<Transactions />} />
         <Route path="/risk" element={<Placeholder title="Risk & Fraud" phase="Phase 6" />} />
         <Route path="*" element={<Placeholder title="Not found" phase="—" />} />
       </Routes>

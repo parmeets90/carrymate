@@ -11,6 +11,7 @@ import { AddRouteScreen } from '@/screens/traveler/AddRouteScreen';
 import { BrowseScreen } from '@/screens/traveler/BrowseScreen';
 import { PlaceBidScreen } from '@/screens/traveler/PlaceBidScreen';
 import { MyBidsScreen } from '@/screens/traveler/MyBidsScreen';
+import { OrdersScreen } from '@/screens/orders/OrdersScreen';
 import { ProfileTabScreen } from '@/screens/profile/ProfileTabScreen';
 
 const Tab = createBottomTabNavigator();
@@ -33,6 +34,7 @@ function RoleTabs() {
       <Tab.Navigator screenOptions={tabScreenOptions}>
         <Tab.Screen name="Trips" component={TripsScreen} />
         <Tab.Screen name="Bids" component={MyBidsScreen} />
+        <Tab.Screen name="Orders" component={OrdersScreen} />
         <Tab.Screen name="Profile" component={ProfileTabScreen} />
       </Tab.Navigator>
     );
@@ -43,6 +45,7 @@ function RoleTabs() {
     <Tab.Navigator screenOptions={tabScreenOptions}>
       <Tab.Screen name="Requests" component={MyRequestsScreen} />
       <Tab.Screen name="Post" component={CreateRequestScreen} />
+      <Tab.Screen name="Orders" component={OrdersScreen} />
       <Tab.Screen name="Profile" component={ProfileTabScreen} />
     </Tab.Navigator>
   );

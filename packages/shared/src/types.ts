@@ -177,6 +177,27 @@ export interface OrderDto {
   createdAt: string;
 }
 
+/** Order as shown to a participant (sender or traveler), with escrow lifecycle. */
+export interface OrderView {
+  id: string;
+  requestId: string;
+  amountInr: number;
+  commissionInr: number;
+  payoutInr: number;
+  status: string;
+  createdAt: string;
+  requestTitle: string;
+  originCity: string;
+  destinationCity: string;
+  /** The viewer's role in this order. */
+  role: 'SENDER' | 'TRAVELER';
+  counterpartyName: string | null;
+  /** Revealed only once escrow is held (anti-disintermediation). */
+  counterpartyPhone: string | null;
+  escrowHeldAt: string | null;
+  releasedAt: string | null;
+}
+
 /** Health-check payload. */
 export interface HealthStatus {
   status: 'healthy' | 'degraded';

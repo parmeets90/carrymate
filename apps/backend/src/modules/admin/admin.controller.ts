@@ -10,6 +10,7 @@ import {
   listRequests,
   forceExpireRequest,
 } from './admin.service';
+import { listAllOrders, refundOrder } from '../orders/orders.service';
 import { listUsersSchema, listRequestsSchema } from './admin.validators';
 import type { RejectKycInput, SetStatusInput } from './admin.validators';
 
@@ -49,5 +50,15 @@ export const getRequests: RequestHandler = async (req, res) => {
 
 export const postExpireRequest: RequestHandler = async (req, res) => {
   await forceExpireRequest(req.params.requestId!);
+  ok(res, { success: true });
+};
+
+export const getOrders: RequestHandler = async (req, res) => {
+  const { page, pageSize } = listRequestsSchema.parse(req.query);
+  ok(res, await listAllOrders(page, pageSize));
+};
+
+export const postRefundOrder: RequestHandler = async (req, res) => {
+  await refundOrder(req.params.orderId!);
   ok(res, { success: true });
 };

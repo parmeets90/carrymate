@@ -7,6 +7,7 @@ import {
   Users,
   AlertTriangle,
   Plane,
+  Wallet,
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,7 @@ const NAV = [
   { to: '/kyc', label: 'KYC Review', icon: ShieldCheck },
   { to: '/disputes', label: 'Disputes', icon: Scale },
   { to: '/requests', label: 'Requests', icon: Package },
+  { to: '/transactions', label: 'Transactions', icon: Wallet },
   { to: '/users', label: 'Users', icon: Users },
   { to: '/risk', label: 'Risk & Fraud', icon: AlertTriangle },
 ];

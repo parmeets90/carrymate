@@ -7,7 +7,10 @@ import type {
   Paginated,
   AdminKycReviewItem,
   DeliveryRequestSummary,
+  OrderView,
 } from '@carrymate/shared';
+
+type AdminOrder = OrderView & { senderName: string | null; travelerName: string | null };
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
@@ -101,4 +104,7 @@ export const api = {
     ),
   expireRequest: (requestId: string) =>
     authed<{ success: boolean }>(`/v1/admin/requests/${requestId}/expire`, { method: 'POST' }),
+  orders: (page = 1) => authed<Paginated<AdminOrder>>(`/v1/admin/orders?page=${page}`),
+  refundOrder: (orderId: string) =>
+    authed<{ success: boolean }>(`/v1/admin/orders/${orderId}/refund`, { method: 'POST' }),
 };

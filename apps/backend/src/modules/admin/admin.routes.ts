@@ -11,6 +11,8 @@ import {
   postSetStatus,
   getRequests,
   postExpireRequest,
+  getOrders,
+  postRefundOrder,
 } from './admin.controller';
 
 export const adminRouter = Router();
@@ -27,3 +29,6 @@ adminRouter.post('/users/:userId/status', validateBody(setStatusSchema), postSet
 
 adminRouter.get('/requests', getRequests);
 adminRouter.post('/requests/:requestId/expire', postExpireRequest);
+
+adminRouter.get('/orders', getOrders);
+adminRouter.post('/orders/:orderId/refund', postRefundOrder);

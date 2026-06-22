@@ -282,7 +282,7 @@ model Bid {
   @@map("bids")
 }
 
-/// Created when a sender accepts a bid. Payment fields are added in Phase 3.
+/// Created when a sender accepts a bid; carries the escrow/payment lifecycle.
 model Order {
   id            String      @id @default(uuid()) @db.Uuid
   requestId     String      @unique @map("request_id") @db.Uuid
@@ -293,6 +293,13 @@ model Order {
   commissionInr Int         @map("commission_inr")
   payoutInr     Int         @map("payout_inr")
   status        OrderStatus @default(PENDING_PAYMENT)
+  paymentMethod String?     @map("payment_method") // "stub" | "upi" | "card" | ...
+  razorpayOrderId   String? @unique @map("razorpay_order_id")
+  razorpayPaymentId String? @unique @map("razorpay_payment_id")
+  razorpayRefundId  String? @map("razorpay_refund_id")
+  escrowHeldAt  DateTime?   @map("escrow_held_at") @db.Timestamptz
+  releasedAt    DateTime?   @map("released_at") @db.Timestamptz
+  refundedAt    DateTime?   @map("refunded_at") @db.Timestamptz
   createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz
 
