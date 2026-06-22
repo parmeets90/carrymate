@@ -229,5 +229,6 @@ export interface HealthStatus {
   version: string;
   checks: {
     database: boolean;
+    storage?: boolean;
   };
 }

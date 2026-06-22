@@ -25,7 +25,7 @@ export function RootNavigator() {
     return (
       <Stack.Navigator screenOptions={baseOptions}>
         <Stack.Screen name="Phone" component={PhoneScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Otp" component={OtpScreen} />
+        <Stack.Screen name="Otp" component={OtpScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     );
   }

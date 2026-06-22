@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, StyleSheet, StatusBar, type ViewStyle, type StyleProp } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, StatusBar, Pressable, type ViewStyle, type StyleProp } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import type { ReactNode } from 'react';
@@ -51,10 +51,12 @@ export function GradientHero({
   eyebrow,
   title,
   subtitle,
+  onBack,
 }: {
   eyebrow?: string;
   title: string;
   subtitle?: string;
+  onBack?: () => void;
 }) {
   const insets = useSafeAreaInsets();
   return (
@@ -62,9 +64,14 @@ export function GradientHero({
       colors={[...gradients.brand]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={[styles.hero, { paddingTop: insets.top + spacing.xl }]}
+      style={[styles.hero, { paddingTop: insets.top + spacing.md }]}
     >
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      {onBack ? (
+        <Pressable onPress={onBack} hitSlop={12} style={styles.back}>
+          <Text style={styles.backChevron}>‹</Text>
+        </Pressable>
+      ) : null}
       {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
       <Text style={styles.heroTitle}>{title}</Text>
       {subtitle ? <Text style={styles.heroSubtitle}>{subtitle}</Text> : null}
@@ -85,6 +92,8 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: radiusLg(),
     borderBottomRightRadius: radiusLg(),
   },
+  back: { marginBottom: spacing.sm },
+  backChevron: { color: colors.white, fontSize: 34, lineHeight: 34, marginLeft: -4 },
   eyebrow: {
     ...typography.label,
     color: '#9FC6EC',

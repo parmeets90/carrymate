@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import type { HealthStatus } from '@carrymate/shared';
 import { prisma } from '../lib/prisma';
-import { env } from '../config/env';
+import { env, isStorageConfigured } from '../config/env';
 
 export const healthRouter = Router();
 
@@ -27,7 +27,7 @@ healthRouter.get('/health', async (_req, res) => {
     status: database ? 'healthy' : 'degraded',
     timestamp: new Date().toISOString(),
     version: env.APP_VERSION,
-    checks: { database },
+    checks: { database, storage: isStorageConfigured },
   };
 
   res.status(database ? 200 : 503).json(payload);

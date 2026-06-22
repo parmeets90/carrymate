@@ -49,10 +49,17 @@ class SupabaseStorageProvider implements StorageProvider {
   }
 
   async upload(key: string, body: Buffer, contentType: string) {
-    const { error } = await this.client.storage
-      .from(this.bucket)
-      .upload(key, body, { contentType, upsert: true });
-    if (error) throw AppError.internal(`Storage upload failed: ${error.message}`);
+    try {
+      // Wrap as a Blob — supabase-js handles this consistently across Node versions.
+      const blob = new Blob([body], { type: contentType });
+      const { error } = await this.client.storage
+        .from(this.bucket)
+        .upload(key, blob, { contentType, upsert: true });
+      if (error) throw AppError.internal(`Storage upload failed: ${error.message}`);
+    } catch (e) {
+      if (e instanceof AppError) throw e;
+      throw AppError.internal(`Storage upload error: ${(e as Error).message}`);
+    }
   }
 }
 
@@ -63,7 +70,11 @@ export function storage(): StorageProvider {
   if (!isStorageConfigured) {
     throw new AppError(503, 'STORAGE_NOT_CONFIGURED', 'File storage is not configured.');
   }
-  provider ??= new SupabaseStorageProvider();
+  try {
+    provider ??= new SupabaseStorageProvider();
+  } catch (e) {
+    throw AppError.internal(`Storage init failed: ${(e as Error).message}`);
+  }
   return provider;
 }
 

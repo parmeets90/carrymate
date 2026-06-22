@@ -7,7 +7,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
 import type { ScreenProps } from '@/navigation/types';
 
-export function OtpScreen({ route }: ScreenProps<'Otp'>) {
+export function OtpScreen({ route, navigation }: ScreenProps<'Otp'>) {
   const { phone } = route.params;
   const completeLogin = useAuth((s) => s.completeLogin);
   const [code, setCode] = useState('');
@@ -29,7 +29,7 @@ export function OtpScreen({ route }: ScreenProps<'Otp'>) {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
-      <GradientHero eyebrow="Verify" title="Enter the code" subtitle={`Sent to ${phone}`} />
+      <GradientHero eyebrow="Verify" title="Enter the code" subtitle={`Sent to ${phone}`} onBack={() => navigation.goBack()} />
       <View style={styles.body}>
         <Field
           label="6-digit code"
