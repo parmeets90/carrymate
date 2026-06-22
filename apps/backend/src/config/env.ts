@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 
 /**
@@ -13,11 +14,20 @@ const envSchema = z.object({
   APP_VERSION: z.string().default('0.1.0'),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
 
-  // Auth (used from Phase 1)
+  // Auth / JWT (used from Phase 1)
   JWT_ACCESS_SECRET: z.string().optional(),
   JWT_REFRESH_SECRET: z.string().optional(),
   JWT_ACCESS_EXPIRY: z.string().default('15m'),
   JWT_REFRESH_EXPIRY: z.string().default('7d'),
+
+  // OTP
+  OTP_EXPIRY_MINUTES: z.coerce.number().int().positive().default(10),
+  OTP_LENGTH: z.coerce.number().int().min(4).max(8).default(6),
+
+  // SMS (Twilio). Blank in dev → OTPs are logged to the console instead of sent.
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_FROM_NUMBER: z.string().optional(),
 
   // Feature flags (off by default; flipped per phase)
   ENABLE_REAL_PAYMENTS: z.coerce.boolean().default(false),
@@ -40,3 +50,32 @@ if (!parsed.success) {
 export const env = parsed.data;
 export const isProd = env.NODE_ENV === 'production';
 export const isDev = env.NODE_ENV === 'development';
+
+/**
+ * JWT secrets are mandatory in production. In dev/test we generate ephemeral
+ * secrets if they're missing so the app runs out of the box (tokens won't
+ * survive a restart — fine for local work).
+ */
+function resolveJwtSecret(value: string | undefined, name: string): string {
+  if (value && value.length >= 16) return value;
+  if (isProd) {
+    // eslint-disable-next-line no-console
+    console.error(`❌ ${name} must be set (min 16 chars) in production.`);
+    process.exit(1);
+  }
+  // eslint-disable-next-line no-console
+  console.warn(`⚠️  ${name} not set — using an ephemeral dev secret.`);
+  return randomBytes(32).toString('hex');
+}
+
+export const jwtConfig = {
+  accessSecret: resolveJwtSecret(env.JWT_ACCESS_SECRET, 'JWT_ACCESS_SECRET'),
+  refreshSecret: resolveJwtSecret(env.JWT_REFRESH_SECRET, 'JWT_REFRESH_SECRET'),
+  accessExpiry: env.JWT_ACCESS_EXPIRY,
+  refreshExpiry: env.JWT_REFRESH_EXPIRY,
+};
+
+/** True when real SMS delivery is configured; otherwise OTPs are logged. */
+export const isTwilioConfigured = Boolean(
+  env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_FROM_NUMBER,
+);

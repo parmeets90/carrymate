@@ -41,6 +41,7 @@ model User {
   role         UserRole   @default(SENDER)
   status       UserStatus @default(ACTIVE)
   kycStatus    KycStatus  @default(PENDING) @map("kyc_status")
+  phoneVerified Boolean   @default(false) @map("phone_verified")
   language     String     @default("en") @db.VarChar(5)
   ratingAvg    Decimal    @default(5.0) @map("rating_avg") @db.Decimal(3, 2)
   ratingCount  Int        @default(0) @map("rating_count")
@@ -49,8 +50,39 @@ model User {
   createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz
 
+  refreshTokens RefreshToken[]
+
   @@index([kycStatus])
   @@index([status])
   @@index([role])
   @@map("users")
+}
+
+/// One-time passcodes for phone login. Codes are stored hashed, never plaintext.
+model PhoneOtp {
+  id         String    @id @default(uuid()) @db.Uuid
+  phone      String    @db.VarChar(15)
+  codeHash   String    @map("code_hash")
+  attempts   Int       @default(0)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([phone, createdAt])
+  @@map("phone_otps")
+}
+
+/// Hashed refresh tokens for rotation + revocation (no Redis in this stack).
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }

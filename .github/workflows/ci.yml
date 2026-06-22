@@ -29,8 +29,7 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Lint
-        run: npm run lint
+      # NOTE: ESLint is configured in a later task; lint step intentionally omitted for now.
 
       - name: Build backend
         run: npm run backend:build

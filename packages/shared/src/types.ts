@@ -31,6 +31,35 @@ export interface Paginated<T> {
   total: number;
 }
 
+/** A user as exposed to clients (no sensitive fields). */
+export interface PublicUser {
+  id: string;
+  phone: string;
+  email: string | null;
+  fullName: string | null;
+  role: string;
+  status: string;
+  kycStatus: string;
+  phoneVerified: boolean;
+  ratingAvg: number;
+  ratingCount: number;
+  createdAt: string;
+}
+
+/** Access + refresh tokens returned to the client. */
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  accessExpiresIn: number;
+}
+
+/** Result of a successful OTP verification / login. */
+export interface AuthResult {
+  user: PublicUser;
+  tokens: AuthTokens;
+  isNewUser: boolean;
+}
+
 /** Health-check payload. */
 export interface HealthStatus {
   status: 'healthy' | 'degraded';
