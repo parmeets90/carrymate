@@ -25,10 +25,11 @@ const envSchema = z.object({
   OTP_EXPIRY_MINUTES: z.coerce.number().int().positive().default(10),
   OTP_LENGTH: z.coerce.number().int().min(4).max(8).default(6),
 
-  // SMS (Twilio). Blank in dev → OTPs are logged to the console instead of sent.
+  // OTP via Twilio Verify. Blank in dev → OTPs are logged to the console instead of sent.
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
-  TWILIO_FROM_NUMBER: z.string().optional(),
+  TWILIO_FROM_NUMBER: z.string().optional(), // legacy (Messages); unused with Verify
+  TWILIO_VERIFY_SERVICE_SID: z.string().optional(),
 
   // Storage (Supabase Storage). Provider-abstracted; Azure can replace it later.
   SUPABASE_URL: z.string().optional(),
@@ -81,9 +82,9 @@ export const jwtConfig = {
   refreshExpiry: env.JWT_REFRESH_EXPIRY,
 };
 
-/** True when real SMS delivery is configured; otherwise OTPs are logged. */
-export const isTwilioConfigured = Boolean(
-  env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_FROM_NUMBER,
+/** True when Twilio Verify is configured; otherwise OTPs are logged to console (dev). */
+export const isTwilioVerifyConfigured = Boolean(
+  env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_VERIFY_SERVICE_SID,
 );
 
 /** True when object storage (Supabase) is configured. */
