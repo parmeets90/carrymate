@@ -31,7 +31,8 @@ enum UserStatus {
 
 enum KycStatus {
   PENDING
-  IN_REVIEW
+  VERIFYING // submitted to IDFY, awaiting the async result
+  IN_REVIEW // needs a human (manual review queue)
   VERIFIED
   REJECTED
 }
@@ -58,6 +59,11 @@ model User {
   role         UserRole   @default(SENDER)
   status       UserStatus @default(ACTIVE)
   kycStatus    KycStatus  @default(PENDING) @map("kyc_status")
+  // KYC resilience (Challenge 02): retry counter, last failure reason, and when
+  // the doc was submitted to IDFY (drives the timeout→manual watcher).
+  selfieAttemptCount Int       @default(0) @map("selfie_attempt_count")
+  kycFailureReason   String?   @map("kyc_failure_reason")
+  kycSubmittedAt     DateTime? @map("kyc_submitted_at") @db.Timestamptz
   phoneVerified Boolean   @default(false) @map("phone_verified")
   passwordHash String?    @map("password_hash") // admins only (email + password login)
   language     String     @default("en") @db.VarChar(5)

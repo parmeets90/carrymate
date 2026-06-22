@@ -4,9 +4,11 @@ import { logger } from './utils/logger';
 import { prisma } from './lib/prisma';
 import { runAutoConfirm } from './modules/orders/orders.service';
 import { runPaymentReconciliation } from './jobs/payment-reconciliation';
+import { runKycTimeoutSweep } from './jobs/kyc-timeout';
 
 const AUTO_CONFIRM_INTERVAL_MS = 10 * 60_000; // every 10 min
 const RECONCILIATION_INTERVAL_MS = 15 * 60_000; // every 15 min
+const KYC_TIMEOUT_INTERVAL_MS = 5 * 60_000; // every 5 min
 
 async function bootstrap(): Promise<void> {
   const app = createApp();
@@ -29,6 +31,12 @@ async function bootstrap(): Promise<void> {
     runPaymentReconciliation().catch((err) => logger.error('reconciliation sweep failed', err));
   }, RECONCILIATION_INTERVAL_MS);
   reconciliationTimer.unref();
+
+  // KYC timeout watcher (rescues users stuck in VERIFYING if IDFY never calls back).
+  const kycTimeoutTimer = setInterval(() => {
+    runKycTimeoutSweep().catch((err) => logger.error('kyc timeout sweep failed', err));
+  }, KYC_TIMEOUT_INTERVAL_MS);
+  kycTimeoutTimer.unref();
 
   const shutdown = async (signal: string): Promise<void> => {
     logger.info(`${signal} received — shutting down gracefully`);

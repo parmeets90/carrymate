@@ -23,10 +23,22 @@ export async function listPendingKyc(): Promise<AdminKycReviewItem[]> {
     include: { kycDocuments: { orderBy: { createdAt: 'asc' } } },
   });
 
-  return users.map((u) => ({
+  return users.map(buildReviewItem);
+}
+
+/** Assemble a KYC review item with IDFY context (scores + failure reason). */
+function buildReviewItem(
+  u: Prisma.UserGetPayload<{ include: { kycDocuments: true } }>,
+): AdminKycReviewItem {
+  const selfie = u.kycDocuments.find((d) => d.docType === 'SELFIE');
+  const meta = (selfie?.meta ?? null) as { faceMatchScore?: number; ocrConfidence?: number } | null;
+  return {
     user: toPublicUser(u),
     documents: u.kycDocuments.map(toKycDocumentDto),
-  }));
+    failureReason: u.kycFailureReason ?? null,
+    faceMatchScore: meta?.faceMatchScore ?? null,
+    ocrConfidence: meta?.ocrConfidence ?? null,
+  };
 }
 
 export async function approveKyc(userId: string, adminId: string): Promise<void> {
@@ -100,7 +112,7 @@ export async function getUserDetail(userId: string): Promise<AdminKycReviewItem>
     include: { kycDocuments: { orderBy: { createdAt: 'asc' } } },
   });
   if (!user) throw AppError.notFound('User not found');
-  return { user: toPublicUser(user), documents: user.kycDocuments.map(toKycDocumentDto) };
+  return buildReviewItem(user);
 }
 
 /** Marketplace request monitor for ops. */

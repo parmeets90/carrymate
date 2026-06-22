@@ -52,6 +52,12 @@ const envSchema = z.object({
   RAZORPAY_KEY_SECRET: z.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
 
+  // IDFY (automated KYC). Used only when ENABLE_AUTO_KYC is on AND these are set;
+  // otherwise KYC falls back to manual admin review.
+  IDFY_BASE_URL: z.string().optional(),
+  IDFY_API_KEY: z.string().optional(),
+  IDFY_ACCOUNT_ID: z.string().optional(),
+
   // Feature flags (off by default; flipped per phase)
   ENABLE_REAL_PAYMENTS: z.coerce.boolean().default(false),
   ENABLE_AUTO_KYC: z.coerce.boolean().default(false),
@@ -110,3 +116,8 @@ export const isStorageConfigured = Boolean(
 
 /** True when push (FCM) is configured; otherwise pushes are logged, not sent. */
 export const isPushConfigured = Boolean(env.FCM_SERVER_KEY);
+
+/** True when automated KYC (IDFY) is fully configured; else KYC is manual. */
+export const isIdfyConfigured = Boolean(
+  env.ENABLE_AUTO_KYC && env.IDFY_BASE_URL && env.IDFY_API_KEY && env.IDFY_ACCOUNT_ID,
+);

@@ -1,10 +1,13 @@
 import type { KycDocType } from '@carrymate/shared';
 import type { KycStatusResult } from '@carrymate/shared';
+import { NotificationType } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
-import { env } from '../../config/env';
+import { isIdfyConfigured } from '../../config/env';
 import { hmac } from '../../utils/crypto';
 import { logger } from '../../utils/logger';
 import { writeAudit } from '../../utils/audit';
+import { createNotification } from '../notifications/notifications.service';
+import { submitVerification, decideFromScores, KYC_THRESHOLDS } from './idfy';
 import { toKycDocumentDto } from './kyc.serializer';
 
 interface SubmitDocInput {
@@ -73,18 +76,117 @@ export async function submitKycDocument(
     },
   });
 
-  // Move the user into review unless they're already verified.
-  await prisma.user.updateMany({
-    where: { id: userId, kycStatus: { in: ['PENDING', 'REJECTED'] } },
-    data: { kycStatus: 'IN_REVIEW' },
-  });
-
-  if (env.ENABLE_AUTO_KYC) {
-    // Extension point: trigger IDFY verification here when configured.
-    logger.info(`[KYC] auto-KYC flag on for user ${userId} (IDFY integration pending)`);
+  if (isIdfyConfigured) {
+    // Automated path: the selfie is the final step that kicks off verification.
+    if (input.docType === 'SELFIE') {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { kycStatus: 'VERIFYING', kycSubmittedAt: new Date(), kycFailureReason: null },
+      });
+      try {
+        await submitVerification(userId);
+      } catch (err) {
+        // Fix 3 — IDFY down/unavailable → graceful fallback to manual review.
+        logger.error(`[KYC] IDFY submit failed for ${userId}: ${(err as Error).message}`);
+        await prisma.user.update({
+          where: { id: userId },
+          data: { kycStatus: 'IN_REVIEW', kycFailureReason: 'IDFY_UNAVAILABLE' },
+        });
+      }
+    }
+    // Non-selfie docs are stored but don't move the user into a queue yet.
+  } else {
+    // Manual path: move the user into the admin review queue.
+    await prisma.user.updateMany({
+      where: { id: userId, kycStatus: { in: ['PENDING', 'REJECTED'] } },
+      data: { kycStatus: 'IN_REVIEW' },
+    });
   }
 
   return getKycStatus(userId);
+}
+
+/**
+ * Apply an IDFY async result (Challenge 02 + B1 Fix 2). Never auto-rejects on a
+ * face-match miss alone — it retries up to a cap, then routes to manual review.
+ */
+export async function applyIdfyResult(
+  userId: string,
+  scores: { faceMatchScore: number; ocrConfidence: number },
+): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return;
+  // Ignore late results for an already-decided user.
+  if (user.kycStatus === 'VERIFIED' || user.kycStatus === 'IN_REVIEW') return;
+
+  // Stash the scores on the selfie doc for the admin reviewer.
+  await prisma.kycDocument.updateMany({
+    where: { userId, docType: 'SELFIE' },
+    data: { provider: 'idfy', meta: scores as never },
+  });
+
+  const decision = decideFromScores(scores.faceMatchScore, scores.ocrConfidence);
+
+  if (decision === 'APPROVE') {
+    await prisma.$transaction([
+      prisma.kycDocument.updateMany({
+        where: { userId },
+        data: { status: 'APPROVED', reviewedAt: new Date(), rejectReason: null },
+      }),
+      prisma.user.update({ where: { id: userId }, data: { kycStatus: 'VERIFIED', kycFailureReason: null } }),
+    ]);
+    logger.info(`[KYC] auto-approved ${userId} (face ${scores.faceMatchScore}, ocr ${scores.ocrConfidence})`);
+    await createNotification({
+      userId,
+      type: NotificationType.KYC_VERIFIED,
+      title: 'Identity verified ✅',
+      body: 'Your KYC is approved. You can now send and carry items on CarryMate.',
+    });
+    return;
+  }
+
+  if (decision === 'MANUAL') {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { kycStatus: 'IN_REVIEW', kycFailureReason: `Low confidence (face ${scores.faceMatchScore})` },
+    });
+    await createNotification({
+      userId,
+      type: NotificationType.SYSTEM,
+      title: 'Verifying your details',
+      body: 'Our team is reviewing your documents — we’ll get back to you within 2 hours.',
+    });
+    return;
+  }
+
+  // RETRY — face match below the floor.
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: { selfieAttemptCount: { increment: 1 } },
+  });
+  if (updated.selfieAttemptCount >= KYC_THRESHOLDS.MAX_SELFIE_ATTEMPTS) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { kycStatus: 'IN_REVIEW', kycFailureReason: 'FACE_MATCH_FAILED_MAX_RETRIES' },
+    });
+    await createNotification({
+      userId,
+      type: NotificationType.SYSTEM,
+      title: 'Verifying your details',
+      body: 'We couldn’t auto-verify your selfie. Our team will review it within 2 hours.',
+    });
+  } else {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { kycStatus: 'PENDING', kycFailureReason: 'FACE_MATCH_FAILED' },
+    });
+    await createNotification({
+      userId,
+      type: NotificationType.SYSTEM,
+      title: 'Selfie didn’t match',
+      body: 'Please retake your selfie in good lighting, facing the camera, without glasses.',
+    });
+  }
 }
 
 export async function getKycStatus(userId: string): Promise<KycStatusResult> {

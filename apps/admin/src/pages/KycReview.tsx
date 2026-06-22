@@ -51,7 +51,7 @@ export function KycReview() {
       )}
 
       <div className="grid gap-4">
-        {data?.map(({ user, documents }) => {
+        {data?.map(({ user, documents, failureReason, faceMatchScore, ocrConfidence }) => {
           const busy =
             (approve.isPending || reject.isPending) && pendingId === user.id;
           return (
@@ -67,6 +67,23 @@ export function KycReview() {
                   {user.kycStatus}
                 </span>
               </div>
+
+              {(failureReason || faceMatchScore != null) && (
+                <div className="mt-3 rounded-lg bg-muted/50 p-3 text-xs">
+                  {failureReason && (
+                    <p>
+                      <span className="font-medium text-muted-foreground">Reason: </span>
+                      {failureReason}
+                    </p>
+                  )}
+                  {faceMatchScore != null && (
+                    <p className="mt-0.5">
+                      <span className="font-medium text-muted-foreground">IDFY: </span>
+                      face match {faceMatchScore}% · OCR {ocrConfidence ?? '—'}%
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {documents.map((d) => (

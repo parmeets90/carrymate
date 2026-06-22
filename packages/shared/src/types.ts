@@ -81,6 +81,11 @@ export interface KycStatusResult {
 export interface AdminKycReviewItem {
   user: PublicUser;
   documents: KycDocumentDto[];
+  /** Why the user landed in manual review (IDFY failure/timeout/low score). */
+  failureReason: string | null;
+  /** IDFY confidence scores when an automated check ran. */
+  faceMatchScore: number | null;
+  ocrConfidence: number | null;
 }
 
 /** A traveler's trip. */

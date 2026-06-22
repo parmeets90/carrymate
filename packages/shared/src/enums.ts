@@ -18,6 +18,7 @@ export enum UserStatus {
 
 export enum KycStatus {
   PENDING = 'PENDING',
+  VERIFYING = 'VERIFYING',
   IN_REVIEW = 'IN_REVIEW',
   VERIFIED = 'VERIFIED',
   REJECTED = 'REJECTED',
