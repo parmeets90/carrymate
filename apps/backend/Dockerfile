@@ -1,5 +1,5 @@
 # ── Build stage ───────────────────────────────
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /repo
 
 # Install workspace deps (root + shared + backend)
@@ -16,7 +16,7 @@ RUN npm run build -w @carrymate/shared \
  && npm run build -w @carrymate/backend
 
 # ── Runtime stage ─────────────────────────────
-FROM node:20-alpine AS runtime
+FROM node:22-alpine AS runtime
 WORKDIR /repo
 ENV NODE_ENV=production
 
