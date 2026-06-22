@@ -6,9 +6,10 @@ import { prisma } from './lib/prisma';
 async function bootstrap(): Promise<void> {
   const app = createApp();
 
-  const server = app.listen(env.PORT, () => {
-    logger.info(`🚀 ${env.APP_NAME} API listening on http://localhost:${env.PORT}`);
-    logger.info(`   Health: http://localhost:${env.PORT}/health`);
+  // Bind 0.0.0.0 so PaaS load balancers (Render) can reach the container.
+  const server = app.listen(env.PORT, '0.0.0.0', () => {
+    logger.info(`🚀 ${env.APP_NAME} API listening on 0.0.0.0:${env.PORT}`);
+    logger.info(`   Liveness: /healthz · Readiness: /health`);
     logger.info(`   Env: ${env.NODE_ENV}`);
   });
 

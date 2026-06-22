@@ -11,7 +11,7 @@ services:
     # --include=dev: NODE_ENV=production would otherwise skip devDeps (typescript, @types, prisma) needed to build.
     buildCommand: npm install --include=dev && npm run shared:build && npm run db:generate && npm run backend:build && npm run migrate:deploy -w @carrymate/backend
     startCommand: npm run backend:start
-    healthCheckPath: /health
+    healthCheckPath: /healthz
     envVars:
       - key: NODE_ENV
         value: production
