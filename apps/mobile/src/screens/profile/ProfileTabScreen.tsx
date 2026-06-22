@@ -1,14 +1,44 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, typography, sizing } from '@/theme';
+import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { Card, Badge } from '@/components/Card';
 import { Avatar } from '@/components/widgets';
 import { SecondaryButton } from '@/components/ui';
+import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
+
+type Role = 'SENDER' | 'TRAVELER' | 'BOTH';
+
+const ROLES: { value: Role; label: string; hint: string }[] = [
+  { value: 'SENDER', label: 'Sender', hint: 'Send packages with travelers' },
+  { value: 'TRAVELER', label: 'Traveler', hint: 'Carry items on your trips' },
+  { value: 'BOTH', label: 'Both', hint: 'Send and carry' },
+];
 
 export function ProfileTabScreen() {
   const insets = useSafeAreaInsets();
-  const { user, signOut } = useAuth();
+  const qc = useQueryClient();
+  const { user, setUser, signOut } = useAuth();
+  const [saving, setSaving] = useState<Role | null>(null);
+
+  const current = (user?.role as Role) ?? 'SENDER';
+
+  const switchRole = async (role: Role) => {
+    if (role === current || saving) return;
+    setSaving(role);
+    try {
+      const updated = await api.updateProfile({ role });
+      setUser(updated);
+      // Role drives tabs + listings — clear cached lists so they refetch fresh.
+      qc.invalidateQueries();
+    } catch (e) {
+      Alert.alert('Could not switch role', (e as Error).message);
+    } finally {
+      setSaving(null);
+    }
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
@@ -20,12 +50,40 @@ export function ProfileTabScreen() {
         <Text style={styles.phone}>{user?.phone}</Text>
         <View style={styles.badges}>
           {user?.kycStatus === 'VERIFIED' && <Badge label="KYC verified" tone="gold" />}
-          <Badge label={user?.role ?? 'SENDER'} tone="sky" />
+          <Badge label={current} tone="sky" />
           {typeof user?.ratingAvg === 'number' && user.ratingCount > 0 && (
             <Badge label={`★ ${user.ratingAvg.toFixed(1)}`} tone="neutral" />
           )}
         </View>
       </Card>
+
+      <Text style={styles.sectionLabel}>YOUR ROLE</Text>
+      <Card style={{ gap: spacing.sm }}>
+        {ROLES.map((r) => {
+          const active = current === r.value;
+          const busy = saving === r.value;
+          return (
+            <Pressable
+              key={r.value}
+              onPress={() => switchRole(r.value)}
+              style={[styles.roleRow, active && styles.roleRowActive]}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.roleLabel, active && styles.roleLabelActive]}>{r.label}</Text>
+                <Text style={styles.roleHint}>{r.hint}</Text>
+              </View>
+              {busy ? (
+                <ActivityIndicator color={colors.skyBlue} />
+              ) : (
+                <View style={[styles.radio, active && styles.radioActive]}>
+                  {active && <View style={styles.radioDot} />}
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
+      </Card>
+      <Text style={styles.note}>Switching changes which tabs and listings you see.</Text>
 
       <View style={{ marginTop: spacing.xl }}>
         <SecondaryButton label="Sign out" onPress={signOut} tone="danger" />
@@ -40,4 +98,32 @@ const styles = StyleSheet.create({
   name: { ...typography.titleL, color: colors.textPrimary, marginTop: spacing.sm },
   phone: { ...typography.bodyM, color: colors.textSecondary },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm, justifyContent: 'center' },
+  sectionLabel: { ...typography.label, color: colors.textSecondary, marginTop: spacing.xl, marginBottom: spacing.sm, marginLeft: spacing.xs },
+  roleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.card,
+    borderWidth: 0.5,
+    borderColor: colors.borderLight,
+    backgroundColor: colors.bgCard,
+  },
+  roleRowActive: { borderColor: colors.skyBlue, backgroundColor: colors.skyLight },
+  roleLabel: { ...typography.bodyL, fontWeight: '700', color: colors.textPrimary },
+  roleLabelActive: { color: colors.navyMid },
+  roleHint: { ...typography.bodyM, color: colors.textSecondary, marginTop: 1 },
+  radio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: colors.borderLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioActive: { borderColor: colors.skyBlue },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.skyBlue },
+  note: { ...typography.caption, color: colors.textHint, marginTop: spacing.sm, marginLeft: spacing.xs },
 });
