@@ -4,18 +4,24 @@
 export { colors } from './colors';
 
 /**
- * Type scale. fontFamily intentionally omitted until Plus Jakarta Sans + Inter
- * are bundled as RN assets; the sizes/weights/spacing match the spec and fall
- * back to the system font in the meantime.
+ * Type scale. Plus Jakarta Sans (display/headings) + Inter (body/UI) are bundled
+ * as variable fonts (apps/mobile/src/assets/fonts, mirrored into android assets).
+ * Variable fonts expose a single family per typeface; weight is driven by
+ * `fontWeight`, which Android maps onto the font's wght axis.
  */
+export const fonts = {
+  display: 'PlusJakartaSans',
+  body: 'Inter',
+} as const;
+
 export const typography = {
-  display: { fontSize: 28, fontWeight: '600' as const, letterSpacing: -0.5 },
-  titleL: { fontSize: 22, fontWeight: '600' as const },
-  titleM: { fontSize: 18, fontWeight: '500' as const },
-  bodyL: { fontSize: 16, fontWeight: '400' as const, lineHeight: 24 },
-  bodyM: { fontSize: 14, fontWeight: '400' as const, lineHeight: 21 },
-  label: { fontSize: 12, fontWeight: '500' as const, letterSpacing: 0.5 },
-  caption: { fontSize: 11, fontWeight: '400' as const },
+  display: { fontFamily: fonts.display, fontSize: 28, fontWeight: '600' as const, letterSpacing: -0.5 },
+  titleL: { fontFamily: fonts.display, fontSize: 22, fontWeight: '600' as const },
+  titleM: { fontFamily: fonts.display, fontSize: 18, fontWeight: '500' as const },
+  bodyL: { fontFamily: fonts.body, fontSize: 16, fontWeight: '400' as const, lineHeight: 24 },
+  bodyM: { fontFamily: fonts.body, fontSize: 14, fontWeight: '400' as const, lineHeight: 21 },
+  label: { fontFamily: fonts.body, fontSize: 12, fontWeight: '500' as const, letterSpacing: 0.5 },
+  caption: { fontFamily: fonts.body, fontSize: 11, fontWeight: '400' as const },
 } as const;
 
 export const spacing = {

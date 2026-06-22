@@ -32,6 +32,43 @@ client.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+/** An error carrying the backend's coded message + field-level validation details. */
+export interface ApiClientError extends Error {
+  code?: string;
+  details?: Record<string, string[]>;
+  status?: number;
+}
+
+/**
+ * Turn non-2xx responses into clean, readable errors. Without this, axios throws
+ * a generic "Request failed with status code 400" and the backend's real message
+ * (e.g. "Deadline must be at least 3 days away") + field errors are lost.
+ */
+client.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    const data = error?.response?.data;
+    if (data && data.success === false && data.error) {
+      const err = new Error(data.error.message) as ApiClientError;
+      err.code = data.error.code;
+      err.details = data.error.details;
+      err.status = error.response.status;
+      return Promise.reject(err);
+    }
+    return Promise.reject(error);
+  },
+);
+
+/** First human-readable field error from a validation failure, if any. */
+export function firstFieldError(e: unknown): string | undefined {
+  const details = (e as ApiClientError)?.details;
+  if (!details) return undefined;
+  for (const messages of Object.values(details)) {
+    if (messages?.length) return messages[0];
+  }
+  return undefined;
+}
+
 /** Unwrap the {success,data|error} envelope; throw a coded error on failure. */
 function unwrap<T>(body: ApiResponse<T>): T {
   if (!body.success) {
