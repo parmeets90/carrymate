@@ -1,12 +1,20 @@
 import type { RequestHandler } from 'express';
 import { ok } from '../../utils/response';
 import { toPublicUser } from '../users/user.serializer';
-import { sendLoginOtp, verifyLoginOtp, refreshSession, logout, updateProfile } from './auth.service';
+import {
+  sendLoginOtp,
+  verifyLoginOtp,
+  refreshSession,
+  logout,
+  updateProfile,
+  adminLogin,
+} from './auth.service';
 import type {
   SendOtpInput,
   VerifyOtpInput,
   RefreshInput,
   UpdateProfileInput,
+  AdminLoginInput,
 } from './auth.validators';
 
 /** Mask a phone for display, keeping country code + last 2 digits. */
@@ -24,6 +32,12 @@ export const postSendOtp: RequestHandler = async (req, res) => {
 export const postVerifyOtp: RequestHandler = async (req, res) => {
   const { phone, code, fcmToken } = req.body as VerifyOtpInput;
   const result = await verifyLoginOtp(phone, code, fcmToken);
+  ok(res, result);
+};
+
+export const postAdminLogin: RequestHandler = async (req, res) => {
+  const { email, password } = req.body as AdminLoginInput;
+  const result = await adminLogin(email, password);
   ok(res, result);
 };
 

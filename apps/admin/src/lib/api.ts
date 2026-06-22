@@ -70,17 +70,10 @@ async function authed<T>(path: string, init: RequestInit = {}): Promise<T> {
 export const api = {
   health: (): Promise<HealthStatus> => fetch(`${BASE_URL}/health`).then((r) => r.json()),
 
-  sendOtp: (phone: string) =>
-    raw<{ phoneMasked: string; expiresInSeconds: number }>(
-      '/v1/auth/send-otp',
-      { method: 'POST', body: JSON.stringify({ phone }) },
-      false,
-    ),
-
-  verifyOtp: (phone: string, code: string) =>
+  adminLogin: (email: string, password: string) =>
     raw<AuthResult>(
-      '/v1/auth/verify-otp',
-      { method: 'POST', body: JSON.stringify({ phone, code }) },
+      '/v1/auth/admin/login',
+      { method: 'POST', body: JSON.stringify({ email, password }) },
       false,
     ),
 

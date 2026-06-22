@@ -59,6 +59,7 @@ model User {
   status       UserStatus @default(ACTIVE)
   kycStatus    KycStatus  @default(PENDING) @map("kyc_status")
   phoneVerified Boolean   @default(false) @map("phone_verified")
+  passwordHash String?    @map("password_hash") // admins only (email + password login)
   language     String     @default("en") @db.VarChar(5)
   ratingAvg    Decimal    @default(5.0) @map("rating_avg") @db.Decimal(3, 2)
   ratingCount  Int        @default(0) @map("rating_count")

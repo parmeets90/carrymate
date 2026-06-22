@@ -1,24 +1,33 @@
 import { prisma } from '../lib/prisma';
 import { logger } from '../utils/logger';
+import { hashPassword } from '../utils/crypto';
 
 /**
  * Database seed. Kept current each phase so admin + apps are always testable.
- * Phase 0: a single admin user placeholder. Expanded per phase.
+ * Admin logs in with email + password (set ADMIN_EMAIL / ADMIN_PASSWORD).
  */
 async function main(): Promise<void> {
+  const adminEmail = (process.env.ADMIN_EMAIL ?? 'admin@carrymate.in').toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD ?? 'ChangeMe123!';
+  if (!process.env.ADMIN_PASSWORD) {
+    logger.warn('⚠️  ADMIN_PASSWORD not set — using default "ChangeMe123!". Change it.');
+  }
+  const passwordHash = hashPassword(adminPassword);
+
   const admin = await prisma.user.upsert({
     where: { phone: '+910000000000' },
-    update: {},
+    update: { email: adminEmail, passwordHash, role: 'ADMIN', status: 'ACTIVE' },
     create: {
       phone: '+910000000000',
-      email: 'admin@carrymate.in',
+      email: adminEmail,
       fullName: 'CarryMate Admin',
       role: 'ADMIN',
       status: 'ACTIVE',
       kycStatus: 'VERIFIED',
+      passwordHash,
     },
   });
-  logger.info(`Seeded admin user: ${admin.id}`);
+  logger.info(`Seeded admin: ${admin.email} (login with email + password)`);
 
   // A sender awaiting KYC review (populates the admin queue).
   const sender = await prisma.user.upsert({

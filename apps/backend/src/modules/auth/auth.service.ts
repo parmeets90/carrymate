@@ -2,6 +2,7 @@ import type { AuthResult, AuthTokens } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import { toPublicUser } from '../users/user.serializer';
+import { verifyPassword } from '../../utils/crypto';
 import { requestOtp, verifyOtp } from './otp.service';
 import { issueTokens, rotateRefreshToken, revokeRefreshToken } from './token.service';
 
@@ -46,6 +47,23 @@ export async function updateProfile(
 ): Promise<ReturnType<typeof toPublicUser>> {
   const user = await prisma.user.update({ where: { id: userId }, data });
   return toPublicUser(user);
+}
+
+/** Admin login with email + password (no OTP). Only ADMIN accounts. */
+export async function adminLogin(email: string, password: string): Promise<AuthResult> {
+  const user = await prisma.user.findUnique({ where: { email } });
+  const invalid = AppError.unauthorized('INVALID_CREDENTIALS', 'Invalid email or password.');
+
+  // Run a hash verify even when the user/hash is missing to avoid timing leaks.
+  const stored = user?.passwordHash ?? 'scrypt$0$0';
+  const ok = verifyPassword(password, stored);
+
+  if (!user || !user.passwordHash || !ok) throw invalid;
+  if (user.role !== 'ADMIN') throw AppError.forbidden('Not an administrator account.');
+  if (user.status !== 'ACTIVE') throw AppError.forbidden('Account is not active.', 'USER_SUSPENDED');
+
+  const tokens = await issueTokens(user.id);
+  return { user: toPublicUser(user), tokens, isNewUser: false };
 }
 
 /** Rotate tokens using a valid refresh token. */

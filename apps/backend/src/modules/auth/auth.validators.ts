@@ -20,6 +20,11 @@ export const refreshSchema = z.object({
   refreshToken: z.string().trim().min(1, 'refreshToken is required'),
 });
 
+export const adminLoginSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(1, 'Password is required'),
+});
+
 export const updateProfileSchema = z
   .object({
     fullName: z.string().trim().min(2).max(100).optional(),
@@ -30,6 +35,7 @@ export const updateProfileSchema = z
     message: 'Provide at least one field to update',
   });
 
+export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
 export type SendOtpInput = z.infer<typeof sendOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type RefreshInput = z.infer<typeof refreshSchema>;
