@@ -47,6 +47,11 @@ const envSchema = z.object({
   // Push notifications (FCM legacy HTTP). Blank → push is logged, not sent.
   FCM_SERVER_KEY: z.string().optional(),
 
+  // Razorpay (real payments). Only used when ENABLE_REAL_PAYMENTS is on.
+  RAZORPAY_KEY_ID: z.string().optional(),
+  RAZORPAY_KEY_SECRET: z.string().optional(),
+  RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+
   // Feature flags (off by default; flipped per phase)
   ENABLE_REAL_PAYMENTS: z.coerce.boolean().default(false),
   ENABLE_AUTO_KYC: z.coerce.boolean().default(false),

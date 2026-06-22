@@ -6,9 +6,13 @@ import { AppError } from '../../utils/errors';
 import { logger } from '../../utils/logger';
 import { writeAudit } from '../../utils/audit';
 import { createNotification } from '../notifications/notifications.service';
+import { runTransition } from '../payments/payment-state-machine';
 
 /** Auto-suspend a user once they're found at fault in this many disputes. */
 const DISPUTE_FAULT_SUSPEND_THRESHOLD = 2;
+
+/** States in which escrow is still held, so a dispute can freeze it. */
+const DISPUTABLE_STATES = ['ESCROW_HELD', 'IN_TRANSIT', 'DELIVERY_PROOF_UPLOADED'];
 
 /** Either party opens a dispute while escrow is held → freezes the order. */
 export async function raiseDispute(
@@ -20,7 +24,7 @@ export async function raiseDispute(
   if (!order || (order.senderId !== userId && order.travelerId !== userId)) {
     throw AppError.notFound('Order not found');
   }
-  if (order.status !== 'ESCROW_HELD') {
+  if (!DISPUTABLE_STATES.includes(order.status)) {
     throw new AppError(409, 'NOT_DISPUTABLE', 'Disputes are only allowed while escrow is held.');
   }
   if (order.dispute) throw new AppError(409, 'DISPUTE_EXISTS', 'A dispute already exists.');
@@ -35,7 +39,7 @@ export async function raiseDispute(
         evidence: input.evidence ?? [],
       },
     });
-    await tx.order.update({ where: { id: orderId }, data: { status: 'DISPUTED' } });
+    await runTransition(tx, orderId, 'DISPUTED', 'dispute_opened', { meta: { reason: input.reason } });
     await tx.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'DISPUTED' } });
     return d;
   });
@@ -113,18 +117,23 @@ export async function resolveDispute(
   const { order } = dispute;
 
   const refund = decision === 'REFUND_SENDER';
-  await prisma.$transaction([
-    prisma.order.update({
-      where: { id: order.id },
-      data: refund
-        ? { status: 'REFUNDED', refundedAt: new Date() }
-        : { status: 'COMPLETED', releasedAt: new Date() },
-    }),
-    prisma.deliveryRequest.update({
-      where: { id: order.requestId },
-      data: { status: refund ? 'CANCELLED' : 'CONFIRMED' },
-    }),
-    prisma.dispute.update({
+  await prisma.$transaction(async (tx) => {
+    if (refund) {
+      await runTransition(tx, order.id, 'REFUNDED', 'dispute_refund', {
+        data: { refundedAt: new Date() },
+      });
+      await tx.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'CANCELLED' } });
+    } else {
+      // Release to traveler: DISPUTED → PAYOUT_INITIATED → COMPLETED.
+      await runTransition(tx, order.id, 'PAYOUT_INITIATED', 'dispute_release', {
+        data: { payoutStatus: 'INITIATED', payoutInitiatedAt: new Date(), releasedAt: new Date() },
+      });
+      await runTransition(tx, order.id, 'COMPLETED', 'payout_settled', {
+        data: { payoutStatus: 'PAID', payoutPaidAt: new Date() },
+      });
+      await tx.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'CONFIRMED' } });
+    }
+    await tx.dispute.update({
       where: { id: disputeId },
       data: {
         status: refund ? 'RESOLVED_SENDER' : 'RESOLVED_TRAVELER',
@@ -132,8 +141,8 @@ export async function resolveDispute(
         resolutionNote: note,
         resolvedAt: new Date(),
       },
-    }),
-  ]);
+    });
+  });
   logger.info(`[dispute] ${disputeId} resolved → ${decision}`);
   await writeAudit({
     actorId: adminId,

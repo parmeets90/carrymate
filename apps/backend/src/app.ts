@@ -27,7 +27,15 @@ export function createApp(): Express {
   );
   app.options('*', cors());
   app.use(compression());
-  app.use(express.json({ limit: '1mb' }));
+  // Capture the raw body so webhook handlers can verify HMAC signatures.
+  app.use(
+    express.json({
+      limit: '1mb',
+      verify: (req, _res, buf) => {
+        (req as express.Request & { rawBody?: Buffer }).rawBody = buf;
+      },
+    }),
+  );
   app.use(express.urlencoded({ extended: true }));
 
   app.use(

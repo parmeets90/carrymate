@@ -18,6 +18,8 @@ import {
   getMetrics_,
   getFraudQueue,
   postClearHold,
+  getFailedPayouts,
+  postRetryPayout,
 } from './admin.controller';
 
 export const adminRouter = Router();
@@ -27,6 +29,8 @@ adminRouter.use(authenticate, requireAdmin);
 adminRouter.get('/metrics', getMetrics_);
 adminRouter.get('/fraud/queue', getFraudQueue);
 adminRouter.post('/orders/:orderId/clear-hold', postClearHold);
+adminRouter.get('/payouts/failed', getFailedPayouts);
+adminRouter.post('/orders/:orderId/retry-payout', postRetryPayout);
 
 adminRouter.get('/kyc/pending', getPendingKyc);
 adminRouter.post('/kyc/:userId/approve', postApproveKyc);

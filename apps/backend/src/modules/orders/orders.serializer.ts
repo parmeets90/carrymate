@@ -8,7 +8,14 @@ type OrderWithRelations = Order & {
   dispute?: Dispute | null;
 };
 
-const CONTACT_VISIBLE = new Set(['ESCROW_HELD', 'PAYOUT_INITIATED', 'COMPLETED', 'DISPUTED']);
+const CONTACT_VISIBLE = new Set([
+  'ESCROW_HELD',
+  'IN_TRANSIT',
+  'DELIVERY_PROOF_UPLOADED',
+  'PAYOUT_INITIATED',
+  'COMPLETED',
+  'DISPUTED',
+]);
 
 /** Build the participant view; reveals counterparty phone + OTP per state/role. */
 export function toOrderView(order: OrderWithRelations, viewerId: string): OrderView {

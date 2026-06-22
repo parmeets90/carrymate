@@ -11,6 +11,7 @@ import { ordersRouter } from '../modules/orders/orders.routes';
 import { uploadsRouter } from '../modules/uploads/uploads.routes';
 import { chatRouter } from '../modules/chat/chat.routes';
 import { notificationsRouter } from '../modules/notifications/notifications.routes';
+import { bankAccountRouter } from '../modules/bankaccount/bankaccount.routes';
 import { razorpayWebhookRouter } from '../modules/payments/razorpay.webhook';
 
 /**
@@ -36,5 +37,6 @@ v1Router.use('/orders', ordersRouter);
 v1Router.use('/uploads', uploadsRouter);
 v1Router.use('/chat', chatRouter);
 v1Router.use('/notifications', notificationsRouter);
+v1Router.use('/bank-account', bankAccountRouter);
 v1Router.use('/webhooks', razorpayWebhookRouter);
 v1Router.use('/admin', adminRouter);

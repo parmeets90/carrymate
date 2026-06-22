@@ -11,7 +11,14 @@ import {
   forceExpireRequest,
   getMetrics,
 } from './admin.service';
-import { listAllOrders, refundOrder, listFraudQueue, clearFraudHold } from '../orders/orders.service';
+import {
+  listAllOrders,
+  refundOrder,
+  listFraudQueue,
+  clearFraudHold,
+  listFailedPayouts,
+  retryPayout,
+} from '../orders/orders.service';
 import { listOpenDisputes, resolveDispute } from '../disputes/disputes.service';
 import { listUsersSchema, listRequestsSchema, resolveDisputeSchema } from './admin.validators';
 import type { ResolveDisputeInput } from './admin.validators';
@@ -56,6 +63,15 @@ export const getFraudQueue: RequestHandler = async (_req, res) => {
 
 export const postClearHold: RequestHandler = async (req, res) => {
   await clearFraudHold(req.params.orderId!, req.user!.id);
+  ok(res, { success: true });
+};
+
+export const getFailedPayouts: RequestHandler = async (_req, res) => {
+  ok(res, await listFailedPayouts());
+};
+
+export const postRetryPayout: RequestHandler = async (req, res) => {
+  await retryPayout(req.params.orderId!, req.user!.id);
   ok(res, { success: true });
 };
 

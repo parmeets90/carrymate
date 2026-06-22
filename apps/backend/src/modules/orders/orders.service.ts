@@ -9,6 +9,7 @@ import { NotificationType } from '@carrymate/shared';
 import { createNotification } from '../notifications/notifications.service';
 import { writeAudit } from '../../utils/audit';
 import { RISK_FLAG_THRESHOLD } from '../fraud/fraud.service';
+import { transition, runTransition } from '../payments/payment-state-machine';
 import { toOrderView } from './orders.serializer';
 
 const withRelations = { request: true, sender: true, traveler: true, dispute: true } as const;
@@ -48,11 +49,10 @@ export async function payOrder(orderId: string, senderId: string): Promise<Order
     throw new AppError(501, 'REAL_PAYMENTS_PENDING', 'Razorpay checkout is not wired yet.');
   }
 
-  const updated = await prisma.order.update({
-    where: { id: orderId },
-    data: { status: 'ESCROW_HELD', escrowHeldAt: new Date(), paymentMethod: 'stub' },
-    include: withRelations,
+  await transition(orderId, 'ESCROW_HELD', 'pay_stub', {
+    data: { escrowHeldAt: new Date(), paymentMethod: 'stub' },
   });
+  const updated = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: withRelations });
   logger.info(`[escrow] held (stub) for order ${orderId}`);
   await createNotification({
     userId: updated.travelerId,
@@ -86,18 +86,18 @@ export async function openBoxOrder(
   }
 
   const deliveryOtp = generateNumericOtp(6);
-  await prisma.$transaction([
-    prisma.order.update({
-      where: { id: orderId },
+  await prisma.$transaction(async (tx) => {
+    await runTransition(tx, orderId, 'IN_TRANSIT', 'open_box', {
       data: {
         openBox: { checklist: input.checklist, photos: input.photos, lat: input.lat, lng: input.lng, at: new Date().toISOString() },
         openBoxAt: new Date(),
         pickedUpAt: new Date(),
         deliveryOtp,
       },
-    }),
-    prisma.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'IN_TRANSIT' } }),
-  ]);
+      meta: { photos: input.photos.length },
+    });
+    await tx.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'IN_TRANSIT' } });
+  });
   const fresh = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: withRelations });
   logger.info(`[fulfillment] open-box done, in transit: order ${orderId}`);
   await createNotification({
@@ -126,13 +126,13 @@ export async function deliverOrder(
   }
 
   const autoConfirmAt = new Date(Date.now() + DELIVERY_AUTO_CONFIRM_HOURS * 3_600_000);
-  await prisma.$transaction([
-    prisma.order.update({
-      where: { id: orderId },
+  await prisma.$transaction(async (tx) => {
+    await runTransition(tx, orderId, 'DELIVERY_PROOF_UPLOADED', 'deliver', {
       data: { deliveryProof: input.photos, deliveredAt: new Date(), autoConfirmAt },
-    }),
-    prisma.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'DELIVERED' } }),
-  ]);
+      meta: { proofPhotos: input.photos.length },
+    });
+    await tx.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'DELIVERED' } });
+  });
   const fresh = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: withRelations });
   logger.info(`[fulfillment] delivered: order ${orderId} (auto-confirm ${autoConfirmAt.toISOString()})`);
   await createNotification({
@@ -158,22 +158,31 @@ export async function releaseOrder(orderId: string, senderId: string): Promise<O
   if (order.fraudHold) {
     throw new AppError(409, 'FRAUD_HOLD', 'This order is under a safety review. Our team will resolve it shortly.');
   }
-  if (order.status !== 'ESCROW_HELD' || order.request.status !== 'DELIVERED') {
+  if (order.status !== 'DELIVERY_PROOF_UPLOADED') {
     throw new AppError(409, 'NOT_DELIVERED', 'You can release escrow only after delivery.');
   }
   return doRelease(orderId, senderId);
 }
 
+/**
+ * Release escrow to the traveler: PAYOUT_INITIATED → COMPLETED.
+ * Stub mode settles the payout instantly; real mode would mark PAYOUT_INITIATED
+ * and let the Razorpay transfer.settled webhook drive COMPLETED.
+ * Works from DELIVERY_PROOF_UPLOADED (normal) or DISPUTED (admin release).
+ */
 async function doRelease(orderId: string, viewerId: string): Promise<OrderView> {
   const order = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
-  const [updated] = await prisma.$transaction([
-    prisma.order.update({
-      where: { id: orderId },
-      data: { status: 'COMPLETED', releasedAt: new Date() },
-      include: withRelations,
-    }),
-    prisma.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'CONFIRMED' } }),
-  ]);
+  await prisma.$transaction(async (tx) => {
+    await runTransition(tx, orderId, 'PAYOUT_INITIATED', 'release', {
+      data: { payoutStatus: 'INITIATED', payoutInitiatedAt: new Date(), releasedAt: new Date() },
+    });
+    // Stub payout settles immediately. (Real mode: webhook completes this.)
+    await runTransition(tx, orderId, 'COMPLETED', 'payout_settled', {
+      data: { payoutStatus: 'PAID', payoutPaidAt: new Date() },
+    });
+    await tx.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'CONFIRMED' } });
+  });
+  const updated = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: withRelations });
   logger.info(`[escrow] released (stub payout ₹${order.payoutInr}) for order ${orderId}`);
   await createNotification({
     userId: updated.travelerId,
@@ -189,9 +198,8 @@ async function doRelease(orderId: string, viewerId: string): Promise<OrderView> 
 export async function runAutoConfirm(): Promise<number> {
   const due = await prisma.order.findMany({
     where: {
-      status: 'ESCROW_HELD',
+      status: 'DELIVERY_PROOF_UPLOADED',
       autoConfirmAt: { lte: new Date() },
-      request: { status: 'DELIVERED' },
       dispute: null,
       fraudHold: false,
     },
@@ -267,19 +275,64 @@ export async function listFraudQueue(): Promise<
   }));
 }
 
+/** Orders whose payout failed — the admin recovery queue (Challenge 03, Fix 5). */
+export async function listFailedPayouts(): Promise<
+  import('@carrymate/shared').FailedPayoutItem[]
+> {
+  const orders = await prisma.order.findMany({
+    where: { payoutStatus: 'FAILED' },
+    include: { traveler: true, request: true },
+    orderBy: { payoutInitiatedAt: 'desc' },
+  });
+  return orders.map((o) => ({
+    orderId: o.id,
+    travelerName: o.traveler.fullName,
+    payoutInr: o.payoutInr,
+    requestTitle: o.request.title,
+    failureReason: o.payoutFailureReason,
+    payoutInitiatedAt: o.payoutInitiatedAt ? o.payoutInitiatedAt.toISOString() : null,
+  }));
+}
+
+/** Admin retries a failed payout. Stub settles instantly; real mode re-initiates the transfer. */
+export async function retryPayout(orderId: string, adminId: string): Promise<void> {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw AppError.notFound('Order not found');
+  if (order.payoutStatus !== 'FAILED') {
+    throw new AppError(409, 'NOT_FAILED', 'This payout is not in a failed state.');
+  }
+
+  if (env.ENABLE_REAL_PAYMENTS) {
+    // Real mode: re-create the Razorpay Route transfer here; COMPLETED arrives via webhook.
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { payoutStatus: 'INITIATED', payoutFailureReason: null, payoutInitiatedAt: new Date() },
+    });
+  } else {
+    // Stub: settle immediately and complete the order if still mid-payout.
+    if (order.status === 'PAYOUT_INITIATED') {
+      await transition(orderId, 'COMPLETED', 'payout_retry', {
+        data: { payoutStatus: 'PAID', payoutPaidAt: new Date(), payoutFailureReason: null },
+      });
+    } else {
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { payoutStatus: 'PAID', payoutPaidAt: new Date(), payoutFailureReason: null },
+      });
+    }
+  }
+  logger.info(`[payout] retry by admin ${adminId} for order ${orderId}`);
+}
+
 export async function refundOrder(orderId: string, adminId?: string): Promise<void> {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) throw AppError.notFound('Order not found');
-  if (!['PENDING_PAYMENT', 'ESCROW_HELD', 'DISPUTED'].includes(order.status)) {
-    throw new AppError(409, 'NOT_REFUNDABLE', 'This order cannot be refunded.');
-  }
-  await prisma.$transaction([
-    prisma.order.update({
-      where: { id: orderId },
-      data: { status: 'REFUNDED', refundedAt: new Date() },
-    }),
-    prisma.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'CANCELLED' } }),
-  ]);
+  await prisma.$transaction(async (tx) => {
+    await runTransition(tx, orderId, 'REFUNDED', adminId ? 'admin_refund' : 'refund', {
+      data: { refundedAt: new Date() },
+    });
+    await tx.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'CANCELLED' } });
+  });
   await writeAudit({
     actorId: adminId ?? null,
     action: 'ORDER_REFUNDED',

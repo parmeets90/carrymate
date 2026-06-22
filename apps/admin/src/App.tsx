@@ -8,6 +8,7 @@ import { Requests } from './pages/Requests';
 import { Transactions } from './pages/Transactions';
 import { Disputes } from './pages/Disputes';
 import { Risk } from './pages/Risk';
+import { FailedPayouts } from './pages/FailedPayouts';
 import { Placeholder } from './pages/Placeholder';
 import { Login } from './pages/Login';
 import { useAuth } from './lib/auth';
@@ -35,6 +36,7 @@ export function App() {
         <Route path="/requests" element={<Requests />} />
         <Route path="/transactions" element={<Transactions />} />
         <Route path="/risk" element={<Risk />} />
+        <Route path="/payouts" element={<FailedPayouts />} />
         <Route path="*" element={<Placeholder title="Not found" phase="—" />} />
       </Routes>
     </Layout>

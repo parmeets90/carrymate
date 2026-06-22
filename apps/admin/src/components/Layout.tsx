@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   Plane,
   Wallet,
+  Banknote,
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ const NAV = [
   { to: '/transactions', label: 'Transactions', icon: Wallet },
   { to: '/users', label: 'Users', icon: Users },
   { to: '/risk', label: 'Risk & Fraud', icon: AlertTriangle },
+  { to: '/payouts', label: 'Failed Payouts', icon: Banknote },
 ];
 
 export function Layout({ children }: { children: ReactNode }) {

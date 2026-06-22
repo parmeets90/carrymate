@@ -295,6 +295,25 @@ export interface FraudQueueItem extends OrderView {
   fraudHold: boolean;
 }
 
+/** A traveler's payout bank account (no full number — masked only). */
+export interface BankAccountDto {
+  id: string;
+  accountHolderName: string;
+  accountNumberMasked: string;
+  ifsc: string;
+  updatedAt: string;
+}
+
+/** An order whose payout failed, for the admin recovery queue. */
+export interface FailedPayoutItem {
+  orderId: string;
+  travelerName: string | null;
+  payoutInr: number;
+  requestTitle: string;
+  failureReason: string | null;
+  payoutInitiatedAt: string | null;
+}
+
 /** Health-check payload. */
 export interface HealthStatus {
   status: 'healthy' | 'degraded';

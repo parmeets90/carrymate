@@ -11,6 +11,7 @@ import type {
   OrderView,
   DisputeView,
   FraudQueueItem,
+  FailedPayoutItem,
 } from '@carrymate/shared';
 
 type AdminOrder = OrderView & { senderName: string | null; travelerName: string | null };
@@ -122,4 +123,7 @@ export const api = {
   fraudQueue: () => authed<FraudQueueItem[]>('/v1/admin/fraud/queue'),
   clearHold: (orderId: string) =>
     authed<{ success: boolean }>(`/v1/admin/orders/${orderId}/clear-hold`, { method: 'POST' }),
+  failedPayouts: () => authed<FailedPayoutItem[]>('/v1/admin/payouts/failed'),
+  retryPayout: (orderId: string) =>
+    authed<{ success: boolean }>(`/v1/admin/orders/${orderId}/retry-payout`, { method: 'POST' }),
 };

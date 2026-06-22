@@ -76,6 +76,7 @@ model User {
   ordersAsSender   Order[] @relation("OrderSender")
   ordersAsTraveler Order[] @relation("OrderTraveler")
   notifications    Notification[]
+  bankAccount      BankAccount?
 
   @@index([kycStatus])
   @@index([status])
@@ -180,13 +181,24 @@ enum PickupPreference {
   MEETUP
 }
 
+// Single source of truth for the money path (Challenge 03 — 7-state FSM).
+// Forward-only happy path; REFUNDED/DISPUTED are exception branches.
 enum OrderStatus {
   PENDING_PAYMENT
   ESCROW_HELD
+  IN_TRANSIT
+  DELIVERY_PROOF_UPLOADED
   PAYOUT_INITIATED
   COMPLETED
   REFUNDED
   DISPUTED
+}
+
+enum PayoutStatus {
+  NONE
+  INITIATED
+  PAID
+  FAILED
 }
 
 /// A traveler's announced journey with spare luggage capacity.
@@ -301,6 +313,11 @@ model Order {
   escrowHeldAt  DateTime?   @map("escrow_held_at") @db.Timestamptz
   releasedAt    DateTime?   @map("released_at") @db.Timestamptz
   refundedAt    DateTime?   @map("refunded_at") @db.Timestamptz
+  // Payout tracking (Challenge 03 — failed-payout recovery)
+  payoutStatus        PayoutStatus @default(NONE) @map("payout_status")
+  payoutFailureReason String?      @map("payout_failure_reason")
+  payoutInitiatedAt   DateTime?    @map("payout_initiated_at") @db.Timestamptz
+  payoutPaidAt        DateTime?    @map("payout_paid_at") @db.Timestamptz
   // Risk / fraud (Phase 6)
   riskScore        Int       @default(0) @map("risk_score")
   riskFactors      String[]  @default([]) @map("risk_factors")
@@ -324,6 +341,7 @@ model Order {
   dispute  Dispute?
   ratings  Rating[]
   conversation Conversation?
+  stateLogs    PaymentStateLog[]
 
   @@index([senderId])
   @@index([travelerId])
@@ -464,6 +482,54 @@ enum AuditAction {
   ORDER_HOLD_CLEARED
   USER_STATUS_CHANGED
   USER_AUTO_SUSPENDED
+}
+
+/// Append-only log of every payment-state transition (Challenge 03).
+/// The FSM is the only writer; this is the audit trail for reconciliation.
+model PaymentStateLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  orderId      String   @map("order_id") @db.Uuid
+  fromState    String   @map("from_state") @db.VarChar(32)
+  toState      String   @map("to_state") @db.VarChar(32)
+  triggerEvent String   @map("trigger_event") @db.VarChar(64)
+  meta         Json?
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+  @@map("payment_state_logs")
+}
+
+/// Idempotency ledger for inbound webhooks (Challenge 03). A unique (provider,
+/// event_id) means a redelivered webhook is recognised and skipped.
+model WebhookEvent {
+  id          String   @id @default(uuid()) @db.Uuid
+  provider    String   @db.VarChar(32)
+  eventId     String   @map("event_id")
+  type        String?  @db.VarChar(64)
+  payload     Json?
+  processedAt DateTime @default(now()) @map("processed_at") @db.Timestamptz
+
+  @@unique([provider, eventId])
+  @@map("webhook_events")
+}
+
+/// A traveler's payout destination. Locked while a delivery is mid-flight so the
+/// money can't be redirected after escrow is held (Challenge 03, Fix 4).
+model BankAccount {
+  id                  String   @id @default(uuid()) @db.Uuid
+  userId              String   @unique @map("user_id") @db.Uuid
+  accountHolderName   String   @map("account_holder_name") @db.VarChar(100)
+  accountNumberMasked String   @map("account_number_masked") @db.VarChar(32)
+  accountNumberHash   String   @map("account_number_hash")
+  ifsc                String   @db.VarChar(15)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("bank_accounts")
 }
 
 /// Immutable trail of sensitive admin + system actions, for ops & compliance.

@@ -51,7 +51,7 @@ export function OrdersScreen() {
           <Text style={styles.amount}>{inr(isSender ? item.amountInr : item.payoutInr)}</Text>
         </View>
 
-        {item.status === 'ESCROW_HELD' && (
+        {item.escrowHeldAt && !item.releasedAt && item.status !== 'REFUNDED' && (
           <View style={styles.escrow}>
             <Icon name="lock" size={14} color="#096438" weight="fill" />
             <Text style={styles.escrowText}>Escrow secured — released only on delivery confirm</Text>
@@ -78,7 +78,7 @@ export function OrdersScreen() {
           {!isSender && item.requestStatus === 'IN_TRANSIT' && (
             <PrimaryButton label="Enter handover code & deliver" onPress={() => nav.navigate('Deliver', { orderId: item.id, title: item.requestTitle })} />
           )}
-          {isSender && item.requestStatus === 'DELIVERED' && item.status === 'ESCROW_HELD' && (
+          {isSender && item.status === 'DELIVERY_PROOF_UPLOADED' && (
             <PrimaryButton label="Confirm receipt & release" onPress={() => release.mutate(item.id)} loading={release.isPending} />
           )}
           {item.status === 'COMPLETED' && (
@@ -92,7 +92,7 @@ export function OrdersScreen() {
           )}
         </View>
 
-        {item.status === 'ESCROW_HELD' && !item.hasDispute && (
+        {['ESCROW_HELD', 'IN_TRANSIT', 'DELIVERY_PROOF_UPLOADED'].includes(item.status) && !item.hasDispute && (
           <Pressable onPress={() => nav.navigate('Dispute', { orderId: item.id, title: item.requestTitle })}>
             <Text style={styles.disputeLink}>Something wrong? Raise a dispute</Text>
           </Pressable>
