@@ -1,9 +1,15 @@
 import type { Prisma } from '@prisma/client';
-import type { AdminKycReviewItem, PublicUser, Paginated } from '@carrymate/shared';
+import type {
+  AdminKycReviewItem,
+  PublicUser,
+  Paginated,
+  DeliveryRequestSummary,
+} from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import { toPublicUser } from '../users/user.serializer';
 import { toKycDocumentDto } from '../kyc/kyc.serializer';
+import { toRequestSummary } from '../marketplace/serializers';
 
 /** Users awaiting KYC review, with their submitted documents. */
 export async function listPendingKyc(): Promise<AdminKycReviewItem[]> {
@@ -77,6 +83,40 @@ export async function getUserDetail(userId: string): Promise<AdminKycReviewItem>
   });
   if (!user) throw AppError.notFound('User not found');
   return { user: toPublicUser(user), documents: user.kycDocuments.map(toKycDocumentDto) };
+}
+
+/** Marketplace request monitor for ops. */
+export async function listRequests(
+  status: string | undefined,
+  page: number,
+  pageSize: number,
+): Promise<Paginated<DeliveryRequestSummary>> {
+  const where: Prisma.DeliveryRequestWhereInput = status
+    ? { status: status as Prisma.EnumRequestStatusFilter['equals'] }
+    : {};
+
+  const [items, total] = await Promise.all([
+    prisma.deliveryRequest.findMany({
+      where,
+      include: { sender: true },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.deliveryRequest.count({ where }),
+  ]);
+
+  return { items: items.map(toRequestSummary), page, pageSize, total };
+}
+
+/** Force-cancel a stale or problematic request. */
+export async function forceExpireRequest(requestId: string): Promise<void> {
+  const request = await prisma.deliveryRequest.findUnique({ where: { id: requestId } });
+  if (!request) throw AppError.notFound('Request not found');
+  await prisma.deliveryRequest.update({
+    where: { id: requestId },
+    data: { status: 'CANCELLED' },
+  });
 }
 
 export async function setUserStatus(

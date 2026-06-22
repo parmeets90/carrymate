@@ -7,8 +7,10 @@ import {
   listUsers,
   getUserDetail,
   setUserStatus,
+  listRequests,
+  forceExpireRequest,
 } from './admin.service';
-import { listUsersSchema } from './admin.validators';
+import { listUsersSchema, listRequestsSchema } from './admin.validators';
 import type { RejectKycInput, SetStatusInput } from './admin.validators';
 
 export const getPendingKyc: RequestHandler = async (_req, res) => {
@@ -38,4 +40,14 @@ export const getUser: RequestHandler = async (req, res) => {
 export const postSetStatus: RequestHandler = async (req, res) => {
   const { status } = req.body as SetStatusInput;
   ok(res, await setUserStatus(req.params.userId!, status));
+};
+
+export const getRequests: RequestHandler = async (req, res) => {
+  const { status, page, pageSize } = listRequestsSchema.parse(req.query);
+  ok(res, await listRequests(status, page, pageSize));
+};
+
+export const postExpireRequest: RequestHandler = async (req, res) => {
+  await forceExpireRequest(req.params.requestId!);
+  ok(res, { success: true });
 };

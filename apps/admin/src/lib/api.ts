@@ -6,6 +6,7 @@ import type {
   PublicUser,
   Paginated,
   AdminKycReviewItem,
+  DeliveryRequestSummary,
 } from '@carrymate/shared';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
@@ -101,4 +102,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ status }),
     }),
+  requests: (status: string, page = 1) =>
+    authed<Paginated<DeliveryRequestSummary>>(
+      `/v1/admin/requests?page=${page}${status ? `&status=${status}` : ''}`,
+    ),
+  expireRequest: (requestId: string) =>
+    authed<{ success: boolean }>(`/v1/admin/requests/${requestId}/expire`, { method: 'POST' }),
 };

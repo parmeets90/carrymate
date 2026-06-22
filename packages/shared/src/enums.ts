@@ -71,6 +71,12 @@ export enum BidStatus {
   EXPIRED = 'EXPIRED',
 }
 
+export enum PickupPreference {
+  AIRPORT = 'AIRPORT',
+  DOORSTEP = 'DOORSTEP',
+  MEETUP = 'MEETUP',
+}
+
 export enum TransactionStatus {
   PENDING_PAYMENT = 'PENDING_PAYMENT',
   ESCROW_HELD = 'ESCROW_HELD',

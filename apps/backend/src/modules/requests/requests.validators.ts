@@ -1,0 +1,25 @@
+import { z } from 'zod';
+import { RequestCategory, UAE_DESTINATION_CITIES } from '@carrymate/shared';
+
+export const createRequestSchema = z.object({
+  title: z.string().trim().min(5).max(100),
+  description: z.string().trim().min(10).max(500),
+  category: z.nativeEnum(RequestCategory),
+  weightKg: z.coerce.number().min(0.1).max(5),
+  declaredValueInr: z.coerce.number().int().min(1).max(10000),
+  itemPhotos: z.array(z.string().trim().min(1)).max(5).optional().default([]),
+  originCity: z.string().trim().min(2).max(50),
+  originAirport: z.string().trim().length(3).toUpperCase(),
+  destinationCity: z.enum([...UAE_DESTINATION_CITIES] as [string, ...string[]]),
+  recipientName: z.string().trim().min(2).max(100),
+  recipientPhone: z
+    .string()
+    .trim()
+    .regex(/^\+971\d{7,9}$/, 'Recipient phone must be a UAE number (+971…).'),
+  recipientAddress: z.string().trim().min(5).max(300),
+  deadlineDate: z.coerce.date(),
+  isFragile: z.coerce.boolean().optional().default(false),
+  senderNotes: z.string().trim().max(200).optional(),
+});
+
+export type CreateRequestInput = z.infer<typeof createRequestSchema>;

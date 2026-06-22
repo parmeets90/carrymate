@@ -9,6 +9,8 @@ import {
   getUsers,
   getUser,
   postSetStatus,
+  getRequests,
+  postExpireRequest,
 } from './admin.controller';
 
 export const adminRouter = Router();
@@ -22,3 +24,6 @@ adminRouter.post('/kyc/:userId/reject', validateBody(rejectKycSchema), postRejec
 adminRouter.get('/users', getUsers);
 adminRouter.get('/users/:userId', getUser);
 adminRouter.post('/users/:userId/status', validateBody(setStatusSchema), postSetStatus);
+
+adminRouter.get('/requests', getRequests);
+adminRouter.post('/requests/:requestId/expire', postExpireRequest);

@@ -83,6 +83,100 @@ export interface AdminKycReviewItem {
   documents: KycDocumentDto[];
 }
 
+/** A traveler's trip. */
+export interface TravelRouteDto {
+  id: string;
+  originAirport: string;
+  destinationAirport: string;
+  departureDate: string;
+  arrivalDate: string | null;
+  capacityKg: number;
+  capacityUsedKg: number;
+  flightNumber: string | null;
+  airline: string | null;
+  ticketVerified: boolean;
+  status: string;
+  createdAt: string;
+}
+
+/** Full delivery request (owner view — includes recipient PII). */
+export interface DeliveryRequestDto {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  weightKg: number;
+  declaredValueInr: number;
+  itemPhotos: string[];
+  originCity: string;
+  originAirport: string;
+  destinationCity: string;
+  recipientName: string;
+  recipientPhone: string;
+  recipientAddress: string;
+  deadlineDate: string;
+  isFragile: boolean;
+  senderNotes: string | null;
+  status: string;
+  createdAt: string;
+}
+
+/** Browse view of a request (no recipient PII; includes sender trust signals). */
+export interface DeliveryRequestSummary {
+  id: string;
+  title: string;
+  category: string;
+  weightKg: number;
+  declaredValueInr: number;
+  originCity: string;
+  destinationCity: string;
+  deadlineDate: string;
+  isFragile: boolean;
+  status: string;
+  createdAt: string;
+  senderName: string | null;
+  senderRating: number;
+}
+
+/** A bid, with the traveler's trust signals and trip summary. */
+export interface BidDto {
+  id: string;
+  requestId: string;
+  carryFeeInr: number;
+  commissionInr: number;
+  payoutInr: number;
+  message: string | null;
+  pickupPreference: string;
+  pickupLocation: string | null;
+  estimatedDeliveryDate: string;
+  status: string;
+  createdAt: string;
+  traveler: {
+    id: string;
+    fullName: string | null;
+    ratingAvg: number;
+    ratingCount: number;
+  };
+  route: {
+    originAirport: string;
+    destinationAirport: string;
+    departureDate: string;
+    flightNumber: string | null;
+  };
+}
+
+/** An order created when a bid is accepted (awaiting payment in Phase 3). */
+export interface OrderDto {
+  id: string;
+  requestId: string;
+  bidId: string;
+  amountInr: number;
+  commissionInr: number;
+  payoutInr: number;
+  status: string;
+  createdAt: string;
+}
+
 /** Health-check payload. */
 export interface HealthStatus {
   status: 'healthy' | 'degraded';

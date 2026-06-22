@@ -67,8 +67,13 @@ model User {
   createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz
 
-  refreshTokens RefreshToken[]
-  kycDocuments  KycDocument[]
+  refreshTokens   RefreshToken[]
+  kycDocuments    KycDocument[]
+  travelRoutes    TravelRoute[]
+  deliveryRequests DeliveryRequest[]
+  bids            Bid[]
+  ordersAsSender   Order[] @relation("OrderSender")
+  ordersAsTraveler Order[] @relation("OrderTraveler")
 
   @@index([kycStatus])
   @@index([status])
@@ -129,4 +134,172 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+// ── Phase 2: Marketplace Core ─────────────────────────────────
+
+enum RequestCategory {
+  FOOD
+  DOCUMENTS
+  CLOTHING
+  GIFTS
+  OTHER
+}
+
+enum RequestStatus {
+  OPEN
+  BIDDING
+  MATCHED
+  IN_TRANSIT
+  DELIVERED
+  CONFIRMED
+  DISPUTED
+  CANCELLED
+}
+
+enum RouteStatus {
+  ACTIVE
+  FULL
+  COMPLETED
+  CANCELLED
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+  EXPIRED
+}
+
+enum PickupPreference {
+  AIRPORT
+  DOORSTEP
+  MEETUP
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  ESCROW_HELD
+  PAYOUT_INITIATED
+  COMPLETED
+  REFUNDED
+  DISPUTED
+}
+
+/// A traveler's announced journey with spare luggage capacity.
+model TravelRoute {
+  id                 String      @id @default(uuid()) @db.Uuid
+  travelerId         String      @map("traveler_id") @db.Uuid
+  flightNumber       String?     @map("flight_number") @db.VarChar(10)
+  airline            String?     @db.VarChar(50)
+  originAirport      String      @map("origin_airport") @db.VarChar(3)
+  destinationAirport String      @map("destination_airport") @db.VarChar(3)
+  departureDate      DateTime    @map("departure_date") @db.Date
+  arrivalDate        DateTime?   @map("arrival_date") @db.Date
+  capacityKg         Decimal     @map("capacity_kg") @db.Decimal(4, 1)
+  capacityUsedKg     Decimal     @default(0) @map("capacity_used_kg") @db.Decimal(4, 1)
+  ticketFileKey      String?     @map("ticket_file_key")
+  ticketVerified     Boolean     @default(false) @map("ticket_verified")
+  deliveryArea       String?     @map("delivery_area") @db.VarChar(100)
+  notes              String?
+  status             RouteStatus @default(ACTIVE)
+  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+
+  traveler User  @relation(fields: [travelerId], references: [id], onDelete: Cascade)
+  bids     Bid[]
+
+  @@index([travelerId])
+  @@index([destinationAirport, departureDate, status])
+  @@map("travel_routes")
+}
+
+/// A sender's request to move a personal item.
+model DeliveryRequest {
+  id                    String          @id @default(uuid()) @db.Uuid
+  senderId              String          @map("sender_id") @db.Uuid
+  title                 String          @db.VarChar(100)
+  description           String
+  category              RequestCategory
+  weightKg              Decimal         @map("weight_kg") @db.Decimal(4, 1)
+  declaredValueInr      Int             @map("declared_value_inr")
+  itemPhotos            String[]        @map("item_photos")
+  originCity            String          @map("origin_city") @db.VarChar(50)
+  originAirport         String          @map("origin_airport") @db.VarChar(3)
+  destinationCountry    String          @default("UAE") @map("destination_country") @db.VarChar(3)
+  destinationCity       String          @map("destination_city") @db.VarChar(50)
+  recipientName         String          @map("recipient_name") @db.VarChar(100)
+  recipientPhone        String          @map("recipient_phone") @db.VarChar(15)
+  recipientAddress      String          @map("recipient_address")
+  deadlineDate          DateTime        @map("deadline_date") @db.Date
+  isFragile             Boolean         @default(false) @map("is_fragile")
+  senderNotes           String?         @map("sender_notes")
+  status                RequestStatus   @default(OPEN)
+  matchedTravelerId     String?         @map("matched_traveler_id") @db.Uuid
+  acceptedBidId         String?         @map("accepted_bid_id") @db.Uuid
+  prohibitedCheckPassed Boolean         @default(false) @map("prohibited_check_passed")
+  expiresAt             DateTime?       @map("expires_at") @db.Timestamptz
+  createdAt             DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+
+  sender User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  bids   Bid[]
+  order  Order?
+
+  @@index([senderId])
+  @@index([status])
+  @@index([destinationCity, deadlineDate, status])
+  @@map("delivery_requests")
+}
+
+/// A traveler's offer to carry a request on one of their routes.
+model Bid {
+  id                    String           @id @default(uuid()) @db.Uuid
+  requestId             String           @map("request_id") @db.Uuid
+  travelerId            String           @map("traveler_id") @db.Uuid
+  routeId               String           @map("route_id") @db.Uuid
+  carryFeeInr           Int              @map("carry_fee_inr")
+  commissionInr         Int              @map("commission_inr")
+  payoutInr             Int              @map("payout_inr")
+  message               String?
+  pickupPreference      PickupPreference @map("pickup_preference")
+  pickupLocation        String?          @map("pickup_location")
+  estimatedDeliveryDate DateTime         @map("estimated_delivery_date") @db.Date
+  status                BidStatus        @default(PENDING)
+  createdAt             DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  request  DeliveryRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  traveler User            @relation(fields: [travelerId], references: [id], onDelete: Cascade)
+  route    TravelRoute     @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, travelerId])
+  @@index([requestId])
+  @@index([travelerId])
+  @@index([status])
+  @@map("bids")
+}
+
+/// Created when a sender accepts a bid. Payment fields are added in Phase 3.
+model Order {
+  id            String      @id @default(uuid()) @db.Uuid
+  requestId     String      @unique @map("request_id") @db.Uuid
+  bidId         String      @unique @map("bid_id") @db.Uuid
+  senderId      String      @map("sender_id") @db.Uuid
+  travelerId    String      @map("traveler_id") @db.Uuid
+  amountInr     Int         @map("amount_inr")
+  commissionInr Int         @map("commission_inr")
+  payoutInr     Int         @map("payout_inr")
+  status        OrderStatus @default(PENDING_PAYMENT)
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+
+  request  DeliveryRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  sender   User            @relation("OrderSender", fields: [senderId], references: [id])
+  traveler User            @relation("OrderTraveler", fields: [travelerId], references: [id])
+
+  @@index([senderId])
+  @@index([travelerId])
+  @@map("orders")
 }
