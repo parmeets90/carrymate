@@ -9,6 +9,8 @@ import { requestsRouter } from '../modules/requests/requests.routes';
 import { bidsRouter } from '../modules/bids/bids.routes';
 import { ordersRouter } from '../modules/orders/orders.routes';
 import { uploadsRouter } from '../modules/uploads/uploads.routes';
+import { chatRouter } from '../modules/chat/chat.routes';
+import { notificationsRouter } from '../modules/notifications/notifications.routes';
 import { razorpayWebhookRouter } from '../modules/payments/razorpay.webhook';
 
 /**
@@ -32,5 +34,7 @@ v1Router.use('/requests', requestsRouter);
 v1Router.use('/bids', bidsRouter);
 v1Router.use('/orders', ordersRouter);
 v1Router.use('/uploads', uploadsRouter);
+v1Router.use('/chat', chatRouter);
+v1Router.use('/notifications', notificationsRouter);
 v1Router.use('/webhooks', razorpayWebhookRouter);
 v1Router.use('/admin', adminRouter);

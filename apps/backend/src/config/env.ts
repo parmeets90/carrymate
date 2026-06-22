@@ -36,10 +36,13 @@ const envSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   STORAGE_BUCKET: z.string().default('carrymate'),
 
+  // Push notifications (FCM legacy HTTP). Blank → push is logged, not sent.
+  FCM_SERVER_KEY: z.string().optional(),
+
   // Feature flags (off by default; flipped per phase)
   ENABLE_REAL_PAYMENTS: z.coerce.boolean().default(false),
   ENABLE_AUTO_KYC: z.coerce.boolean().default(false),
-  ENABLE_CHAT: z.coerce.boolean().default(false),
+  ENABLE_CHAT: z.coerce.boolean().default(true),
   ENABLE_CANADA: z.coerce.boolean().default(false),
   ENABLE_USA: z.coerce.boolean().default(false),
 });
@@ -91,3 +94,6 @@ export const isTwilioVerifyConfigured = Boolean(
 export const isStorageConfigured = Boolean(
   env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY,
 );
+
+/** True when push (FCM) is configured; otherwise pushes are logged, not sent. */
+export const isPushConfigured = Boolean(env.FCM_SERVER_KEY);

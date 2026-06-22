@@ -11,6 +11,10 @@ import type {
   BidDto,
   OrderDto,
   OrderView,
+  ConversationSummary,
+  MessageDto,
+  NotificationDto,
+  Paginated,
 } from '@carrymate/shared';
 import { API_BASE_URL } from '../config';
 import { tokenStorage } from './storage';
@@ -116,4 +120,20 @@ export const api = {
     post<{ id: string; status: string }>(`/v1/orders/${orderId}/dispute`, data),
   rateOrder: (orderId: string, data: Record<string, unknown>) =>
     post<{ success: boolean }>(`/v1/orders/${orderId}/rate`, data),
+
+  // Chat (Phase 5)
+  conversations: () => get<ConversationSummary[]>('/v1/chat/conversations'),
+  conversationForOrder: (orderId: string) =>
+    get<{ id: string; orderId: string }>(`/v1/chat/order/${orderId}`),
+  messages: (conversationId: string) =>
+    get<MessageDto[]>(`/v1/chat/conversations/${conversationId}/messages`),
+  sendMessage: (conversationId: string, body: string) =>
+    post<MessageDto>(`/v1/chat/conversations/${conversationId}/messages`, { body }),
+
+  // Notifications (Phase 5)
+  notifications: (page = 1) =>
+    get<Paginated<NotificationDto>>(`/v1/notifications?page=${page}`),
+  unreadCount: () => get<{ count: number }>('/v1/notifications/unread-count'),
+  markNotificationRead: (id: string) => post<{ ok: boolean }>(`/v1/notifications/${id}/read`),
+  markAllNotificationsRead: () => post<{ count: number }>('/v1/notifications/read-all'),
 };

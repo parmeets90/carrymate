@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { Card, Badge, statusTone } from '@/components/Card';
-import { PrimaryButton } from '@/components/ui';
+import { PrimaryButton, SecondaryButton } from '@/components/ui';
 import { Avatar, Timeline, EmptyState } from '@/components/widgets';
 import { api } from '@/lib/api';
 import type { OrderView } from '@carrymate/shared';
@@ -22,6 +22,11 @@ export function OrdersScreen() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ['orders'] });
   const pay = useMutation({ mutationFn: (id: string) => api.payOrder(id), onSuccess: invalidate, onError: (e) => Alert.alert('Payment failed', (e as Error).message) });
   const release = useMutation({ mutationFn: (id: string) => api.releaseOrder(id), onSuccess: () => { invalidate(); Alert.alert('Released', 'Escrow released to the traveler.'); }, onError: (e) => Alert.alert('Could not release', (e as Error).message) });
+  const chat = useMutation({
+    mutationFn: async (o: OrderView) => ({ conv: await api.conversationForOrder(o.id), order: o }),
+    onSuccess: ({ conv, order }) => nav.navigate('Chat', { conversationId: conv.id, title: order.requestTitle, counterparty: order.counterpartyName }),
+    onError: (e) => Alert.alert('Chat unavailable', (e as Error).message),
+  });
 
   const renderItem = ({ item }: { item: OrderView }) => {
     const isSender = item.role === 'SENDER';
@@ -76,6 +81,12 @@ export function OrdersScreen() {
           )}
           {item.status === 'COMPLETED' && (
             <PrimaryButton label="Rate" onPress={() => nav.navigate('Rate', { orderId: item.id, counterparty: item.counterpartyName ?? 'them' })} />
+          )}
+          {item.escrowHeldAt && (
+            <SecondaryButton
+              label={`💬 Message ${item.counterpartyName ?? (isSender ? 'traveler' : 'sender')}`}
+              onPress={() => chat.mutate(item)}
+            />
           )}
         </View>
 

@@ -1,8 +1,10 @@
 import type { DisputeReason } from '@carrymate/shared';
 import type { DisputeView } from '@carrymate/shared';
+import { NotificationType } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import { logger } from '../../utils/logger';
+import { createNotification } from '../notifications/notifications.service';
 
 /** Either party opens a dispute while escrow is held → freezes the order. */
 export async function raiseDispute(
@@ -34,6 +36,14 @@ export async function raiseDispute(
     return d;
   });
   logger.warn(`[dispute] opened on order ${orderId} by ${userId} (${input.reason})`);
+  const otherPartyId = order.senderId === userId ? order.travelerId : order.senderId;
+  await createNotification({
+    userId: otherPartyId,
+    type: NotificationType.DISPUTE_OPENED,
+    title: 'A dispute was opened',
+    body: 'The other party raised a dispute on your order. Our team will review it shortly.',
+    data: { orderId, disputeId: dispute.id },
+  });
   return { id: dispute.id, status: dispute.status };
 }
 
@@ -96,4 +106,18 @@ export async function resolveDispute(
     }),
   ]);
   logger.info(`[dispute] ${disputeId} resolved → ${decision}`);
+  const outcome = refund
+    ? 'resolved in the sender’s favour (refund issued).'
+    : 'resolved in the traveler’s favour (payout released).';
+  await Promise.all(
+    [order.senderId, order.travelerId].map((uid) =>
+      createNotification({
+        userId: uid,
+        type: NotificationType.DISPUTE_RESOLVED,
+        title: 'Dispute resolved',
+        body: `Your dispute has been ${outcome}`,
+        data: { orderId: order.id, disputeId },
+      }),
+    ),
+  );
 }

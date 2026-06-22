@@ -17,6 +17,9 @@ import { OpenBoxScreen } from '@/screens/fulfillment/OpenBoxScreen';
 import { DeliverScreen } from '@/screens/fulfillment/DeliverScreen';
 import { DisputeScreen } from '@/screens/fulfillment/DisputeScreen';
 import { RateScreen } from '@/screens/fulfillment/RateScreen';
+import { ConversationsScreen } from '@/screens/chat/ConversationsScreen';
+import { ChatScreen } from '@/screens/chat/ChatScreen';
+import { NotificationsScreen } from '@/screens/notifications/NotificationsScreen';
 import { ProfileTabScreen } from '@/screens/profile/ProfileTabScreen';
 
 const Tab = createBottomTabNavigator();
@@ -43,6 +46,7 @@ const ICONS: Record<string, string> = {
   Trips: '✈️',
   Bids: '🏷️',
   Orders: '🧾',
+  Chat: '💬',
   Profile: '👤',
 };
 
@@ -61,6 +65,7 @@ function RoleTabs() {
         <Tab.Screen name="Trips" component={TripsScreen} options={{ tabBarIcon: tabIcon('Trips') }} />
         <Tab.Screen name="Bids" component={MyBidsScreen} options={{ tabBarIcon: tabIcon('Bids') }} />
         <Tab.Screen name="Orders" component={OrdersScreen} options={{ tabBarIcon: tabIcon('Orders') }} />
+        <Tab.Screen name="Chat" component={ConversationsScreen} options={{ tabBarIcon: tabIcon('Chat') }} />
         <Tab.Screen name="Profile" component={ProfileTabScreen} options={{ tabBarIcon: tabIcon('Profile') }} />
       </Tab.Navigator>
     );
@@ -72,6 +77,7 @@ function RoleTabs() {
       <Tab.Screen name="Requests" component={MyRequestsScreen} options={{ tabBarIcon: tabIcon('Requests') }} />
       <Tab.Screen name="Post" component={CreateRequestScreen} options={{ tabBarIcon: tabIcon('Post') }} />
       <Tab.Screen name="Orders" component={OrdersScreen} options={{ tabBarIcon: tabIcon('Orders') }} />
+      <Tab.Screen name="Chat" component={ConversationsScreen} options={{ tabBarIcon: tabIcon('Chat') }} />
       <Tab.Screen name="Profile" component={ProfileTabScreen} options={{ tabBarIcon: tabIcon('Profile') }} />
     </Tab.Navigator>
   );
@@ -95,6 +101,12 @@ export function MainNavigator() {
       <Stack.Screen name="Deliver" component={DeliverScreen} options={{ title: 'Deliver' }} />
       <Stack.Screen name="Dispute" component={DisputeScreen} options={{ title: 'Dispute' }} />
       <Stack.Screen name="Rate" component={RateScreen} options={{ title: 'Rate' }} />
+      <Stack.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={({ route }) => ({ title: route.params.counterparty ?? 'Chat' })}
+      />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
     </Stack.Navigator>
   );
 }

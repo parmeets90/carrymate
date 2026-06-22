@@ -5,8 +5,10 @@ import type {
   Paginated,
   DeliveryRequestSummary,
 } from '@carrymate/shared';
+import { NotificationType } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
+import { createNotification } from '../notifications/notifications.service';
 import { toPublicUser } from '../users/user.serializer';
 import { toKycDocumentDto } from '../kyc/kyc.serializer';
 import { toRequestSummary } from '../marketplace/serializers';
@@ -36,6 +38,12 @@ export async function approveKyc(userId: string, adminId: string): Promise<void>
     }),
     prisma.user.update({ where: { id: userId }, data: { kycStatus: 'VERIFIED' } }),
   ]);
+  await createNotification({
+    userId,
+    type: NotificationType.KYC_VERIFIED,
+    title: 'Identity verified ✅',
+    body: 'Your KYC is approved. You can now send and carry items on CarryMate.',
+  });
 }
 
 export async function rejectKyc(userId: string, adminId: string, reason: string): Promise<void> {
@@ -49,6 +57,12 @@ export async function rejectKyc(userId: string, adminId: string, reason: string)
     }),
     prisma.user.update({ where: { id: userId }, data: { kycStatus: 'REJECTED' } }),
   ]);
+  await createNotification({
+    userId,
+    type: NotificationType.KYC_REJECTED,
+    title: 'KYC needs attention',
+    body: `Your KYC was not approved: ${reason}. Please re-submit your documents.`,
+  });
 }
 
 /** Paginated user search by name/phone/email. */

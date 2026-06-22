@@ -5,6 +5,8 @@ import { env } from '../../config/env';
 import { AppError } from '../../utils/errors';
 import { logger } from '../../utils/logger';
 import { generateNumericOtp } from '../../utils/crypto';
+import { NotificationType } from '@carrymate/shared';
+import { createNotification } from '../notifications/notifications.service';
 import { toOrderView } from './orders.serializer';
 
 const withRelations = { request: true, sender: true, traveler: true, dispute: true } as const;
@@ -50,6 +52,13 @@ export async function payOrder(orderId: string, senderId: string): Promise<Order
     include: withRelations,
   });
   logger.info(`[escrow] held (stub) for order ${orderId}`);
+  await createNotification({
+    userId: updated.travelerId,
+    type: NotificationType.ORDER_PAID,
+    title: 'Payment secured in escrow',
+    body: `Funds for “${updated.request.title}” are held. You can pick up and start the trip.`,
+    data: { orderId },
+  });
   return toOrderView(updated, senderId);
 }
 
@@ -89,6 +98,13 @@ export async function openBoxOrder(
   ]);
   const fresh = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: withRelations });
   logger.info(`[fulfillment] open-box done, in transit: order ${orderId}`);
+  await createNotification({
+    userId: fresh.senderId,
+    type: NotificationType.IN_TRANSIT,
+    title: 'Your item is on the way',
+    body: `The traveler completed the open-box check for “${fresh.request.title}” and is in transit.`,
+    data: { orderId },
+  });
   return toOrderView(fresh, travelerId);
 }
 
@@ -117,6 +133,13 @@ export async function deliverOrder(
   ]);
   const fresh = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: withRelations });
   logger.info(`[fulfillment] delivered: order ${orderId} (auto-confirm ${autoConfirmAt.toISOString()})`);
+  await createNotification({
+    userId: fresh.senderId,
+    type: NotificationType.DELIVERED,
+    title: 'Item delivered — please confirm',
+    body: `“${fresh.request.title}” was delivered. Confirm receipt to release payment (auto-confirms in ${DELIVERY_AUTO_CONFIRM_HOURS}h).`,
+    data: { orderId },
+  });
   return toOrderView(fresh, travelerId);
 }
 
@@ -147,6 +170,13 @@ async function doRelease(orderId: string, viewerId: string): Promise<OrderView> 
     prisma.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'CONFIRMED' } }),
   ]);
   logger.info(`[escrow] released (stub payout ₹${order.payoutInr}) for order ${orderId}`);
+  await createNotification({
+    userId: updated.travelerId,
+    type: NotificationType.ESCROW_RELEASED,
+    title: 'Payout released 🎉',
+    body: `₹${updated.payoutInr} for “${updated.request.title}” has been released to you.`,
+    data: { orderId },
+  });
   return toOrderView(updated, viewerId);
 }
 

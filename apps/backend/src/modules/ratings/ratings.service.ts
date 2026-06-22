@@ -1,5 +1,7 @@
+import { NotificationType } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
+import { createNotification } from '../notifications/notifications.service';
 
 /** Rate the counterparty after a completed order; recomputes their average. */
 export async function rateOrder(
@@ -31,5 +33,13 @@ export async function rateOrder(
   await prisma.user.update({
     where: { id: rateeId },
     data: { ratingAvg: agg._avg.stars ?? 5, ratingCount: agg._count },
+  });
+
+  await createNotification({
+    userId: rateeId,
+    type: NotificationType.RATING_RECEIVED,
+    title: 'You received a rating',
+    body: `You were rated ${stars}★ on a completed delivery.`,
+    data: { orderId },
   });
 }

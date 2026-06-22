@@ -3,6 +3,8 @@ import { MAX_ACTIVE_BIDS_PER_TRAVELER } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import { computeFees } from '../../utils/marketplace';
+import { NotificationType } from '@carrymate/shared';
+import { createNotification } from '../notifications/notifications.service';
 import { toBidDto, toOrderDto } from '../marketplace/serializers';
 import type { CreateBidInput } from './bids.validators';
 
@@ -65,6 +67,14 @@ export async function createBid(travelerId: string, input: CreateBidInput): Prom
     });
   }
 
+  await createNotification({
+    userId: request.senderId,
+    type: NotificationType.BID_RECEIVED,
+    title: 'New bid on your request',
+    body: `A traveler offered to carry “${request.title}” for ₹${input.carryFeeInr}.`,
+    data: { requestId: request.id, bidId: bid.id },
+  });
+
   return toBidDto(bid);
 }
 
@@ -112,7 +122,7 @@ export async function acceptBid(
   bidId: string,
   senderId: string,
 ): Promise<OrderDto> {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const request = await tx.deliveryRequest.findUnique({ where: { id: requestId } });
     if (!request || request.senderId !== senderId) throw AppError.notFound('Request not found');
     if (request.status !== 'OPEN' && request.status !== 'BIDDING') {
@@ -155,6 +165,16 @@ export async function acceptBid(
       },
     });
 
-    return toOrderDto(order);
+    return { dto: toOrderDto(order), travelerId: bid.travelerId, title: request.title, amountInr: bid.carryFeeInr };
   });
+
+  await createNotification({
+    userId: result.travelerId,
+    type: NotificationType.BID_ACCEPTED,
+    title: 'Your bid was accepted 🎉',
+    body: `You're matched for “${result.title}” (₹${result.amountInr}). Awaiting the sender's payment into escrow.`,
+    data: { orderId: result.dto.id, requestId },
+  });
+
+  return result.dto;
 }

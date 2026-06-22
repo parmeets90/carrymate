@@ -222,6 +222,49 @@ export interface DisputeView {
   createdAt: string;
 }
 
+// ── Phase 5: Communications ───────────────────────────────────
+
+/** A single chat message as exposed to clients. */
+export interface MessageDto {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  /** True when this message was sent by the requesting user. */
+  mine: boolean;
+  type: 'TEXT' | 'IMAGE' | 'SYSTEM';
+  body: string;
+  /** Whether contact info was stripped from this message. */
+  piiRedacted: boolean;
+  createdAt: string;
+}
+
+/** A chat thread (one per order) as shown in the conversations list. */
+export interface ConversationSummary {
+  id: string;
+  orderId: string;
+  requestTitle: string;
+  /** The other party in this conversation. */
+  counterpartyName: string | null;
+  /** The viewer's role in the underlying order. */
+  role: 'SENDER' | 'TRAVELER';
+  orderStatus: string;
+  requestStatus: string;
+  lastMessage: string | null;
+  lastMessageAt: string | null;
+  unreadCount: number;
+}
+
+/** An in-app notification as exposed to clients. */
+export interface NotificationDto {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  data: Record<string, unknown> | null;
+  read: boolean;
+  createdAt: string;
+}
+
 /** Health-check payload. */
 export interface HealthStatus {
   status: 'healthy' | 'degraded';

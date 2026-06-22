@@ -18,6 +18,8 @@ export type RootStackParamList = {
   Deliver: { orderId: string; title: string };
   Dispute: { orderId: string; title: string };
   Rate: { orderId: string; counterparty: string };
+  Chat: { conversationId: string; title: string; counterparty?: string | null };
+  Notifications: undefined;
 };
 
 export type ScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<
