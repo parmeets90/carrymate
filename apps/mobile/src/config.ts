@@ -9,7 +9,7 @@ import { Platform } from 'react-native';
  * To build an APK that talks to your machine on the same Wi-Fi instead, set
  * PROD_API_URL to http://<your-LAN-IP>:3000 (and cleartext is already allowed).
  */
-const PROD_API_URL = 'https://carrymate-api.onrender.com';
+const PROD_API_URL = 'https://carrymate-api-nw17.onrender.com';
 
 export const API_BASE_URL = __DEV__
   ? Platform.select({ android: 'http://10.0.2.2:3000', ios: 'http://localhost:3000' }) ??
