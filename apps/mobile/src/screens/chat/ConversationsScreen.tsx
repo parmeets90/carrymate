@@ -7,6 +7,7 @@ import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { Card } from '@/components/Card';
 import { Avatar, EmptyState } from '@/components/widgets';
 import { Pressable3D } from '@/components/ui';
+import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
 import type { ConversationSummary } from '@carrymate/shared';
 import type { RootStackParamList } from '@/navigation/types';
@@ -81,7 +82,7 @@ export function ConversationsScreen() {
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <Text style={styles.heading}>Messages</Text>
         <Pressable onPress={() => nav.navigate('Notifications')} hitSlop={12} style={styles.bell}>
-          <Text style={styles.bellGlyph}>🔔</Text>
+          <Icon name="bell" size={24} color={colors.textPrimary} />
           {(notif.data?.count ?? 0) > 0 && <View style={styles.bellDot} />}
         </Pressable>
       </View>
@@ -97,7 +98,7 @@ export function ConversationsScreen() {
             <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing['3xl'] }} />
           ) : (
             <EmptyState
-              icon="💬"
+              icon="chat"
               title="No conversations yet"
               body="Chat unlocks once a payment is held in escrow, so you can safely coordinate the handover."
             />

@@ -5,25 +5,26 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { EmptyState } from '@/components/widgets';
 import { Pressable3D } from '@/components/ui';
+import { Icon, type IconName } from '@/components/Icon';
 import { api } from '@/lib/api';
 import type { NotificationDto } from '@carrymate/shared';
 import type { RootStackParamList } from '@/navigation/types';
 
-const ICONS: Record<string, string> = {
-  BID_RECEIVED: '🏷️',
-  BID_ACCEPTED: '🤝',
-  ORDER_PAID: '🔒',
-  OPEN_BOX_DONE: '📦',
-  IN_TRANSIT: '✈️',
-  DELIVERED: '📍',
-  ESCROW_RELEASED: '💰',
-  DISPUTE_OPENED: '⚠️',
-  DISPUTE_RESOLVED: '✅',
-  KYC_VERIFIED: '🛡️',
-  KYC_REJECTED: '❌',
-  NEW_MESSAGE: '💬',
-  RATING_RECEIVED: '⭐',
-  SYSTEM: '🔔',
+const ICONS: Record<string, { name: IconName; color: string }> = {
+  BID_RECEIVED: { name: 'bids', color: colors.skyBlue },
+  BID_ACCEPTED: { name: 'handshake', color: colors.mintPrimary },
+  ORDER_PAID: { name: 'lock', color: colors.mintPrimary },
+  OPEN_BOX_DONE: { name: 'package', color: colors.cautionAmber },
+  IN_TRANSIT: { name: 'inTransit', color: colors.cautionAmber },
+  DELIVERED: { name: 'location', color: colors.mintPrimary },
+  ESCROW_RELEASED: { name: 'wallet', color: colors.mintPrimary },
+  DISPUTE_OPENED: { name: 'warning', color: colors.dangerRed },
+  DISPUTE_RESOLVED: { name: 'check', color: colors.mintPrimary },
+  KYC_VERIFIED: { name: 'verified', color: colors.goldPrimary },
+  KYC_REJECTED: { name: 'cross', color: colors.dangerRed },
+  NEW_MESSAGE: { name: 'chat', color: colors.skyBlue },
+  RATING_RECEIVED: { name: 'star', color: colors.goldPrimary },
+  SYSTEM: { name: 'bell', color: colors.textSecondary },
 };
 
 function timeAgo(iso: string): string {
@@ -60,7 +61,7 @@ export function NotificationsScreen() {
     <Pressable3D onPress={() => open(item)}>
       <View style={[styles.card, !item.read && styles.cardUnread]}>
         <View style={styles.iconWrap}>
-          <Text style={styles.icon}>{ICONS[item.type] ?? '🔔'}</Text>
+          <Icon {...(ICONS[item.type] ?? { name: 'bell', color: colors.textSecondary })} size={20} />
         </View>
         <View style={{ flex: 1 }}>
           <View style={styles.titleRow}>
@@ -96,7 +97,7 @@ export function NotificationsScreen() {
           isLoading ? (
             <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing['3xl'] }} />
           ) : (
-            <EmptyState icon="🔔" title="You're all caught up" body="Updates about your bids, orders and deliveries will appear here." />
+            <EmptyState icon="bell" title="You're all caught up" body="Updates about your bids, orders and deliveries will appear here." />
           )
         }
       />

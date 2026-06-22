@@ -13,6 +13,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, radius, sizing } from '@/theme';
+import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
 import type { MessageDto } from '@carrymate/shared';
 import type { ScreenProps } from '@/navigation/types';
@@ -59,9 +60,12 @@ export function ChatScreen({ route }: ScreenProps<'Chat'>) {
         <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
           <Text style={[styles.msgText, mine && styles.msgTextMine]}>{item.body}</Text>
           {item.piiRedacted && (
-            <Text style={[styles.redacted, mine && styles.redactedMine]}>
-              🔒 Contact details hidden for your safety
-            </Text>
+            <View style={styles.redactedRow}>
+              <Icon name="lock" size={12} color={mine ? 'rgba(255,255,255,0.85)' : colors.textHint} />
+              <Text style={[styles.redacted, mine && styles.redactedMine]}>
+                Contact details hidden for your safety
+              </Text>
+            </View>
           )}
           <Text style={[styles.time, mine && styles.timeMine]}>{clock(item.createdAt)}</Text>
         </View>
@@ -111,7 +115,7 @@ export function ChatScreen({ route }: ScreenProps<'Chat'>) {
           disabled={!text.trim() || send.isPending}
           style={[styles.sendBtn, (!text.trim() || send.isPending) && styles.sendBtnDisabled]}
         >
-          <Text style={styles.sendGlyph}>{send.isPending ? '…' : '➤'}</Text>
+          <Icon name="send" size={20} color={colors.white} weight="fill" />
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -141,7 +145,8 @@ const styles = StyleSheet.create({
   },
   msgText: { ...typography.bodyM, color: colors.textPrimary },
   msgTextMine: { color: colors.white },
-  redacted: { ...typography.caption, color: colors.textHint, marginTop: 4, fontStyle: 'italic' },
+  redactedRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  redacted: { ...typography.caption, color: colors.textHint, fontStyle: 'italic' },
   redactedMine: { color: 'rgba(255,255,255,0.8)' },
   time: { ...typography.caption, color: colors.textHint, marginTop: 4, alignSelf: 'flex-end', fontSize: 10 },
   timeMine: { color: 'rgba(255,255,255,0.75)' },
@@ -179,5 +184,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sendBtnDisabled: { backgroundColor: '#A9C7E2' },
-  sendGlyph: { color: colors.white, fontSize: 18, fontWeight: '700' },
 });

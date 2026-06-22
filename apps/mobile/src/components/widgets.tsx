@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, spacing, typography, radius, gradients } from '@/theme';
+import { Icon, type IconName } from './Icon';
 
 /** Gradient circle with initials. */
 export function Avatar({ name, size = 44 }: { name?: string | null; size?: number }) {
@@ -48,18 +49,18 @@ export function Timeline({ status }: { status: string }) {
 }
 
 export function EmptyState({
-  icon = '✦',
+  icon = 'star',
   title,
   body,
 }: {
-  icon?: string;
+  icon?: IconName;
   title: string;
   body?: string;
 }) {
   return (
     <View style={styles.empty}>
       <View style={styles.emptyIcon}>
-        <Text style={styles.emptyGlyph}>{icon}</Text>
+        <Icon name={icon} size={28} color={colors.skyBlue} />
       </View>
       <Text style={styles.emptyTitle}>{title}</Text>
       {body ? <Text style={styles.emptyBody}>{body}</Text> : null}

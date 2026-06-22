@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { PublicUser, AuthResult } from '@carrymate/shared';
 import { tokenStorage } from '../lib/storage';
-import { api, setAccessToken } from '../lib/api';
+import { api, setAccessToken, setOnAuthExpired } from '../lib/api';
 
 interface AuthState {
   hydrated: boolean;
@@ -17,6 +17,8 @@ export const useAuth = create<AuthState>((set) => ({
   user: null,
 
   bootstrap: async () => {
+    // When a session can no longer be refreshed, drop the user back to sign-in.
+    setOnAuthExpired(() => set({ user: null }));
     const { access } = await tokenStorage.get();
     if (!access) {
       set({ hydrated: true });

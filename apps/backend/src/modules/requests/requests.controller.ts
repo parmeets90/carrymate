@@ -7,9 +7,11 @@ import {
   listMyRequests,
   getMyRequest,
   cancelRequest,
+  updateRequest,
+  deleteRequest,
   browseForRoute,
 } from './requests.service';
-import type { CreateRequestInput } from './requests.validators';
+import type { CreateRequestInput, UpdateRequestInput } from './requests.validators';
 
 export const postRequest: RequestHandler = async (req, res) => {
   const request = await createRequest(req.user!.id, req.body as CreateRequestInput);
@@ -26,6 +28,15 @@ export const getRequestById: RequestHandler = async (req, res) => {
 
 export const postCancelRequest: RequestHandler = async (req, res) => {
   ok(res, await cancelRequest(req.params.requestId!, req.user!.id));
+};
+
+export const patchRequest: RequestHandler = async (req, res) => {
+  ok(res, await updateRequest(req.params.requestId!, req.user!.id, req.body as UpdateRequestInput));
+};
+
+export const deleteRequestHandler: RequestHandler = async (req, res) => {
+  await deleteRequest(req.params.requestId!, req.user!.id);
+  ok(res, { success: true });
 };
 
 export const getAvailableRequests: RequestHandler = async (req, res) => {

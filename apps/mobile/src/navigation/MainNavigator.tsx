@@ -1,8 +1,8 @@
-import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './types';
 import { colors, typography, shadows } from '@/theme';
+import { Icon, type IconName } from '@/components/Icon';
 import { useAuth } from '@/store/auth';
 import { MyRequestsScreen } from '@/screens/sender/MyRequestsScreen';
 import { CreateRequestScreen } from '@/screens/sender/CreateRequestScreen';
@@ -40,20 +40,20 @@ const tabScreenOptions = {
   },
 };
 
-const ICONS: Record<string, string> = {
-  Requests: '📦',
-  Post: '➕',
-  Trips: '✈️',
-  Bids: '🏷️',
-  Orders: '🧾',
-  Chat: '💬',
-  Profile: '👤',
+const TAB_ICONS: Record<string, IconName> = {
+  Requests: 'package',
+  Post: 'post',
+  Trips: 'trips',
+  Bids: 'bids',
+  Orders: 'orders',
+  Chat: 'chat',
+  Profile: 'profile',
 };
 
 const tabIcon =
   (name: string) =>
-  ({ focused }: { focused: boolean }) =>
-    <Text style={{ fontSize: 18, opacity: focused ? 1 : 0.45 }}>{ICONS[name]}</Text>;
+  ({ focused, color }: { focused: boolean; color: string }) =>
+    <Icon name={TAB_ICONS[name]!} size={24} color={color} weight={focused ? 'fill' : 'regular'} />;
 
 function RoleTabs() {
   const role = useAuth((s) => s.user?.role);
@@ -93,8 +93,13 @@ export function MainNavigator() {
       }}
     >
       <Stack.Screen name="Tabs" component={RoleTabs} options={{ headerShown: false }} />
+      <Stack.Screen name="EditRequest" component={CreateRequestScreen} options={{ title: 'Edit request' }} />
       <Stack.Screen name="RequestDetail" component={RequestDetailScreen} options={{ title: 'Bids' }} />
-      <Stack.Screen name="AddRoute" component={AddRouteScreen} options={{ title: 'Add trip' }} />
+      <Stack.Screen
+        name="AddRoute"
+        component={AddRouteScreen}
+        options={({ route }) => ({ title: route.params?.route ? 'Edit trip' : 'Add trip' })}
+      />
       <Stack.Screen name="Browse" component={BrowseScreen} options={{ title: 'Requests' }} />
       <Stack.Screen name="PlaceBid" component={PlaceBidScreen} options={{ title: 'Place bid' }} />
       <Stack.Screen name="OpenBox" component={OpenBoxScreen} options={{ title: 'Open-box' }} />

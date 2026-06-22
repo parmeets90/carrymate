@@ -7,6 +7,7 @@ import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { Card, Badge, statusTone } from '@/components/Card';
 import { PrimaryButton, SecondaryButton } from '@/components/ui';
 import { Avatar, Timeline, EmptyState } from '@/components/widgets';
+import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
 import type { OrderView } from '@carrymate/shared';
 import type { RootStackParamList } from '@/navigation/types';
@@ -52,7 +53,8 @@ export function OrdersScreen() {
 
         {item.status === 'ESCROW_HELD' && (
           <View style={styles.escrow}>
-            <Text style={styles.escrowText}>🔒 Escrow secured — released only on delivery confirm</Text>
+            <Icon name="lock" size={14} color="#096438" weight="fill" />
+            <Text style={styles.escrowText}>Escrow secured — released only on delivery confirm</Text>
           </View>
         )}
         {item.counterpartyPhone && (
@@ -84,7 +86,7 @@ export function OrdersScreen() {
           )}
           {item.escrowHeldAt && (
             <SecondaryButton
-              label={`💬 Message ${item.counterpartyName ?? (isSender ? 'traveler' : 'sender')}`}
+              label={`Message ${item.counterpartyName ?? (isSender ? 'traveler' : 'sender')}`}
               onPress={() => chat.mutate(item)}
             />
           )}
@@ -113,7 +115,7 @@ export function OrdersScreen() {
           isLoading ? (
             <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing['3xl'] }} />
           ) : (
-            <EmptyState icon="📦" title="No orders yet" body="Accept a bid (sender) or get matched (traveler) to start an order." />
+            <EmptyState icon="orders" title="No orders yet" body="Accept a bid (sender) or get matched (traveler) to start an order." />
           )
         }
       />
@@ -131,7 +133,7 @@ const styles = StyleSheet.create({
   amountRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 0.5, borderTopColor: colors.borderLight },
   amountLabel: { ...typography.bodyM, color: colors.textSecondary },
   amount: { ...typography.titleM, fontWeight: '700', color: colors.navyMid },
-  escrow: { marginTop: spacing.md, backgroundColor: colors.mintLight, borderRadius: radius.input, padding: spacing.sm },
+  escrow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.md, backgroundColor: colors.mintLight, borderRadius: radius.input, padding: spacing.sm },
   escrowText: { ...typography.caption, color: '#096438', fontWeight: '600' },
   contact: { ...typography.bodyM, color: colors.textPrimary, marginTop: spacing.sm },
   otpBox: { marginTop: spacing.md, backgroundColor: colors.goldLight, borderRadius: radius.card, padding: spacing.md, alignItems: 'center' },

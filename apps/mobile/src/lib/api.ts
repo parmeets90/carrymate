@@ -26,11 +26,42 @@ export function setAccessToken(token: string | null): void {
   inMemoryAccess = token;
 }
 
+/** Called when the session can no longer be refreshed (true expiry) — store wires sign-out. */
+let onAuthExpired: (() => void) | null = null;
+export function setOnAuthExpired(cb: () => void): void {
+  onAuthExpired = cb;
+}
+
 client.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   if (!inMemoryAccess) inMemoryAccess = (await tokenStorage.get()).access;
   if (inMemoryAccess) config.headers.Authorization = `Bearer ${inMemoryAccess}`;
   return config;
 });
+
+/**
+ * Single-flight refresh: exchange the (rotating) refresh token for a fresh pair.
+ * Uses a bare axios call so it bypasses this client's interceptors (no recursion),
+ * and persists the NEW refresh token since the backend rotates it on every use.
+ */
+let refreshing: Promise<string | null> | null = null;
+async function refreshAccess(): Promise<string | null> {
+  const { refresh } = await tokenStorage.get();
+  if (!refresh) return null;
+  try {
+    const res = await axios.post<ApiResponse<AuthTokens>>(
+      `${API_BASE_URL}/v1/auth/refresh`,
+      { refreshToken: refresh },
+      { timeout: 15_000 },
+    );
+    if (!res.data.success) return null;
+    const tokens = res.data.data;
+    await tokenStorage.set(tokens);
+    inMemoryAccess = tokens.accessToken;
+    return tokens.accessToken;
+  } catch {
+    return null;
+  }
+}
 
 /** An error carrying the backend's coded message + field-level validation details. */
 export interface ApiClientError extends Error {
@@ -46,13 +77,38 @@ export interface ApiClientError extends Error {
  */
 client.interceptors.response.use(
   (res) => res,
-  (error) => {
+  async (error) => {
+    const status = error?.response?.status;
+    const code = error?.response?.data?.error?.code;
+    const original = error?.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+
+    // Access token expired → transparently refresh once and retry the request.
+    if (
+      status === 401 &&
+      code === 'TOKEN_EXPIRED' &&
+      original &&
+      !original._retry &&
+      !original.url?.includes('/auth/refresh')
+    ) {
+      original._retry = true;
+      if (!refreshing) refreshing = refreshAccess().finally(() => (refreshing = null));
+      const newAccess = await refreshing;
+      if (newAccess) {
+        original.headers.Authorization = `Bearer ${newAccess}`;
+        return client(original);
+      }
+      // Refresh failed → the session is genuinely over; sign the user out.
+      await tokenStorage.clear();
+      inMemoryAccess = null;
+      onAuthExpired?.();
+    }
+
     const data = error?.response?.data;
     if (data && data.success === false && data.error) {
       const err = new Error(data.error.message) as ApiClientError;
       err.code = data.error.code;
       err.details = data.error.details;
-      err.status = error.response.status;
+      err.status = status;
       return Promise.reject(err);
     }
     return Promise.reject(error);
@@ -91,6 +147,10 @@ async function patch<T>(path: string, data?: unknown): Promise<T> {
   const res = await client.patch<ApiResponse<T>>(path, data);
   return unwrap(res.data);
 }
+async function del<T>(path: string): Promise<T> {
+  const res = await client.delete<ApiResponse<T>>(path);
+  return unwrap(res.data);
+}
 
 /** Upload a picked image via multipart → returns the stored object key. */
 export async function uploadPhoto(
@@ -127,6 +187,9 @@ export const api = {
 
   // Trips (traveler)
   createRoute: (data: Record<string, unknown>) => post<TravelRouteDto>('/v1/routes', data),
+  updateRoute: (id: string, data: Record<string, unknown>) =>
+    patch<TravelRouteDto>(`/v1/routes/${id}`, data),
+  deleteRoute: (id: string) => del<{ success: boolean }>(`/v1/routes/${id}`),
   myRoutes: () => get<TravelRouteDto[]>('/v1/routes'),
   availableForRoute: (routeId: string) =>
     get<DeliveryRequestSummary[]>(`/v1/requests/available?routeId=${routeId}`),
@@ -134,6 +197,9 @@ export const api = {
   // Requests (sender)
   createRequest: (data: Record<string, unknown>) =>
     post<DeliveryRequestDto>('/v1/requests', data),
+  updateRequest: (id: string, data: Record<string, unknown>) =>
+    patch<DeliveryRequestDto>(`/v1/requests/${id}`, data),
+  deleteRequest: (id: string) => del<{ success: boolean }>(`/v1/requests/${id}`),
   myRequests: () => get<DeliveryRequestDto[]>('/v1/requests'),
   requestBids: (requestId: string) => get<BidDto[]>(`/v1/requests/${requestId}/bids`),
   acceptBid: (requestId: string, bidId: string) =>

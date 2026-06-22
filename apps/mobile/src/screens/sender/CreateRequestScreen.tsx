@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { DeliveryRequestDto } from '@carrymate/shared';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
+import { DateField } from '@/components/DateField';
 import { PhotoButton } from '@/components/PhotoButton';
 import { api, firstFieldError } from '@/lib/api';
+
+const MIN_DEADLINE = new Date(Date.now() + 3 * 86_400_000); // 3+ days out (server rule)
 
 const CATEGORIES = ['FOOD', 'DOCUMENTS', 'CLOTHING', 'GIFTS', 'OTHER'];
 const CITIES = ['Dubai', 'Abu Dhabi', 'Sharjah'];
@@ -13,21 +18,24 @@ const CITIES = ['Dubai', 'Abu Dhabi', 'Sharjah'];
 export function CreateRequestScreen() {
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
+  const nav = useNavigation();
+  const editing = (useRoute().params as { request?: DeliveryRequestDto } | undefined)?.request;
+
   const [form, setForm] = useState({
-    title: '',
-    description: '',
-    category: 'GIFTS',
-    weightKg: '1',
-    declaredValueInr: '',
-    originCity: '',
-    originAirport: 'DEL',
-    destinationCity: 'Dubai',
-    recipientName: '',
-    recipientPhone: '+971',
-    recipientAddress: '',
-    deadlineDate: '',
+    title: editing?.title ?? '',
+    description: editing?.description ?? '',
+    category: editing?.category ?? 'GIFTS',
+    weightKg: editing ? String(editing.weightKg) : '1',
+    declaredValueInr: editing ? String(editing.declaredValueInr) : '',
+    originCity: editing?.originCity ?? '',
+    originAirport: editing?.originAirport ?? 'DEL',
+    destinationCity: editing?.destinationCity ?? 'Dubai',
+    recipientName: editing?.recipientName ?? '',
+    recipientPhone: editing?.recipientPhone ?? '+971',
+    recipientAddress: editing?.recipientAddress ?? '',
+    deadlineDate: editing?.deadlineDate ?? '',
   });
-  const [itemPhotos, setItemPhotos] = useState<string[]>([]);
+  const [itemPhotos, setItemPhotos] = useState<string[]>(editing?.itemPhotos ?? []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -37,7 +45,7 @@ export function CreateRequestScreen() {
     setBusy(true);
     setError(undefined);
     try {
-      await api.createRequest({
+      const payload = {
         ...form,
         title: form.title.trim(),
         description: form.description.trim(),
@@ -51,7 +59,15 @@ export function CreateRequestScreen() {
         weightKg: Number(form.weightKg),
         declaredValueInr: Number(form.declaredValueInr),
         itemPhotos,
-      });
+      };
+      if (editing) {
+        await api.updateRequest(editing.id, payload);
+        qc.invalidateQueries({ queryKey: ['my-requests'] });
+        Alert.alert('Request updated', 'Your changes have been saved.');
+        nav.goBack();
+        return;
+      }
+      await api.createRequest(payload);
       qc.invalidateQueries({ queryKey: ['my-requests'] });
       Alert.alert('Request posted', 'Travelers on your route can now bid.');
       setForm((f) => ({ ...f, title: '', description: '', declaredValueInr: '', recipientName: '', recipientAddress: '', deadlineDate: '' }));
@@ -67,10 +83,10 @@ export function CreateRequestScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingTop: insets.top + spacing.lg, paddingBottom: spacing['3xl'], gap: spacing.md }}
+      contentContainerStyle={{ paddingTop: (editing ? 0 : insets.top) + spacing.lg, paddingBottom: spacing['3xl'], gap: spacing.md }}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.title}>Send a package</Text>
+      <Text style={styles.title}>{editing ? 'Edit request' : 'Send a package'}</Text>
 
       <Field label="Title" value={form.title} onChangeText={set('title')} placeholder="e.g. Homemade pickle for Diwali" />
       <Field label="Description" value={form.description} onChangeText={set('description')} placeholder="What's inside?" multiline />
@@ -94,7 +110,13 @@ export function CreateRequestScreen() {
       <Field label="Recipient name" value={form.recipientName} onChangeText={set('recipientName')} />
       <Field label="Recipient phone (UAE)" value={form.recipientPhone} onChangeText={set('recipientPhone')} keyboardType="phone-pad" />
       <Field label="Recipient address" value={form.recipientAddress} onChangeText={set('recipientAddress')} multiline />
-      <Field label="Deadline (YYYY-MM-DD)" value={form.deadlineDate} onChangeText={set('deadlineDate')} placeholder="at least 3 days away" />
+      <DateField
+        label="Deadline"
+        value={form.deadlineDate}
+        onChange={set('deadlineDate')}
+        placeholder="Pick a deadline (3+ days away)"
+        minimumDate={MIN_DEADLINE}
+      />
 
       <Text style={styles.sectionLabel}>Item photos (optional, up to 5)</Text>
       <PhotoButton
@@ -110,7 +132,7 @@ export function CreateRequestScreen() {
         </View>
       ) : null}
 
-      <PrimaryButton label="Post request" onPress={submit} loading={busy} />
+      <PrimaryButton label={editing ? 'Save changes' : 'Post request'} onPress={submit} loading={busy} />
     </ScrollView>
   );
 }

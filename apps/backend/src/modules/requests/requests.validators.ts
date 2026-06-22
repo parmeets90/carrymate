@@ -23,3 +23,10 @@ export const createRequestSchema = z.object({
 });
 
 export type CreateRequestInput = z.infer<typeof createRequestSchema>;
+
+/** Edit an existing request — any subset of editable fields (≥1 required). */
+export const updateRequestSchema = createRequestSchema
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, { message: 'Provide at least one field to update' });
+
+export type UpdateRequestInput = z.infer<typeof updateRequestSchema>;

@@ -3,14 +3,15 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { colors, spacing, radius, typography, shadows } from '@/theme';
 import { Screen, ScreenHeader } from '@/components/Screen';
 import { PrimaryButton, Field } from '@/components/ui';
+import { Icon, type IconName } from '@/components/Icon';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
 
 type Role = 'SENDER' | 'TRAVELER' | 'BOTH';
-const ROLES: { value: Role; emoji: string; title: string; desc: string }[] = [
-  { value: 'SENDER', emoji: '📦', title: 'Send items', desc: 'Send things to people abroad.' },
-  { value: 'TRAVELER', emoji: '✈️', title: 'Carry items', desc: 'Earn on trips you already take.' },
-  { value: 'BOTH', emoji: '🤝', title: 'Both', desc: 'Send and carry.' },
+const ROLES: { value: Role; icon: IconName; title: string; desc: string }[] = [
+  { value: 'SENDER', icon: 'package', title: 'Send items', desc: 'Send things to people abroad.' },
+  { value: 'TRAVELER', icon: 'trips', title: 'Carry items', desc: 'Earn on trips you already take.' },
+  { value: 'BOTH', icon: 'handshake', title: 'Both', desc: 'Send and carry.' },
 ];
 
 export function ProfileScreen() {
@@ -43,7 +44,9 @@ export function ProfileScreen() {
         const active = role === r.value;
         return (
           <Pressable key={r.value} onPress={() => setRole(r.value)} style={[styles.role, active && styles.roleActive]}>
-            <Text style={styles.emoji}>{r.emoji}</Text>
+            <View style={[styles.roleIcon, active && styles.roleIconActive]}>
+              <Icon name={r.icon} size={22} color={active ? colors.skyBlue : colors.textSecondary} weight={active ? 'fill' : 'regular'} />
+            </View>
             <View style={styles.roleText}>
               <Text style={[styles.roleTitle, active && { color: colors.navyMid }]}>{r.title}</Text>
               <Text style={styles.roleDesc}>{r.desc}</Text>
@@ -73,7 +76,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgCard,
   },
   roleActive: { borderColor: colors.skyBlue, backgroundColor: colors.skyLight, ...shadows.sm },
-  emoji: { fontSize: 26 },
+  roleIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.bgSecondary, alignItems: 'center', justifyContent: 'center' },
+  roleIconActive: { backgroundColor: colors.white },
   roleText: { flex: 1 },
   roleTitle: { ...typography.bodyL, fontWeight: '700', color: colors.textPrimary },
   roleDesc: { ...typography.bodyM, color: colors.textSecondary, marginTop: 1 },

@@ -18,8 +18,10 @@ const envSchema = z.object({
   // Auth / JWT (used from Phase 1)
   JWT_ACCESS_SECRET: z.string().optional(),
   JWT_REFRESH_SECRET: z.string().optional(),
-  JWT_ACCESS_EXPIRY: z.string().default('15m'),
-  JWT_REFRESH_EXPIRY: z.string().default('7d'),
+  JWT_ACCESS_EXPIRY: z.string().default('1h'),
+  // Long, rotating refresh window: with client-side auto-refresh this keeps an
+  // active session alive until the user explicitly signs out.
+  JWT_REFRESH_EXPIRY: z.string().default('90d'),
 
   // OTP
   OTP_EXPIRY_MINUTES: z.coerce.number().int().positive().default(10),

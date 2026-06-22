@@ -9,7 +9,9 @@ import {
 } from '../../utils/marketplace';
 import { INDIA_ORIGIN_AIRPORTS } from '@carrymate/shared';
 import { toRequestDto, toRequestSummary } from '../marketplace/serializers';
-import type { CreateRequestInput } from './requests.validators';
+import type { CreateRequestInput, UpdateRequestInput } from './requests.validators';
+
+const EDITABLE_STATUSES = ['OPEN', 'BIDDING'] as const;
 
 const ACTIVE_STATUSES = ['OPEN', 'BIDDING', 'MATCHED', 'IN_TRANSIT'] as const;
 
@@ -90,6 +92,51 @@ async function ownRequestOrThrow(requestId: string, senderId: string) {
   const request = await prisma.deliveryRequest.findUnique({ where: { id: requestId } });
   if (!request || request.senderId !== senderId) throw AppError.notFound('Request not found');
   return request;
+}
+
+/** Edit a request — only before it's matched, and re-running the safety checks. */
+export async function updateRequest(
+  requestId: string,
+  senderId: string,
+  input: UpdateRequestInput,
+): Promise<DeliveryRequestDto> {
+  const request = await ownRequestOrThrow(requestId, senderId);
+  if (!(EDITABLE_STATUSES as readonly string[]).includes(request.status)) {
+    throw new AppError(409, 'NOT_EDITABLE', 'Only open requests can be edited.');
+  }
+
+  const title = input.title ?? request.title;
+  const description = input.description ?? request.description;
+  const hit = findProhibitedKeyword(title, description);
+  if (hit) throw new AppError(400, 'ITEM_PROHIBITED', `This item is not allowed (matched "${hit}").`);
+
+  if (input.originAirport && !(INDIA_ORIGIN_AIRPORTS as readonly string[]).includes(input.originAirport)) {
+    throw new AppError(400, 'INVALID_AIRPORT', `Unsupported origin airport: ${input.originAirport}`);
+  }
+  if (input.destinationCity) assertDestinationCity(input.destinationCity);
+  if (input.deadlineDate) {
+    const minDeadline = new Date();
+    minDeadline.setHours(0, 0, 0, 0);
+    minDeadline.setDate(minDeadline.getDate() + MIN_DEADLINE_DAYS);
+    if (input.deadlineDate < minDeadline) {
+      throw new AppError(400, 'DEADLINE_TOO_SOON', `Deadline must be at least ${MIN_DEADLINE_DAYS} days away.`);
+    }
+  }
+
+  const updated = await prisma.deliveryRequest.update({
+    where: { id: requestId },
+    data: { ...input, senderNotes: input.senderNotes ?? undefined },
+  });
+  return toRequestDto(updated);
+}
+
+/** Delete a request outright — allowed only before it's matched (cascades any bids). */
+export async function deleteRequest(requestId: string, senderId: string): Promise<void> {
+  const request = await ownRequestOrThrow(requestId, senderId);
+  if (!(EDITABLE_STATUSES as readonly string[]).includes(request.status)) {
+    throw new AppError(409, 'NOT_DELETABLE', 'A matched request cannot be deleted — cancel it from the order.');
+  }
+  await prisma.deliveryRequest.delete({ where: { id: requestId } });
 }
 
 export async function getMyRequest(

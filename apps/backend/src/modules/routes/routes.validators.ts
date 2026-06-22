@@ -13,3 +13,10 @@ export const createRouteSchema = z.object({
 });
 
 export type CreateRouteInput = z.infer<typeof createRouteSchema>;
+
+/** Edit an existing trip — any subset of fields (≥1 required). */
+export const updateRouteSchema = createRouteSchema
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, { message: 'Provide at least one field to update' });
+
+export type UpdateRouteInput = z.infer<typeof updateRouteSchema>;

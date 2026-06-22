@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
+import { DateField } from '@/components/DateField';
 import { api } from '@/lib/api';
 import type { ScreenProps } from '@/navigation/types';
 
@@ -70,7 +71,7 @@ export function PlaceBidScreen({ route, navigation }: ScreenProps<'PlaceBid'>) {
         })}
       </View>
 
-      <Field label="Estimated delivery (YYYY-MM-DD)" value={estimatedDeliveryDate} onChangeText={setEta} placeholder="2026-07-03" />
+      <DateField label="Estimated delivery date" value={estimatedDeliveryDate} onChange={setEta} placeholder="Pick a delivery date" minimumDate={new Date()} />
       <Field label="Message to sender (optional)" value={message} onChangeText={setMessage} multiline placeholder="Happy to carry this!" error={error} />
 
       <PrimaryButton label="Submit bid" onPress={submit} loading={busy} />

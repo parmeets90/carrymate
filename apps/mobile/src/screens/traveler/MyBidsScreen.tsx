@@ -26,7 +26,7 @@ export function MyBidsScreen() {
           refreshing={isRefetching}
           contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.md }}
           ListEmptyComponent={
-            <EmptyState icon="🏷️" title="No bids yet" body="Browse requests from your trips to place a bid." />
+            <EmptyState icon="bids" title="No bids yet" body="Browse requests from your trips to place a bid." />
           }
           renderItem={({ item }) => (
             <Card>

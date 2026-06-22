@@ -2,12 +2,14 @@ import { Router } from 'express';
 import { UserRole } from '@carrymate/shared';
 import { authenticate, requireKyc, requireRole } from '../../middleware/auth.middleware';
 import { validateBody } from '../../middleware/validate';
-import { createRequestSchema } from './requests.validators';
+import { createRequestSchema, updateRequestSchema } from './requests.validators';
 import {
   postRequest,
   getMyRequests,
   getRequestById,
   postCancelRequest,
+  patchRequest,
+  deleteRequestHandler,
   getAvailableRequests,
 } from './requests.controller';
 import { getRequestBids, postAcceptBid } from '../bids/bids.controller';
@@ -23,6 +25,8 @@ requestsRouter.get('/available', requireRole(UserRole.TRAVELER), getAvailableReq
 requestsRouter.post('/', requireRole(UserRole.SENDER), validateBody(createRequestSchema), postRequest);
 requestsRouter.get('/', requireRole(UserRole.SENDER), getMyRequests);
 requestsRouter.get('/:requestId', requireRole(UserRole.SENDER), getRequestById);
+requestsRouter.patch('/:requestId', requireRole(UserRole.SENDER), validateBody(updateRequestSchema), patchRequest);
+requestsRouter.delete('/:requestId', requireRole(UserRole.SENDER), deleteRequestHandler);
 requestsRouter.post('/:requestId/cancel', requireRole(UserRole.SENDER), postCancelRequest);
 
 // Sender: view bids on a request and accept one.

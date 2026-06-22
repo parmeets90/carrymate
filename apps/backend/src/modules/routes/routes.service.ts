@@ -3,7 +3,7 @@ import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import { assertCorridor } from '../../utils/marketplace';
 import { toRouteDto } from '../marketplace/serializers';
-import type { CreateRouteInput } from './routes.validators';
+import type { CreateRouteInput, UpdateRouteInput } from './routes.validators';
 
 function startOfToday(): Date {
   const d = new Date();
@@ -69,4 +69,44 @@ export async function cancelRoute(routeId: string, travelerId: string): Promise<
     data: { status: 'CANCELLED' },
   });
   return toRouteDto(route);
+}
+
+/** Edit a trip — only while ACTIVE and before any cargo has been committed. */
+export async function updateRoute(
+  routeId: string,
+  travelerId: string,
+  input: UpdateRouteInput,
+): Promise<TravelRouteDto> {
+  const route = await ownRouteOrThrow(routeId, travelerId);
+  if (route.status !== 'ACTIVE') {
+    throw new AppError(409, 'NOT_EDITABLE', 'Only active trips can be edited.');
+  }
+  if (Number(route.capacityUsedKg) > 0) {
+    throw new AppError(409, 'ROUTE_COMMITTED', 'You’ve already accepted cargo on this trip — it can’t be edited.');
+  }
+
+  const origin = input.originAirport ?? route.originAirport;
+  const destination = input.destinationAirport ?? route.destinationAirport;
+  assertCorridor(origin, destination);
+
+  const departure = input.departureDate ?? route.departureDate;
+  if (departure < startOfToday()) {
+    throw new AppError(400, 'FLIGHT_DEPARTED', 'Departure date cannot be in the past.');
+  }
+  const arrival = input.arrivalDate ?? route.arrivalDate;
+  if (arrival && arrival < departure) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Arrival cannot be before departure.');
+  }
+
+  const updated = await prisma.travelRoute.update({ where: { id: routeId }, data: { ...input } });
+  return toRouteDto(updated);
+}
+
+/** Delete a trip outright — only while ACTIVE with no committed cargo (cascades pending bids). */
+export async function deleteRoute(routeId: string, travelerId: string): Promise<void> {
+  const route = await ownRouteOrThrow(routeId, travelerId);
+  if (route.status !== 'ACTIVE' || Number(route.capacityUsedKg) > 0) {
+    throw new AppError(409, 'NOT_DELETABLE', 'This trip has committed cargo and can’t be deleted.');
+  }
+  await prisma.travelRoute.delete({ where: { id: routeId } });
 }
