@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { colors, spacing, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
+import { PhotoButton } from '@/components/PhotoButton';
 import { api } from '@/lib/api';
 import type { ScreenProps } from '@/navigation/types';
 
@@ -10,15 +11,19 @@ export function DeliverScreen({ route, navigation }: ScreenProps<'Deliver'>) {
   const { orderId, title } = route.params;
   const qc = useQueryClient();
   const [otp, setOtp] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
   const submit = async () => {
+    if (photos.length === 0) {
+      setError('Add at least one delivery photo.');
+      return;
+    }
     setBusy(true);
     setError(undefined);
     try {
-      // Photo capture/upload is a follow-up (needs image-picker + presigned upload).
-      await api.deliverOrder(orderId, { otp: otp.trim(), photos: ['pending-upload'] });
+      await api.deliverOrder(orderId, { otp: otp.trim(), photos });
       qc.invalidateQueries({ queryKey: ['orders'] });
       navigation.goBack();
     } catch (e) {
@@ -44,7 +49,14 @@ export function DeliverScreen({ route, navigation }: ScreenProps<'Deliver'>) {
         autoFocus
         error={error}
       />
-      <Text style={styles.note}>Photo proof capture arrives in an upcoming update.</Text>
+      <View style={{ marginTop: spacing.md }}>
+        <PhotoButton
+          purpose="delivery"
+          label="Add delivery photo"
+          count={photos.length}
+          onUploaded={(key) => setPhotos((p) => (p.length < 3 ? [...p, key] : p))}
+        />
+      </View>
 
       <View style={styles.footer}>
         <PrimaryButton label="Mark as delivered" onPress={submit} loading={busy} />

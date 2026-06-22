@@ -13,6 +13,8 @@ export interface StorageProvider {
   createUploadUrl(key: string): Promise<{ uploadUrl: string; token: string; key: string }>;
   /** A short-lived signed URL to read a private object. */
   createDownloadUrl(key: string, expiresInSeconds?: number): Promise<string>;
+  /** Server-side upload of raw bytes (used by the multipart upload endpoint). */
+  upload(key: string, body: Buffer, contentType: string): Promise<void>;
 }
 
 class SupabaseStorageProvider implements StorageProvider {
@@ -44,6 +46,13 @@ class SupabaseStorageProvider implements StorageProvider {
       throw AppError.internal(`Storage download URL failed: ${error?.message ?? 'unknown'}`);
     }
     return data.signedUrl;
+  }
+
+  async upload(key: string, body: Buffer, contentType: string) {
+    const { error } = await this.client.storage
+      .from(this.bucket)
+      .upload(key, body, { contentType, upsert: true });
+    if (error) throw AppError.internal(`Storage upload failed: ${error.message}`);
   }
 }
 

@@ -51,7 +51,27 @@ async function patch<T>(path: string, data?: unknown): Promise<T> {
   return unwrap(res.data);
 }
 
+/** Upload a picked image via multipart → returns the stored object key. */
+export async function uploadPhoto(
+  purpose: string,
+  asset: { uri: string; type?: string; fileName?: string },
+): Promise<string> {
+  const form = new FormData();
+  form.append('purpose', purpose);
+  form.append('file', {
+    uri: asset.uri,
+    type: asset.type ?? 'image/jpeg',
+    name: asset.fileName ?? 'photo.jpg',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any);
+  const res = await client.post<ApiResponse<{ key: string }>>('/v1/uploads', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return unwrap(res.data).key;
+}
+
 export const api = {
+  uploadPhoto,
   sendOtp: (phone: string) =>
     post<{ phoneMasked: string; expiresInSeconds: number }>('/v1/auth/send-otp', { phone }),
   verifyOtp: (phone: string, code: string, fcmToken?: string) =>

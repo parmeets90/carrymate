@@ -30,17 +30,6 @@ export function OrdersScreen() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ['orders'] });
   const pay = useMutation({ mutationFn: (id: string) => api.payOrder(id), onSuccess: invalidate, onError: (e) => Alert.alert('Payment failed', (e as Error).message) });
   const release = useMutation({ mutationFn: (id: string) => api.releaseOrder(id), onSuccess: () => { invalidate(); Alert.alert('Released', 'Escrow released to the traveler.'); }, onError: (e) => Alert.alert('Could not release', (e as Error).message) });
-  const openBox = useMutation({
-    mutationFn: (id: string) => api.openBox(id, { checklist: { inspected: true, contentsMatch: true, noProhibited: true, sealed: true }, photos: ['pending-upload'] }),
-    onSuccess: invalidate,
-    onError: (e) => Alert.alert('Open-box failed', (e as Error).message),
-  });
-
-  const confirmOpenBox = (id: string) =>
-    Alert.alert('Open-box declaration', 'Confirm you inspected the package, contents match, no prohibited items, and it is sealed.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Confirm & pick up', onPress: () => openBox.mutate(id) },
-    ]);
 
   const renderItem = ({ item }: { item: OrderView }) => {
     const isSender = item.role === 'SENDER';
@@ -88,7 +77,7 @@ export function OrdersScreen() {
             <PrimaryButton label={`Pay ${inr(item.amountInr)} into escrow`} onPress={() => pay.mutate(item.id)} loading={pay.isPending} />
           )}
           {!isSender && item.status === 'ESCROW_HELD' && item.requestStatus === 'MATCHED' && (
-            <PrimaryButton label="Confirm open-box & pick up" onPress={() => confirmOpenBox(item.id)} loading={openBox.isPending} />
+            <PrimaryButton label="Open-box & pick up" onPress={() => nav.navigate('OpenBox', { orderId: item.id, title: item.requestTitle })} />
           )}
           {!isSender && item.requestStatus === 'IN_TRANSIT' && (
             <PrimaryButton label="Enter handover code & deliver" onPress={() => nav.navigate('Deliver', { orderId: item.id, title: item.requestTitle })} />

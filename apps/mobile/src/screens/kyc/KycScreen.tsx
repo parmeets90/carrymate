@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
+import { PhotoButton } from '@/components/PhotoButton';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
 
@@ -22,6 +23,7 @@ export function KycScreen() {
   const [status, setStatus] = useState<string>(user?.kycStatus ?? 'PENDING');
   const [docType, setDocType] = useState(options[0]!.value);
   const [docNumber, setDocNumber] = useState('');
+  const [fileKey, setFileKey] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
@@ -42,7 +44,7 @@ export function KycScreen() {
     setBusy(true);
     setError(undefined);
     try {
-      const res = await api.submitKyc({ docType, docNumber: docNumber.trim() });
+      const res = await api.submitKyc({ docType, docNumber: docNumber.trim(), fileKey });
       setStatus(res.kycStatus);
     } catch (e) {
       setError((e as Error).message);
@@ -124,9 +126,14 @@ export function KycScreen() {
             error={error}
           />
 
-          <Text style={styles.note}>
-            Document photo upload arrives with secure storage in an upcoming update.
-          </Text>
+          <View style={{ marginTop: spacing.md }}>
+            <PhotoButton
+              purpose="kyc"
+              label={fileKey ? 'Document photo added' : 'Upload document photo'}
+              count={fileKey ? 1 : 0}
+              onUploaded={setFileKey}
+            />
+          </View>
 
           <View style={styles.footer}>
             <PrimaryButton label="Submit for verification" onPress={submit} loading={busy} />

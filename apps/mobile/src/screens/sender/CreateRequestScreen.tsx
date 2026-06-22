@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
+import { PhotoButton } from '@/components/PhotoButton';
 import { api } from '@/lib/api';
 
 const CATEGORIES = ['FOOD', 'DOCUMENTS', 'CLOTHING', 'GIFTS', 'OTHER'];
@@ -26,6 +27,7 @@ export function CreateRequestScreen() {
     recipientAddress: '',
     deadlineDate: '',
   });
+  const [itemPhotos, setItemPhotos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -39,10 +41,12 @@ export function CreateRequestScreen() {
         ...form,
         weightKg: Number(form.weightKg),
         declaredValueInr: Number(form.declaredValueInr),
+        itemPhotos,
       });
       qc.invalidateQueries({ queryKey: ['my-requests'] });
       Alert.alert('Request posted', 'Travelers on your route can now bid.');
       setForm((f) => ({ ...f, title: '', description: '', declaredValueInr: '', recipientName: '', recipientAddress: '', deadlineDate: '' }));
+      setItemPhotos([]);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -81,6 +85,14 @@ export function CreateRequestScreen() {
       <Field label="Recipient phone (UAE)" value={form.recipientPhone} onChangeText={set('recipientPhone')} keyboardType="phone-pad" />
       <Field label="Recipient address" value={form.recipientAddress} onChangeText={set('recipientAddress')} multiline />
       <Field label="Deadline (YYYY-MM-DD)" value={form.deadlineDate} onChangeText={set('deadlineDate')} placeholder="at least 3 days away" error={error} />
+
+      <Text style={styles.sectionLabel}>Item photos (optional, up to 5)</Text>
+      <PhotoButton
+        purpose="item"
+        label="Add item photo"
+        count={itemPhotos.length}
+        onUploaded={(key) => setItemPhotos((p) => (p.length < 5 ? [...p, key] : p))}
+      />
 
       <PrimaryButton label="Post request" onPress={submit} loading={busy} />
     </ScrollView>
