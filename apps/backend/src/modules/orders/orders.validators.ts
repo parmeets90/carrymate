@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import { DisputeReason } from '@carrymate/shared';
 
+/** A single open-box photo with its capture location + time (the legal firewall). */
+export const inspectionPhotoSchema = z.object({
+  key: z.string().trim().min(1),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+  takenAt: z.string().trim().optional(),
+});
+
 export const openBoxSchema = z.object({
   checklist: z.object({
     inspected: z.boolean(),
@@ -8,9 +16,7 @@ export const openBoxSchema = z.object({
     noProhibited: z.boolean(),
     sealed: z.boolean(),
   }),
-  photos: z.array(z.string().trim().min(1)).min(1).max(5),
-  lat: z.number().optional(),
-  lng: z.number().optional(),
+  photos: z.array(inspectionPhotoSchema).min(1).max(5),
 });
 
 export const deliverSchema = z.object({

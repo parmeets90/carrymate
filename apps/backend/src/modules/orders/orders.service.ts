@@ -10,6 +10,7 @@ import { createNotification } from '../notifications/notifications.service';
 import { writeAudit } from '../../utils/audit';
 import { RISK_FLAG_THRESHOLD } from '../fraud/fraud.service';
 import { transition, runTransition } from '../payments/payment-state-machine';
+import { generateInspectionPdf, type InspectionPhoto } from '../inspection/inspection-pdf';
 import { toOrderView } from './orders.serializer';
 
 const withRelations = { request: true, sender: true, traveler: true, dispute: true } as const;
@@ -71,7 +72,7 @@ export async function payOrder(orderId: string, senderId: string): Promise<Order
 export async function openBoxOrder(
   orderId: string,
   travelerId: string,
-  input: { checklist: Record<string, boolean>; photos: string[]; lat?: number; lng?: number },
+  input: { checklist: Record<string, boolean>; photos: InspectionPhoto[] },
 ): Promise<OrderView> {
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { request: true } });
   if (!order || order.travelerId !== travelerId) throw AppError.notFound('Order not found');
@@ -89,7 +90,7 @@ export async function openBoxOrder(
   await prisma.$transaction(async (tx) => {
     await runTransition(tx, orderId, 'IN_TRANSIT', 'open_box', {
       data: {
-        openBox: { checklist: input.checklist, photos: input.photos, lat: input.lat, lng: input.lng, at: new Date().toISOString() },
+        openBox: { checklist: input.checklist, photos: input.photos, at: new Date().toISOString() } as never,
         openBoxAt: new Date(),
         pickedUpAt: new Date(),
         deliveryOtp,
@@ -97,9 +98,34 @@ export async function openBoxOrder(
       meta: { photos: input.photos.length },
     });
     await tx.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'IN_TRANSIT' } });
+    // Open-box inspection record — the legal firewall (Challenge 01).
+    await tx.inspectionRecord.create({
+      data: {
+        orderId,
+        travelerId,
+        photos: input.photos as never,
+        checklist: input.checklist as never,
+      },
+    });
   });
   const fresh = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: withRelations });
   logger.info(`[fulfillment] open-box done, in transit: order ${orderId}`);
+
+  // Generate the inspection summary PDF off the request path (best-effort).
+  void generateInspectionPdf({
+    orderId,
+    travelerName: fresh.traveler.fullName,
+    requestTitle: fresh.request.title,
+    checklist: input.checklist,
+    photos: input.photos,
+  }).then((pdfKey) => {
+    if (pdfKey) {
+      return prisma.inspectionRecord
+        .update({ where: { orderId }, data: { pdfKey } })
+        .catch((err) => logger.error(`[inspection] pdfKey save failed: ${(err as Error).message}`));
+    }
+    return undefined;
+  });
   await createNotification({
     userId: fresh.senderId,
     type: NotificationType.IN_TRANSIT,

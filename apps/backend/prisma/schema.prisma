@@ -348,6 +348,7 @@ model Order {
   ratings  Rating[]
   conversation Conversation?
   stateLogs    PaymentStateLog[]
+  inspection   InspectionRecord?
 
   @@index([senderId])
   @@index([travelerId])
@@ -488,6 +489,23 @@ enum AuditAction {
   ORDER_HOLD_CLEARED
   USER_STATUS_CHANGED
   USER_AUTO_SUSPENDED
+}
+
+/// Open-box inspection record (Challenge 01 — the legal firewall). One per order.
+/// Photos carry per-image GPS + timestamp; a summary PDF is generated after submit.
+model InspectionRecord {
+  id         String   @id @default(uuid()) @db.Uuid
+  orderId    String   @unique @map("order_id") @db.Uuid
+  travelerId String   @map("traveler_id") @db.Uuid
+  photos     Json // [{ key, lat, lng, takenAt }]
+  checklist  Json // { inspected, contentsMatch, noProhibited, sealed }
+  pdfKey     String?  @map("pdf_key") // storage key of the generated summary PDF
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([travelerId])
+  @@map("inspection_records")
 }
 
 /// Append-only log of every payment-state transition (Challenge 03).

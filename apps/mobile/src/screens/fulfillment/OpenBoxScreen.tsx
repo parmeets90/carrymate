@@ -5,7 +5,15 @@ import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton } from '@/components/ui';
 import { PhotoButton } from '@/components/PhotoButton';
 import { api } from '@/lib/api';
+import { getCurrentCoords } from '@/lib/location';
 import type { ScreenProps } from '@/navigation/types';
+
+interface InspectionPhoto {
+  key: string;
+  lat?: number;
+  lng?: number;
+  takenAt: string;
+}
 
 const ITEMS: { key: 'inspected' | 'contentsMatch' | 'noProhibited' | 'sealed'; label: string }[] = [
   { key: 'inspected', label: 'I inspected the package in the sender’s presence' },
@@ -18,11 +26,21 @@ export function OpenBoxScreen({ route, navigation }: ScreenProps<'OpenBox'>) {
   const { orderId, title } = route.params;
   const qc = useQueryClient();
   const [checks, setChecks] = useState({ inspected: false, contentsMatch: false, noProhibited: false, sealed: false });
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<InspectionPhoto[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
   const allChecked = ITEMS.every((i) => checks[i.key]);
+
+  // Geotag + timestamp each photo as it's captured (best-effort location).
+  const onPhotoUploaded = async (key: string) => {
+    const coords = await getCurrentCoords();
+    setPhotos((p) =>
+      p.length < 5
+        ? [...p, { key, lat: coords?.lat, lng: coords?.lng, takenAt: new Date().toISOString() }]
+        : p,
+    );
+  };
 
   const submit = async () => {
     if (!allChecked) return setError('Please confirm all four items.');
@@ -56,7 +74,10 @@ export function OpenBoxScreen({ route, navigation }: ScreenProps<'OpenBox'>) {
         );
       })}
 
-      <PhotoButton purpose="openbox" label="Add package photo" count={photos.length} onUploaded={(k) => setPhotos((p) => (p.length < 5 ? [...p, k] : p))} />
+      <PhotoButton purpose="openbox" label="Add package photo" count={photos.length} onUploaded={onPhotoUploaded} />
+      {photos.some((p) => p.lat != null) && (
+        <Text style={styles.geo}>📍 Photos geotagged for your inspection record</Text>
+      )}
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <PrimaryButton label="Confirm & pick up" onPress={submit} loading={busy} disabled={!allChecked} />
@@ -75,4 +96,5 @@ const styles = StyleSheet.create({
   tick: { color: colors.white, fontWeight: '800' },
   checkLabel: { ...typography.bodyM, color: colors.textPrimary, flex: 1 },
   error: { ...typography.bodyM, color: colors.dangerRed },
+  geo: { ...typography.caption, color: colors.mintPrimary, fontWeight: '600' },
 });
