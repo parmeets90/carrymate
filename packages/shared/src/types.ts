@@ -196,6 +196,30 @@ export interface OrderView {
   counterpartyPhone: string | null;
   escrowHeldAt: string | null;
   releasedAt: string | null;
+  // Fulfillment (Phase 4)
+  requestStatus: string; // MATCHED | IN_TRANSIT | DELIVERED | CONFIRMED | ...
+  openBoxDone: boolean;
+  deliveredAt: string | null;
+  autoConfirmAt: string | null;
+  hasDispute: boolean;
+  /** Delivery handover code — shown to the sender only, once in transit. */
+  deliveryOtp: string | null;
+}
+
+/** A dispute as shown to admins, with order/party context. */
+export interface DisputeView {
+  id: string;
+  orderId: string;
+  reason: string;
+  description: string;
+  evidence: string[];
+  status: string;
+  raisedByRole: 'SENDER' | 'TRAVELER';
+  requestTitle: string;
+  amountInr: number;
+  senderName: string | null;
+  travelerName: string | null;
+  createdAt: string;
 }
 
 /** Health-check payload. */

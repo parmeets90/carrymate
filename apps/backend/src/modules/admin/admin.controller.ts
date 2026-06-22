@@ -11,7 +11,9 @@ import {
   forceExpireRequest,
 } from './admin.service';
 import { listAllOrders, refundOrder } from '../orders/orders.service';
-import { listUsersSchema, listRequestsSchema } from './admin.validators';
+import { listOpenDisputes, resolveDispute } from '../disputes/disputes.service';
+import { listUsersSchema, listRequestsSchema, resolveDisputeSchema } from './admin.validators';
+import type { ResolveDisputeInput } from './admin.validators';
 import type { RejectKycInput, SetStatusInput } from './admin.validators';
 
 export const getPendingKyc: RequestHandler = async (_req, res) => {
@@ -60,5 +62,15 @@ export const getOrders: RequestHandler = async (req, res) => {
 
 export const postRefundOrder: RequestHandler = async (req, res) => {
   await refundOrder(req.params.orderId!);
+  ok(res, { success: true });
+};
+
+export const getDisputes: RequestHandler = async (_req, res) => {
+  ok(res, await listOpenDisputes());
+};
+
+export const postResolveDispute: RequestHandler = async (req, res) => {
+  const { decision, note } = req.body as ResolveDisputeInput;
+  await resolveDispute(req.params.disputeId!, req.user!.id, decision, note);
   ok(res, { success: true });
 };

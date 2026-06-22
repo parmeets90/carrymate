@@ -2,6 +2,9 @@ import { createApp } from './app';
 import { env } from './config/env';
 import { logger } from './utils/logger';
 import { prisma } from './lib/prisma';
+import { runAutoConfirm } from './modules/orders/orders.service';
+
+const AUTO_CONFIRM_INTERVAL_MS = 10 * 60_000; // every 10 min
 
 async function bootstrap(): Promise<void> {
   const app = createApp();
@@ -12,6 +15,12 @@ async function bootstrap(): Promise<void> {
     logger.info(`   Liveness: /healthz · Readiness: /health`);
     logger.info(`   Env: ${env.NODE_ENV}`);
   });
+
+  // Escrow auto-confirm sweep (releases delivered orders past their window).
+  const autoConfirmTimer = setInterval(() => {
+    runAutoConfirm().catch((err) => logger.error('auto-confirm sweep failed', err));
+  }, AUTO_CONFIRM_INTERVAL_MS);
+  autoConfirmTimer.unref();
 
   const shutdown = async (signal: string): Promise<void> => {
     logger.info(`${signal} received — shutting down gracefully`);

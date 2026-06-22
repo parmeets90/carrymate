@@ -300,14 +300,77 @@ model Order {
   escrowHeldAt  DateTime?   @map("escrow_held_at") @db.Timestamptz
   releasedAt    DateTime?   @map("released_at") @db.Timestamptz
   refundedAt    DateTime?   @map("refunded_at") @db.Timestamptz
+  // Fulfillment (Phase 4)
+  openBox       Json?       @map("open_box") // checklist + photo keys + gps + ts
+  openBoxAt     DateTime?   @map("open_box_at") @db.Timestamptz
+  deliveryOtp   String?     @map("delivery_otp_hash") // 6-digit handover code (shown to sender)
+  deliveryProof String[]    @default([]) @map("delivery_proof") // S3 keys
+  pickedUpAt    DateTime?   @map("picked_up_at") @db.Timestamptz
+  deliveredAt   DateTime?   @map("delivered_at") @db.Timestamptz
+  autoConfirmAt DateTime?   @map("auto_confirm_at") @db.Timestamptz
   createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz
 
   request  DeliveryRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   sender   User            @relation("OrderSender", fields: [senderId], references: [id])
   traveler User            @relation("OrderTraveler", fields: [travelerId], references: [id])
+  dispute  Dispute?
+  ratings  Rating[]
 
   @@index([senderId])
   @@index([travelerId])
+  @@index([status, autoConfirmAt])
   @@map("orders")
+}
+
+enum DisputeReason {
+  ITEM_NOT_DELIVERED
+  ITEM_DAMAGED
+  WRONG_ITEM
+  FRAUD
+  OTHER
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED_SENDER
+  RESOLVED_TRAVELER
+}
+
+/// A dispute on an order. Freezes escrow until an admin resolves it.
+model Dispute {
+  id             String        @id @default(uuid()) @db.Uuid
+  orderId        String        @unique @map("order_id") @db.Uuid
+  raisedById     String        @map("raised_by_id") @db.Uuid
+  reason         DisputeReason
+  description    String
+  evidence       String[]      @default([]) // S3 keys
+  status         DisputeStatus @default(OPEN)
+  resolvedById   String?       @map("resolved_by_id") @db.Uuid
+  resolutionNote String?       @map("resolution_note")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  resolvedAt     DateTime?     @map("resolved_at") @db.Timestamptz
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("disputes")
+}
+
+/// Bidirectional post-delivery rating.
+model Rating {
+  id        String   @id @default(uuid()) @db.Uuid
+  orderId   String   @map("order_id") @db.Uuid
+  raterId   String   @map("rater_id") @db.Uuid
+  rateeId   String   @map("ratee_id") @db.Uuid
+  stars     Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, raterId])
+  @@index([rateeId])
+  @@map("ratings")
 }

@@ -1,11 +1,13 @@
 import type { OrderView, Paginated } from '@carrymate/shared';
+import { DELIVERY_AUTO_CONFIRM_HOURS } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { env } from '../../config/env';
 import { AppError } from '../../utils/errors';
 import { logger } from '../../utils/logger';
+import { generateNumericOtp } from '../../utils/crypto';
 import { toOrderView } from './orders.serializer';
 
-const withRelations = { request: true, sender: true, traveler: true } as const;
+const withRelations = { request: true, sender: true, traveler: true, dispute: true } as const;
 
 export async function listMyOrders(userId: string): Promise<OrderView[]> {
   const orders = await prisma.order.findMany({
@@ -52,16 +54,90 @@ export async function payOrder(orderId: string, senderId: string): Promise<Order
 }
 
 /**
- * Sender confirms receipt → release escrow to the traveler.
- * (Phase 4 will gate this behind delivery proof + OTP; here it's a direct confirm.)
+ * Traveler open-box declaration at pickup → item goes in transit.
+ * Generates the delivery handover code (shown to the sender).
  */
-export async function releaseOrder(orderId: string, senderId: string): Promise<OrderView> {
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order || order.senderId !== senderId) throw AppError.notFound('Order not found');
-  if (order.status !== 'ESCROW_HELD') {
-    throw new AppError(409, 'ESCROW_NOT_HELD', 'Escrow is not currently held for this order.');
+export async function openBoxOrder(
+  orderId: string,
+  travelerId: string,
+  input: { checklist: Record<string, boolean>; photos: string[]; lat?: number; lng?: number },
+): Promise<OrderView> {
+  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { request: true } });
+  if (!order || order.travelerId !== travelerId) throw AppError.notFound('Order not found');
+  if (order.status !== 'ESCROW_HELD' || order.request.status !== 'MATCHED') {
+    throw new AppError(409, 'NOT_READY_FOR_PICKUP', 'This order is not ready for pickup.');
+  }
+  const allChecked = ['inspected', 'contentsMatch', 'noProhibited', 'sealed'].every(
+    (k) => input.checklist[k] === true,
+  );
+  if (!allChecked) {
+    throw AppError.badRequest('All open-box checklist items must be confirmed.');
   }
 
+  const deliveryOtp = generateNumericOtp(6);
+  await prisma.$transaction([
+    prisma.order.update({
+      where: { id: orderId },
+      data: {
+        openBox: { checklist: input.checklist, photos: input.photos, lat: input.lat, lng: input.lng, at: new Date().toISOString() },
+        openBoxAt: new Date(),
+        pickedUpAt: new Date(),
+        deliveryOtp,
+      },
+    }),
+    prisma.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'IN_TRANSIT' } }),
+  ]);
+  const fresh = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: withRelations });
+  logger.info(`[fulfillment] open-box done, in transit: order ${orderId}`);
+  return toOrderView(fresh, travelerId);
+}
+
+/** Traveler delivers: verify handover OTP + upload proof → delivered (starts auto-confirm clock). */
+export async function deliverOrder(
+  orderId: string,
+  travelerId: string,
+  input: { otp: string; photos: string[] },
+): Promise<OrderView> {
+  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { request: true } });
+  if (!order || order.travelerId !== travelerId) throw AppError.notFound('Order not found');
+  if (order.request.status !== 'IN_TRANSIT') {
+    throw new AppError(409, 'NOT_IN_TRANSIT', 'This order is not in transit.');
+  }
+  if (!order.deliveryOtp || input.otp.trim() !== order.deliveryOtp) {
+    throw new AppError(400, 'OTP_INVALID', 'Invalid handover code.');
+  }
+
+  const autoConfirmAt = new Date(Date.now() + DELIVERY_AUTO_CONFIRM_HOURS * 3_600_000);
+  await prisma.$transaction([
+    prisma.order.update({
+      where: { id: orderId },
+      data: { deliveryProof: input.photos, deliveredAt: new Date(), autoConfirmAt },
+    }),
+    prisma.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'DELIVERED' } }),
+  ]);
+  const fresh = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, include: withRelations });
+  logger.info(`[fulfillment] delivered: order ${orderId} (auto-confirm ${autoConfirmAt.toISOString()})`);
+  return toOrderView(fresh, travelerId);
+}
+
+/**
+ * Sender confirms receipt → release escrow to the traveler.
+ * Gated: the item must be DELIVERED and not under dispute.
+ */
+export async function releaseOrder(orderId: string, senderId: string): Promise<OrderView> {
+  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { request: true } });
+  if (!order || order.senderId !== senderId) throw AppError.notFound('Order not found');
+  if (order.status === 'DISPUTED') {
+    throw new AppError(409, 'ORDER_DISPUTED', 'This order is under dispute.');
+  }
+  if (order.status !== 'ESCROW_HELD' || order.request.status !== 'DELIVERED') {
+    throw new AppError(409, 'NOT_DELIVERED', 'You can release escrow only after delivery.');
+  }
+  return doRelease(orderId, senderId);
+}
+
+async function doRelease(orderId: string, viewerId: string): Promise<OrderView> {
+  const order = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
   const [updated] = await prisma.$transaction([
     prisma.order.update({
       where: { id: orderId },
@@ -71,7 +147,23 @@ export async function releaseOrder(orderId: string, senderId: string): Promise<O
     prisma.deliveryRequest.update({ where: { id: order.requestId }, data: { status: 'CONFIRMED' } }),
   ]);
   logger.info(`[escrow] released (stub payout ₹${order.payoutInr}) for order ${orderId}`);
-  return toOrderView(updated, senderId);
+  return toOrderView(updated, viewerId);
+}
+
+/** Cron: auto-release escrow for delivered orders past their confirm window (no dispute). */
+export async function runAutoConfirm(): Promise<number> {
+  const due = await prisma.order.findMany({
+    where: {
+      status: 'ESCROW_HELD',
+      autoConfirmAt: { lte: new Date() },
+      request: { status: 'DELIVERED' },
+      dispute: null,
+    },
+    select: { id: true, senderId: true },
+  });
+  for (const o of due) await doRelease(o.id, o.senderId);
+  if (due.length) logger.info(`[escrow] auto-confirmed ${due.length} order(s)`);
+  return due.length;
 }
 
 // ── Admin ──────────────────────────────────────────────

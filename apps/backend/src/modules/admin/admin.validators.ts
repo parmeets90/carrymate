@@ -14,6 +14,12 @@ export const setStatusSchema = z.object({
   status: z.enum(['ACTIVE', 'SUSPENDED', 'BANNED']),
 });
 
+export const resolveDisputeSchema = z.object({
+  decision: z.enum(['REFUND_SENDER', 'RELEASE_TRAVELER']),
+  note: z.string().trim().min(3).max(500),
+});
+export type ResolveDisputeInput = z.infer<typeof resolveDisputeSchema>;
+
 export const listRequestsSchema = z.object({
   status: z.string().trim().max(20).optional(),
   page: z.coerce.number().int().positive().optional().default(1),

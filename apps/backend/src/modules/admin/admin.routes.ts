@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, requireAdmin } from '../../middleware/auth.middleware';
 import { validateBody } from '../../middleware/validate';
-import { rejectKycSchema, setStatusSchema } from './admin.validators';
+import { rejectKycSchema, setStatusSchema, resolveDisputeSchema } from './admin.validators';
 import {
   getPendingKyc,
   postApproveKyc,
@@ -13,6 +13,8 @@ import {
   postExpireRequest,
   getOrders,
   postRefundOrder,
+  getDisputes,
+  postResolveDispute,
 } from './admin.controller';
 
 export const adminRouter = Router();
@@ -32,3 +34,6 @@ adminRouter.post('/requests/:requestId/expire', postExpireRequest);
 
 adminRouter.get('/orders', getOrders);
 adminRouter.post('/orders/:orderId/refund', postRefundOrder);
+
+adminRouter.get('/disputes', getDisputes);
+adminRouter.post('/disputes/:disputeId/resolve', validateBody(resolveDisputeSchema), postResolveDispute);
