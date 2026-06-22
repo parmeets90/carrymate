@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, typography } from '@/theme';
+import { colors, spacing, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { ScreenProps } from '@/navigation/types';
@@ -28,11 +28,11 @@ export function PhoneScreen({ navigation }: ScreenProps<'Phone'>) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={[styles.container, { paddingTop: insets.top + spacing.xxl }]}
+      style={[styles.container, { paddingTop: insets.top + spacing['3xl'] }]}
     >
       <View style={styles.header}>
-        <Text style={typography.h1}>What's your number?</Text>
-        <Text style={[typography.muted, styles.sub]}>
+        <Text style={styles.title}>What's your number?</Text>
+        <Text style={styles.sub}>
           We'll text you a code to verify it. Standard rates may apply.
         </Text>
       </View>
@@ -55,8 +55,13 @@ export function PhoneScreen({ navigation }: ScreenProps<'Phone'>) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingHorizontal: spacing.lg },
+  container: {
+    flex: 1,
+    backgroundColor: colors.bgApp,
+    paddingHorizontal: sizing.screenPaddingX,
+  },
   header: { gap: spacing.sm, marginBottom: spacing.xl },
-  sub: { lineHeight: 22 },
+  title: { ...typography.display, color: colors.textPrimary },
+  sub: { ...typography.bodyM, color: colors.textSecondary },
   footer: { marginTop: spacing.xl },
 });

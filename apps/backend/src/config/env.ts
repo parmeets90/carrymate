@@ -13,6 +13,7 @@ const envSchema = z.object({
   APP_NAME: z.string().default('CarryMate'),
   APP_VERSION: z.string().default('0.1.0'),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  DIRECT_URL: z.string().optional(),
 
   // Auth / JWT (used from Phase 1)
   JWT_ACCESS_SECRET: z.string().optional(),

@@ -21,8 +21,8 @@ export function RootNavigator() {
       screenOptions={{
         headerShadowVisible: false,
         headerTitle: '',
-        headerTintColor: colors.navy,
-        contentStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.navyDark,
+        contentStyle: { backgroundColor: colors.bgApp },
       }}
     >
       {!user ? (

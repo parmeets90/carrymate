@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, radius, typography } from '@/theme';
+import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { useAuth } from '@/store/auth';
 
 export function HomeScreen() {
@@ -10,12 +10,12 @@ export function HomeScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingTop: insets.top + spacing.xl, paddingBottom: spacing.xxl }}
+      contentContainerStyle={{ paddingTop: insets.top + spacing.xl, paddingBottom: spacing['3xl'] }}
     >
       <View style={styles.topRow}>
         <View>
-          <Text style={typography.muted}>Welcome back</Text>
-          <Text style={typography.h2}>{user?.fullName ?? 'there'}</Text>
+          <Text style={styles.greeting}>Welcome back</Text>
+          <Text style={styles.name}>{user?.fullName ?? 'there'}</Text>
         </View>
         <View style={styles.verified}>
           <Text style={styles.verifiedText}>✓ Verified</Text>
@@ -24,7 +24,7 @@ export function HomeScreen() {
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>You're all set</Text>
-        <Text style={typography.muted}>
+        <Text style={styles.cardBody}>
           Your identity is verified. The marketplace — posting requests and finding travelers —
           arrives in the next update.
         </Text>
@@ -42,37 +42,48 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingHorizontal: spacing.lg },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
+  container: {
+    flex: 1,
+    backgroundColor: colors.bgApp,
+    paddingHorizontal: sizing.screenPaddingX,
+  },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  greeting: { ...typography.bodyM, color: colors.textSecondary },
+  name: { ...typography.titleL, color: colors.textPrimary },
   verified: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: colors.mintLight,
+    borderWidth: 0.5,
+    borderColor: colors.mintBorder,
     paddingVertical: 4,
     paddingHorizontal: spacing.sm,
-    borderRadius: radius.pill,
+    borderRadius: radius.chip,
   },
-  verifiedText: { color: '#166534', fontWeight: '700', fontSize: 13 },
+  verifiedText: { ...typography.caption, fontWeight: '700', color: '#096438' },
   card: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderWidth: 0.5,
+    borderColor: colors.borderLight,
+    borderRadius: radius.card,
     padding: spacing.lg,
     gap: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.bgCard,
   },
-  cardTitle: { ...typography.body, fontWeight: '700', fontSize: 17 },
+  cardTitle: { ...typography.titleM, color: colors.textPrimary },
+  cardBody: { ...typography.bodyM, color: colors.textSecondary },
   pillRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
   pill: {
-    backgroundColor: colors.background,
-    borderColor: colors.border,
-    borderWidth: 1,
-    color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    backgroundColor: colors.bgSecondary,
+    color: colors.textSecondary,
+    ...typography.label,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
-    borderRadius: radius.pill,
+    borderRadius: radius.chip,
     overflow: 'hidden',
   },
   signOut: { marginTop: spacing.xl, alignItems: 'center' },
-  signOutText: { ...typography.muted, color: colors.textMuted },
+  signOutText: { ...typography.bodyM, color: colors.textSecondary },
 });

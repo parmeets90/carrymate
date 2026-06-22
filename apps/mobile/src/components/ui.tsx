@@ -7,7 +7,7 @@ import {
   StyleSheet,
   type TextInputProps,
 } from 'react-native';
-import { colors, spacing, radius, typography } from '@/theme';
+import { colors, spacing, radius, typography, sizing } from '@/theme';
 
 export function PrimaryButton({
   label,
@@ -25,13 +25,16 @@ export function PrimaryButton({
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      android_ripple={{ color: colors.primaryDark }}
-      style={[styles.btn, isDisabled && styles.btnDisabled]}
+      style={({ pressed }) => [
+        styles.btn,
+        pressed && styles.btnPressed,
+        isDisabled && styles.btnDisabled,
+      ]}
     >
       {loading ? (
         <ActivityIndicator color={colors.white} />
       ) : (
-        <Text style={typography.button}>{label}</Text>
+        <Text style={styles.btnLabel}>{label}</Text>
       )}
     </Pressable>
   );
@@ -44,9 +47,9 @@ export function Field({
 }: TextInputProps & { label: string; error?: string }) {
   return (
     <View style={styles.fieldWrap}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.fieldLabel}>{label}</Text>
       <TextInput
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={colors.textHint}
         style={[styles.input, error ? styles.inputError : null]}
         {...props}
       />
@@ -57,26 +60,27 @@ export function Field({
 
 const styles = StyleSheet.create({
   btn: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
+    backgroundColor: colors.skyBlue,
+    height: sizing.buttonPrimary,
+    borderRadius: radius.button,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 52,
   },
-  btnDisabled: { opacity: 0.55 },
+  btnPressed: { opacity: 0.9 },
+  btnDisabled: { opacity: 0.5 },
+  btnLabel: { ...typography.bodyL, fontWeight: '600', color: colors.white },
   fieldWrap: { gap: spacing.xs },
-  label: { ...typography.muted, fontWeight: '600', color: colors.text },
+  fieldLabel: { ...typography.label, color: colors.textSecondary },
   input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    height: sizing.input,
+    borderWidth: 0.5,
+    borderColor: colors.borderLight,
+    borderRadius: radius.input,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
     fontSize: 16,
-    color: colors.text,
-    backgroundColor: colors.surface,
+    color: colors.textPrimary,
+    backgroundColor: colors.bgSecondary,
   },
-  inputError: { borderColor: colors.danger },
-  errorText: { color: colors.danger, fontSize: 13 },
+  inputError: { borderColor: colors.dangerRed },
+  errorText: { ...typography.caption, color: colors.dangerRed },
 });

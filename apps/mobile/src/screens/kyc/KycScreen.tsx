@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, radius, typography } from '@/theme';
+import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
@@ -65,7 +65,7 @@ export function KycScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} />
+        <ActivityIndicator color={colors.skyBlue} />
       </View>
     );
   }
@@ -75,11 +75,11 @@ export function KycScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingTop: insets.top + spacing.xl, paddingBottom: spacing.xxl }}
+      contentContainerStyle={{ paddingTop: insets.top + spacing.xl, paddingBottom: spacing['3xl'] }}
     >
       <View style={styles.header}>
-        <Text style={typography.h1}>{pending ? 'Verification in progress' : 'Verify your identity'}</Text>
-        <Text style={[typography.muted, styles.sub]}>
+        <Text style={styles.title}>{pending ? 'Verification in progress' : 'Verify your identity'}</Text>
+        <Text style={styles.sub}>
           {pending
             ? "We're reviewing your documents. This usually takes a little while — we'll let you know."
             : 'CarryMate is a trust-first marketplace. Verify your ID to send or carry items.'}
@@ -89,7 +89,7 @@ export function KycScreen() {
       {pending ? (
         <View style={styles.pendingCard}>
           <Text style={styles.pendingBadge}>UNDER REVIEW</Text>
-          <Text style={typography.muted}>You can check back here once your ID is approved.</Text>
+          <Text style={styles.sub}>You can check back here once your ID is approved.</Text>
           <PrimaryButton label="Check status" onPress={refreshStatus} loading={busy} />
         </View>
       ) : (
@@ -99,7 +99,7 @@ export function KycScreen() {
               Your previous submission was rejected. Please re-submit a valid document.
             </Text>
           )}
-          <Text style={styles.label}>Document type</Text>
+          <Text style={styles.sectionLabel}>Document type</Text>
           <View style={styles.docs}>
             {options.map((o) => {
               const active = docType === o.value;
@@ -142,45 +142,54 @@ export function KycScreen() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  container: { flex: 1, backgroundColor: colors.background, paddingHorizontal: spacing.lg },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgApp },
+  container: {
+    flex: 1,
+    backgroundColor: colors.bgApp,
+    paddingHorizontal: sizing.screenPaddingX,
+  },
   header: { gap: spacing.sm, marginBottom: spacing.lg },
-  sub: { lineHeight: 22 },
-  label: { ...typography.muted, fontWeight: '600', color: colors.text, marginBottom: spacing.sm },
+  title: { ...typography.display, color: colors.textPrimary },
+  sub: { ...typography.bodyM, color: colors.textSecondary },
+  sectionLabel: {
+    ...typography.label,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
   docs: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
   doc: {
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.pill,
+    borderWidth: 0.5,
+    borderColor: colors.borderLight,
+    borderRadius: radius.chip,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.bgCard,
   },
-  docActive: { borderColor: colors.primary, backgroundColor: '#fff5f7' },
-  docText: { ...typography.body, fontWeight: '600' },
-  docTextActive: { color: colors.primary },
-  note: { ...typography.muted, fontSize: 13, marginTop: spacing.sm },
-  rejected: { color: colors.danger, marginBottom: spacing.md },
+  docActive: { borderColor: colors.skyBlue, backgroundColor: colors.skyLight },
+  docText: { ...typography.bodyM, fontWeight: '600', color: colors.textPrimary },
+  docTextActive: { color: colors.navyMid },
+  note: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.sm },
+  rejected: { ...typography.bodyM, color: colors.dangerRed, marginBottom: spacing.md },
   footer: { marginTop: spacing.xl },
   pendingCard: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderWidth: 0.5,
+    borderColor: colors.borderLight,
+    borderRadius: radius.card,
     padding: spacing.lg,
     gap: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.bgCard,
   },
   pendingBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#fef3c7',
-    color: '#92400e',
+    backgroundColor: colors.cautionLight,
+    color: colors.cautionAmber,
+    ...typography.label,
     fontWeight: '700',
-    fontSize: 12,
     paddingVertical: 4,
     paddingHorizontal: spacing.sm,
-    borderRadius: radius.sm,
+    borderRadius: radius.input,
     overflow: 'hidden',
   },
   signOut: { marginTop: spacing.xl, alignItems: 'center' },
-  signOutText: { ...typography.muted, color: colors.textMuted },
+  signOutText: { ...typography.bodyM, color: colors.textSecondary },
 });

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, radius, typography } from '@/theme';
+import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
@@ -41,16 +41,16 @@ export function ProfileScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ paddingTop: insets.top + spacing.xl, paddingBottom: spacing.xxl }}
+      contentContainerStyle={{ paddingTop: insets.top + spacing.xl, paddingBottom: spacing['3xl'] }}
     >
       <View style={styles.header}>
-        <Text style={typography.h1}>Set up your profile</Text>
-        <Text style={[typography.muted, styles.sub]}>Tell us your name and how you'll use CarryMate.</Text>
+        <Text style={styles.title}>Set up your profile</Text>
+        <Text style={styles.sub}>Tell us your name and how you'll use CarryMate.</Text>
       </View>
 
       <Field label="Full name" value={name} onChangeText={setName} placeholder="e.g. Anjali Sharma" />
 
-      <Text style={[styles.label]}>I want to…</Text>
+      <Text style={styles.sectionLabel}>I want to…</Text>
       <View style={styles.roles}>
         {ROLES.map((r) => {
           const active = role === r.value;
@@ -77,22 +77,32 @@ export function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingHorizontal: spacing.lg },
+  container: {
+    flex: 1,
+    backgroundColor: colors.bgApp,
+    paddingHorizontal: sizing.screenPaddingX,
+  },
   header: { gap: spacing.sm, marginBottom: spacing.lg },
-  sub: { lineHeight: 22 },
-  label: { ...typography.muted, fontWeight: '600', color: colors.text, marginTop: spacing.lg, marginBottom: spacing.sm },
+  title: { ...typography.display, color: colors.textPrimary },
+  sub: { ...typography.bodyM, color: colors.textSecondary },
+  sectionLabel: {
+    ...typography.label,
+    color: colors.textSecondary,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
   roles: { gap: spacing.sm },
   role: {
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderWidth: 0.5,
+    borderColor: colors.borderLight,
+    borderRadius: radius.card,
     padding: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.bgCard,
   },
-  roleActive: { borderColor: colors.primary, backgroundColor: '#fff5f7' },
-  roleTitle: { ...typography.body, fontWeight: '700' },
-  roleTitleActive: { color: colors.primary },
-  roleDesc: { ...typography.muted, marginTop: 2 },
-  error: { color: colors.danger, marginTop: spacing.md },
+  roleActive: { borderColor: colors.skyBlue, backgroundColor: colors.skyLight },
+  roleTitle: { ...typography.bodyL, fontWeight: '600', color: colors.textPrimary },
+  roleTitleActive: { color: colors.navyMid },
+  roleDesc: { ...typography.bodyM, color: colors.textSecondary, marginTop: 2 },
+  error: { ...typography.bodyM, color: colors.dangerRed, marginTop: spacing.md },
   footer: { marginTop: spacing.xl },
 });

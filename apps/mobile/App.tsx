@@ -19,7 +19,7 @@ function Gate(): React.JSX.Element {
   if (!hydrated) {
     return (
       <View style={styles.splash}>
-        <ActivityIndicator color={colors.primary} size="large" />
+        <ActivityIndicator color={colors.skyBlue} size="large" />
       </View>
     );
   }
@@ -42,7 +42,7 @@ function App(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  splash: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+  splash: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgApp },
 });
 
 export default App;

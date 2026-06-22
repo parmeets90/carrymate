@@ -2,18 +2,20 @@
 # Paste this at the start of every Claude Code session for this project.
 
 You are building CarryMate, a peer-to-peer cross-border luggage marketplace (India → UAE).
-This is a TRUST-FIRST, mobile-native product built in React Native (Expo).
+This is a TRUST-FIRST, mobile-native product built in React Native (bare CLI, not Expo).
 Every UI decision must reinforce safety, legitimacy, and accountability.
 
 ---
 
 ## STACK
-- React Native (Expo SDK, latest stable)
+- React Native (bare CLI, 0.76.x) — NOT Expo
 - TypeScript strict mode
-- NativeWind (Tailwind for RN) OR StyleSheet — pick one and stay consistent
-- React Navigation v6 (stack + bottom tabs)
-- Phosphor Icons (outline weight only, 20–24px)
+- StyleSheet (chosen; do not introduce NativeWind) — stay consistent
+- React Navigation v7 (stack + bottom tabs)
+- Phosphor Icons (outline weight only, 20–24px) — via phosphor-react-native (needs react-native-svg; add when icons are introduced)
 - Razorpay for payments (INR only in MVP)
+- Backend: Node/Express + Prisma. DB: Supabase (Postgres). Storage: AWS S3. OTP/SMS: Twilio. Deploy: Render.
+- Custom fonts (Plus Jakarta Sans + Inter) are bundled via react-native assets (not expo-font); until added, the type scale falls back to the system font.
 
 ---
 
@@ -168,7 +170,7 @@ App detects role (sender/traveler) and renders the correct tab set. Users can sw
 ---
 
 ## SCREEN ARCHITECTURE (build in this order)
-1. Onboarding + OTP auth (phone number, MSG91)
+1. Onboarding + OTP auth (phone number, Twilio)
 2. KYC flow: Aadhaar/PAN → passport scan → selfie → IDFY webhook
 3. Sender home: route cards (DEL→DXB with traveler count + date)
 4. Post request form: item type, weight, deadline, photo

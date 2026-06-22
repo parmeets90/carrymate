@@ -20,15 +20,16 @@ carrymate/
 
 ## Tech stack
 
-- **Mobile:** React Native (CLI), TypeScript, React Navigation, TanStack Query, Zustand
+- **Mobile:** React Native (bare CLI), TypeScript, React Navigation, TanStack Query, Zustand
 - **Backend:** Node 20+, Express, Prisma, PostgreSQL, Zod, JWT, socket.io
 - **Admin:** React 18, Vite, TypeScript, Tailwind + shadcn/ui
-- **Integrations (added per phase):** Razorpay (payments/escrow), MSG91 (OTP/SMS), IDFY (KYC), Firebase (push), AWS S3 (uploads), SendGrid (email)
+- **Infra:** **Supabase** (Postgres), **AWS S3** (storage), **Render** (deploy)
+- **Integrations (added per phase):** Razorpay (payments/escrow), Twilio (OTP/SMS), IDFY (KYC), Firebase (push), SendGrid (email)
 
 ## Prerequisites
 
 - Node `>= 20`
-- Docker (for local Postgres) — or a local/remote PostgreSQL
+- A **Supabase** project (Postgres) — or any PostgreSQL (Docker compose provided for local)
 - For mobile: JDK 17 + Android SDK (Android), Xcode + CocoaPods (iOS)
 
 ## Getting started
@@ -38,14 +39,13 @@ carrymate/
 npm install
 
 # 2. Configure environment
-cp .env.example .env        # then fill in values as needed
+cp .env.example .env        # set DATABASE_URL + DIRECT_URL to your Supabase URLs
 
-# 3. Start Postgres (Docker)
-docker compose up -d postgres
-
-# 4. Generate Prisma client + run migrations
+# 3. Generate Prisma client + run migrations against Supabase
 npm run db:generate
 npm run db:migrate
+
+#    (Local Postgres alternative: `docker compose up -d postgres`)
 
 # 5. Run services
 npm run backend:dev         # API on http://localhost:3000  (GET /health)
