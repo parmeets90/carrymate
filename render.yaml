@@ -7,8 +7,8 @@ services:
     plan: free
     region: singapore
     branch: main
-    buildCommand: npm install && npm run shared:build && npm run db:generate && npm run backend:build
-    preDeployCommand: npm run migrate:deploy -w @carrymate/backend
+    # Free tier doesn't support preDeployCommand, so migrations run at the end of build.
+    buildCommand: npm install && npm run shared:build && npm run db:generate && npm run backend:build && npm run migrate:deploy -w @carrymate/backend
     startCommand: npm run backend:start
     healthCheckPath: /health
     envVars:
