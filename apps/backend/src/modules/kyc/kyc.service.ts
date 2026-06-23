@@ -8,6 +8,7 @@ import { logger } from '../../utils/logger';
 import { writeAudit } from '../../utils/audit';
 import { createNotification } from '../notifications/notifications.service';
 import { submitVerification, decideFromScores, KYC_THRESHOLDS } from './idfy';
+import { createDiditSession, mapDiditStatus } from './didit';
 import { toKycDocumentDto } from './kyc.serializer';
 
 interface SubmitDocInput {
@@ -186,6 +187,57 @@ export async function applyIdfyResult(
       title: 'Selfie didn’t match',
       body: 'Please retake your selfie in good lighting, facing the camera, without glasses.',
     });
+  }
+}
+
+/** Start a Didit hosted verification: returns the URL the app opens. */
+export async function startKycVerification(userId: string): Promise<{ url: string }> {
+  const session = await createDiditSession(userId);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { kycStatus: 'VERIFYING', kycSubmittedAt: new Date(), kycFailureReason: null },
+  });
+  logger.info(`[didit] session started for user ${userId} (${session.sessionId})`);
+  return { url: session.url };
+}
+
+/** Apply a Didit webhook result. Approved → VERIFIED; In Review/Declined → manual queue. */
+export async function applyDiditResult(userId: string, status: string): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || user.kycStatus === 'VERIFIED') return;
+
+  const outcome = mapDiditStatus(status);
+  if (outcome === 'IGNORE') return;
+
+  if (outcome === 'VERIFIED') {
+    await prisma.user.update({ where: { id: userId }, data: { kycStatus: 'VERIFIED', kycFailureReason: null } });
+    logger.info(`[didit] ${userId} → VERIFIED`);
+    await createNotification({
+      userId,
+      type: NotificationType.KYC_VERIFIED,
+      title: 'Identity verified ✅',
+      body: 'Your KYC is approved. You can now send and carry items on CarryMate.',
+    });
+    return;
+  }
+
+  if (outcome === 'IN_REVIEW') {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { kycStatus: 'IN_REVIEW', kycFailureReason: `Didit: ${status}` },
+    });
+    await createNotification({
+      userId,
+      type: NotificationType.SYSTEM,
+      title: 'Verifying your details',
+      body: 'Our team is reviewing your verification — we’ll get back to you shortly.',
+    });
+    return;
+  }
+
+  // PENDING (in progress) — make sure we're showing the verifying state.
+  if (user.kycStatus !== 'VERIFYING') {
+    await prisma.user.update({ where: { id: userId }, data: { kycStatus: 'VERIFYING', kycSubmittedAt: new Date() } });
   }
 }
 

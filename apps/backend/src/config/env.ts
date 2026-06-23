@@ -61,6 +61,12 @@ const envSchema = z.object({
   // AviationStack (flight/PNR check). Blank → flights verified manually by admin.
   AVIATIONSTACK_API_KEY: z.string().optional(),
 
+  // Didit hosted KYC. Blank → KYC falls back to manual upload + admin review.
+  DIDIT_API_KEY: z.string().optional(),
+  DIDIT_WORKFLOW_ID: z.string().optional(),
+  DIDIT_WEBHOOK_SECRET: z.string().optional(),
+  DIDIT_BASE_URL: z.string().default('https://verification.didit.me'),
+
   // Firebase Admin (verifies Google/Firebase login tokens). Blank → Google
   // sign-in is disabled; phone-OTP login still works.
   FIREBASE_PROJECT_ID: z.string().optional(),
@@ -133,6 +139,9 @@ export const isIdfyConfigured = Boolean(
 
 /** True when AviationStack is configured; else flights are verified manually. */
 export const isAviationStackConfigured = Boolean(env.AVIATIONSTACK_API_KEY);
+
+/** True when Didit hosted KYC is configured; else KYC is manual upload + review. */
+export const isDiditConfigured = Boolean(env.DIDIT_API_KEY && env.DIDIT_WORKFLOW_ID);
 
 /** True when Firebase Admin is configured; else Google sign-in is disabled. */
 export const isFirebaseConfigured = Boolean(

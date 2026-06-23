@@ -194,6 +194,8 @@ export const api = {
   submitKyc: (data: { docType: string; fileKey?: string; docNumber?: string }) =>
     post<KycStatusResult>('/v1/kyc/submit', data),
   kycStatus: () => get<KycStatusResult>('/v1/kyc/status'),
+  kycProvider: () => get<{ provider: 'didit' | 'manual' }>('/v1/kyc/provider'),
+  startKycVerification: () => post<{ url: string }>('/v1/kyc/verify/start'),
 
   // Trips (traveler)
   createRoute: (data: Record<string, unknown>) => post<TravelRouteDto>('/v1/routes', data),

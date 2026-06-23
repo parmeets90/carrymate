@@ -14,6 +14,7 @@ import { notificationsRouter } from '../modules/notifications/notifications.rout
 import { bankAccountRouter } from '../modules/bankaccount/bankaccount.routes';
 import { razorpayWebhookRouter } from '../modules/payments/razorpay.webhook';
 import { idfyWebhookRouter } from '../modules/kyc/idfy.webhook';
+import { diditWebhookRouter } from '../modules/kyc/didit.webhook';
 
 /**
  * Versioned API router. All feature modules mount under /v1.
@@ -41,4 +42,5 @@ v1Router.use('/notifications', notificationsRouter);
 v1Router.use('/bank-account', bankAccountRouter);
 v1Router.use('/webhooks', razorpayWebhookRouter);
 v1Router.use('/webhooks', idfyWebhookRouter);
+v1Router.use('/webhooks', diditWebhookRouter);
 v1Router.use('/admin', adminRouter);
