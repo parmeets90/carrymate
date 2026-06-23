@@ -165,6 +165,7 @@ enum RequestStatus {
   DISPUTED
   CANCELLED
   EXPIRED
+  PENDING_REVIEW // flagged by prohibited-item rules; awaiting an admin decision
 }
 
 enum RouteStatus {
@@ -264,6 +265,9 @@ model DeliveryRequest {
   // Cold-start UX (Challenge 05): one free re-list, and a 48h pre-expiry nudge.
   relistCount           Int             @default(0) @map("relist_count")
   expiryReminderSentAt  DateTime?       @map("expiry_reminder_sent_at") @db.Timestamptz
+  // Legal declaration accepted at submission (Challenge 08).
+  declarationAcceptedAt DateTime?       @map("declaration_accepted_at") @db.Timestamptz
+  declarationIp         String?         @map("declaration_ip") @db.VarChar(64)
   createdAt             DateTime        @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime        @updatedAt @map("updated_at") @db.Timestamptz
 

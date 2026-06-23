@@ -4,11 +4,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { DeliveryRequestDto } from '@carrymate/shared';
+import { ITEM_DECLARATIONS } from '@carrymate/shared';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
 import { DateField } from '@/components/DateField';
 import { PhotoButton } from '@/components/PhotoButton';
-import { api, firstFieldError } from '@/lib/api';
+import { Icon } from '@/components/Icon';
+import { api, firstFieldError, type ApiClientError } from '@/lib/api';
 
 const MIN_DEADLINE = new Date(Date.now() + 3 * 86_400_000); // 3+ days out (server rule)
 
@@ -36,12 +38,15 @@ export function CreateRequestScreen() {
     deadlineDate: editing?.deadlineDate ?? '',
   });
   const [itemPhotos, setItemPhotos] = useState<string[]>(editing?.itemPhotos ?? []);
+  // Editing an existing request implies the declaration was accepted on creation.
+  const [declared, setDeclared] = useState<boolean>(!!editing);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
   const set = (k: keyof typeof form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-  const submit = async () => {
+  const submit = async (forceReview = false) => {
+    if (!declared) return setError('Please accept the item declaration to post.');
     setBusy(true);
     setError(undefined);
     try {
@@ -59,6 +64,8 @@ export function CreateRequestScreen() {
         weightKg: Number(form.weightKg),
         declaredValueInr: Number(form.declaredValueInr),
         itemPhotos,
+        declarationAccepted: true,
+        requestReview: forceReview,
       };
       if (editing) {
         await api.updateRequest(editing.id, payload);
@@ -67,14 +74,28 @@ export function CreateRequestScreen() {
         nav.goBack();
         return;
       }
-      await api.createRequest(payload);
+      const created = await api.createRequest(payload);
       qc.invalidateQueries({ queryKey: ['my-requests'] });
-      Alert.alert('Request posted', 'Travelers on your route can now bid.');
+      Alert.alert(
+        forceReview ? 'Sent for review' : 'Request posted',
+        created.status === 'PENDING_REVIEW'
+          ? 'Our team will review your item and approve it shortly.'
+          : 'Travelers on your route can now bid.',
+      );
       setForm((f) => ({ ...f, title: '', description: '', declaredValueInr: '', recipientName: '', recipientAddress: '', deadlineDate: '' }));
       setItemPhotos([]);
+      setDeclared(false);
     } catch (e) {
-      // Prefer the specific field error; fall back to the backend message.
-      setError(firstFieldError(e) ?? (e as Error).message);
+      const err = e as ApiClientError;
+      // Prohibited-item recovery: explain + offer a manual review (Challenge 08).
+      if (err.code === 'ITEM_PROHIBITED' && !forceReview && !editing) {
+        Alert.alert('This item needs a check', err.message, [
+          { text: 'Edit item', style: 'cancel' },
+          { text: 'Request review', onPress: () => void submit(true) },
+        ]);
+      } else {
+        setError(firstFieldError(e) ?? err.message);
+      }
     } finally {
       setBusy(false);
     }
@@ -126,13 +147,29 @@ export function CreateRequestScreen() {
         onUploaded={(key) => setItemPhotos((p) => (p.length < 5 ? [...p, key] : p))}
       />
 
+      {!editing && (
+        <View style={styles.declaration}>
+          {ITEM_DECLARATIONS.map((d) => (
+            <Text key={d} style={styles.declItem}>
+              •  {d}
+            </Text>
+          ))}
+          <Pressable style={styles.declAccept} onPress={() => setDeclared((v) => !v)}>
+            <View style={[styles.declBox, declared && styles.declBoxOn]}>
+              {declared && <Icon name="check" size={14} color={colors.white} weight="fill" />}
+            </View>
+            <Text style={styles.declAcceptText}>I confirm all of the above is accurate</Text>
+          </Pressable>
+        </View>
+      )}
+
       {error ? (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : null}
 
-      <PrimaryButton label={editing ? 'Save changes' : 'Post request'} onPress={submit} loading={busy} />
+      <PrimaryButton label={editing ? 'Save changes' : 'Post request'} onPress={() => submit()} loading={busy} />
     </ScrollView>
   );
 }
@@ -172,4 +209,10 @@ const styles = StyleSheet.create({
   pillTextActive: { color: colors.navyMid, fontWeight: '600' },
   errorBanner: { backgroundColor: colors.dangerLight, borderRadius: radius.input, padding: spacing.md, borderWidth: 0.5, borderColor: '#F2C0C0' },
   errorText: { ...typography.bodyM, color: '#921010', fontWeight: '600' },
+  declaration: { backgroundColor: colors.bgSecondary, borderRadius: radius.card, padding: spacing.md, gap: 4 },
+  declItem: { ...typography.caption, color: colors.textSecondary, lineHeight: 16 },
+  declAccept: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },
+  declBox: { width: 22, height: 22, borderRadius: radius.input, borderWidth: 1.5, borderColor: colors.borderLight, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bgCard },
+  declBoxOn: { backgroundColor: colors.mintPrimary, borderColor: colors.mintPrimary },
+  declAcceptText: { ...typography.bodyM, color: colors.textPrimary, fontWeight: '600', flex: 1 },
 });

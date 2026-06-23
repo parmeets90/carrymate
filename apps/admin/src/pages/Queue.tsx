@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Inbox, Scale, ShieldAlert, ShieldCheck, Banknote } from 'lucide-react';
+import { Loader2, Inbox, Scale, ShieldAlert, ShieldCheck, Banknote, PackageSearch } from 'lucide-react';
 import type { AdminQueueItem, SlaLevel } from '@carrymate/shared';
 import { api } from '@/lib/api';
 
 const KIND_ICON = {
   DISPUTE: Scale,
   FRAUD: ShieldAlert,
+  REVIEW: PackageSearch,
   KYC: ShieldCheck,
   PAYOUT: Banknote,
 } as const;

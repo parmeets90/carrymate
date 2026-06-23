@@ -1,5 +1,6 @@
 import {
   PROHIBITED_KEYWORDS,
+  PROHIBITED_CONTEXTS,
   COMMISSION_RATE,
   INDIA_ORIGIN_AIRPORTS,
   UAE_DESTINATION_AIRPORTS,
@@ -23,6 +24,46 @@ export function findProhibitedKeyword(...parts: string[]): string | null {
     if (re.test(haystack)) return word;
   }
   return null;
+}
+
+const wordIn = (haystack: string, word: string): boolean =>
+  new RegExp(`\\b${word.toLowerCase()}\\b`).test(haystack);
+
+export interface ProhibitedCheck {
+  blocked: boolean;
+  reason?: string; // context name, e.g. "electronics"
+  matchedWord?: string;
+}
+
+/**
+ * Context-aware prohibited-item check (Challenge 08). A trigger only blocks when
+ * the context fits — so "tablet" passes in FOOD but "samsung tablet" is blocked.
+ */
+export function checkProhibited(
+  title: string,
+  description: string,
+  category: string,
+): ProhibitedCheck {
+  const text = `${title} ${description}`.toLowerCase();
+
+  for (const [reason, rules] of Object.entries(PROHIBITED_CONTEXTS)) {
+    const trigger = rules.triggers.find((t) => wordIn(text, t));
+    if (!trigger) continue;
+
+    const amplifiers = 'amplifiers' in rules ? (rules.amplifiers as readonly string[]) : undefined;
+    const safeCategories =
+      'safeCategories' in rules ? (rules.safeCategories as readonly string[]) : undefined;
+
+    if (amplifiers) {
+      const amp = amplifiers.find((a) => wordIn(text, a));
+      if (amp) return { blocked: true, reason, matchedWord: `${amp} ${trigger}` };
+    } else if (safeCategories) {
+      if (!safeCategories.includes(category)) return { blocked: true, reason, matchedWord: trigger };
+    } else {
+      return { blocked: true, reason, matchedWord: trigger };
+    }
+  }
+  return { blocked: false };
 }
 
 /** Platform commission + traveler payout for a carry fee (whole INR). */

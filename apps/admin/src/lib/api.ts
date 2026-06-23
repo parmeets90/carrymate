@@ -109,6 +109,8 @@ export const api = {
     ),
   expireRequest: (requestId: string) =>
     authed<{ success: boolean }>(`/v1/admin/requests/${requestId}/expire`, { method: 'POST' }),
+  approveReview: (requestId: string) =>
+    authed<{ success: boolean }>(`/v1/admin/requests/${requestId}/approve-review`, { method: 'POST' }),
   orders: (page = 1) => authed<Paginated<AdminOrder>>(`/v1/admin/orders?page=${page}`),
   refundOrder: (orderId: string) =>
     authed<{ success: boolean }>(`/v1/admin/orders/${orderId}/refund`, { method: 'POST' }),

@@ -56,6 +56,7 @@ export enum RequestStatus {
   DISPUTED = 'DISPUTED',
   CANCELLED = 'CANCELLED',
   EXPIRED = 'EXPIRED',
+  PENDING_REVIEW = 'PENDING_REVIEW',
 }
 
 export enum RouteStatus {

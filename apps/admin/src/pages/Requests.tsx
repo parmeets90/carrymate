@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { Loader2, Ban } from 'lucide-react';
+import { Loader2, Ban, Check } from 'lucide-react';
 import { api } from '@/lib/api';
 
-const STATUSES = ['', 'OPEN', 'BIDDING', 'MATCHED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'];
+const STATUSES = ['', 'PENDING_REVIEW', 'OPEN', 'BIDDING', 'MATCHED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED', 'EXPIRED'];
 
 const STATUS_STYLE: Record<string, string> = {
+  PENDING_REVIEW: 'bg-orange-100 text-orange-700',
   OPEN: 'bg-sky-100 text-sky-700',
   BIDDING: 'bg-indigo-100 text-indigo-700',
   MATCHED: 'bg-emerald-100 text-emerald-700',
   IN_TRANSIT: 'bg-amber-100 text-amber-700',
   DELIVERED: 'bg-emerald-100 text-emerald-700',
   CANCELLED: 'bg-red-100 text-red-700',
+  EXPIRED: 'bg-muted text-muted-foreground',
 };
 
 export function Requests() {
@@ -27,6 +29,11 @@ export function Requests() {
   const expire = useMutation({
     mutationFn: (id: string) => api.expireRequest(id),
     onSettled: () => qc.invalidateQueries({ queryKey: ['admin-requests'] }),
+  });
+  const approve = useMutation({
+    mutationFn: (id: string) => api.approveReview(id),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['admin-requests'] }),
+    onError: (e) => window.alert((e as Error).message),
   });
 
   return (
@@ -92,14 +99,24 @@ export function Requests() {
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  {['OPEN', 'BIDDING'].includes(r.status) && (
-                    <button
-                      onClick={() => expire.mutate(r.id)}
-                      className="flex items-center gap-1 rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
-                    >
-                      <Ban className="h-3.5 w-3.5" /> Expire
-                    </button>
-                  )}
+                  <div className="flex gap-1.5">
+                    {r.status === 'PENDING_REVIEW' && (
+                      <button
+                        onClick={() => approve.mutate(r.id)}
+                        className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700"
+                      >
+                        <Check className="h-3.5 w-3.5" /> Approve
+                      </button>
+                    )}
+                    {['OPEN', 'BIDDING', 'PENDING_REVIEW'].includes(r.status) && (
+                      <button
+                        onClick={() => expire.mutate(r.id)}
+                        className="flex items-center gap-1 rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
+                      >
+                        <Ban className="h-3.5 w-3.5" /> {r.status === 'PENDING_REVIEW' ? 'Reject' : 'Expire'}
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

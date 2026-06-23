@@ -17,7 +17,7 @@ import {
 import type { CreateRequestInput, UpdateRequestInput } from './requests.validators';
 
 export const postRequest: RequestHandler = async (req, res) => {
-  const request = await createRequest(req.user!.id, req.body as CreateRequestInput);
+  const request = await createRequest(req.user!.id, req.body as CreateRequestInput, req.ip);
   ok(res, request, 201);
 };
 

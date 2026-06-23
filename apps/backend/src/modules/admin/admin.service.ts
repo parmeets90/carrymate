@@ -8,7 +8,7 @@ import type {
   Paginated,
   DeliveryRequestSummary,
 } from '@carrymate/shared';
-import { NotificationType } from '@carrymate/shared';
+import { NotificationType, REQUEST_EXPIRY_DAYS } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import { writeAudit } from '../../utils/audit';
@@ -151,6 +151,30 @@ export async function forceExpireRequest(requestId: string): Promise<void> {
   });
 }
 
+/** Approve a prohibited-flagged request (Challenge 08) → goes live. */
+export async function approveReviewRequest(requestId: string, adminId: string): Promise<void> {
+  const request = await prisma.deliveryRequest.findUnique({ where: { id: requestId } });
+  if (!request) throw AppError.notFound('Request not found');
+  if (request.status !== 'PENDING_REVIEW') {
+    throw new AppError(409, 'NOT_IN_REVIEW', 'This request is not awaiting review.');
+  }
+  await prisma.deliveryRequest.update({
+    where: { id: requestId },
+    data: {
+      status: 'OPEN',
+      prohibitedCheckPassed: true,
+      expiresAt: new Date(Date.now() + REQUEST_EXPIRY_DAYS * 86_400_000),
+    },
+  });
+  await createNotification({
+    userId: request.senderId,
+    type: NotificationType.SYSTEM,
+    title: 'Request approved',
+    body: `“${request.title}” passed review and is now live for travelers.`,
+    data: { requestId },
+  });
+}
+
 export async function setUserStatus(
   userId: string,
   status: 'ACTIVE' | 'SUSPENDED' | 'BANNED',
@@ -283,7 +307,7 @@ function slaOf(ageHours: number, amber: number, red: number): SlaLevel {
  * kind, oldest first.
  */
 export async function getAdminQueue(): Promise<AdminQueueItem[]> {
-  const [disputes, fraudOrders, kycUsers, failedPayouts] = await Promise.all([
+  const [disputes, fraudOrders, reviewRequests, kycUsers, failedPayouts] = await Promise.all([
     prisma.dispute.findMany({
       where: { status: { in: ['OPEN', 'UNDER_REVIEW'] } },
       include: { order: { include: { request: true } } },
@@ -291,6 +315,10 @@ export async function getAdminQueue(): Promise<AdminQueueItem[]> {
     prisma.order.findMany({
       where: { fraudHold: true },
       include: { request: true },
+    }),
+    prisma.deliveryRequest.findMany({
+      where: { status: 'PENDING_REVIEW' },
+      select: { id: true, title: true, category: true, createdAt: true },
     }),
     prisma.user.findMany({
       where: { kycStatus: 'IN_REVIEW' },
@@ -335,6 +363,21 @@ export async function getAdminQueue(): Promise<AdminQueueItem[]> {
     });
   }
 
+  for (const r of reviewRequests) {
+    const ageHours = hoursSince(r.createdAt);
+    items.push({
+      kind: 'REVIEW',
+      id: r.id,
+      title: `Item review · ${r.title}`,
+      subtitle: `flagged · ${r.category.toLowerCase()}`,
+      createdAt: r.createdAt.toISOString(),
+      ageHours: Math.round(ageHours),
+      sla: slaOf(ageHours, 2, 12),
+      priority: 2,
+      link: '/requests',
+    });
+  }
+
   for (const u of kycUsers) {
     const created = u.kycSubmittedAt ?? u.updatedAt;
     const ageHours = hoursSince(created);
@@ -346,7 +389,7 @@ export async function getAdminQueue(): Promise<AdminQueueItem[]> {
       createdAt: created.toISOString(),
       ageHours: Math.round(ageHours),
       sla: slaOf(ageHours, 1, 2),
-      priority: 2,
+      priority: 3,
       link: '/kyc',
     });
   }
@@ -362,7 +405,7 @@ export async function getAdminQueue(): Promise<AdminQueueItem[]> {
       createdAt: created.toISOString(),
       ageHours: Math.round(ageHours),
       sla: slaOf(ageHours, 2, 12),
-      priority: 3,
+      priority: 4,
       link: '/payouts',
     });
   }

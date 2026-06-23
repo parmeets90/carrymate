@@ -8,7 +8,7 @@ import { MAX_ACTIVE_REQUESTS_PER_SENDER, MIN_DEADLINE_DAYS, REQUEST_EXPIRY_DAYS 
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import {
-  findProhibitedKeyword,
+  checkProhibited,
   assertDestinationCity,
   AIRPORT_TO_CITY,
 } from '../../utils/marketplace';
@@ -32,16 +32,23 @@ const ACTIVE_STATUSES = ['OPEN', 'BIDDING', 'MATCHED', 'IN_TRANSIT'] as const;
 export async function createRequest(
   senderId: string,
   input: CreateRequestInput,
+  ip?: string,
 ): Promise<DeliveryRequestDto> {
   if (!(INDIA_ORIGIN_AIRPORTS as readonly string[]).includes(input.originAirport)) {
     throw new AppError(400, 'INVALID_AIRPORT', `Unsupported origin airport: ${input.originAirport}`);
   }
   assertDestinationCity(input.destinationCity);
 
-  // Prohibited-item firewall — block before the request is ever published.
-  const hit = findProhibitedKeyword(input.title, input.description);
-  if (hit) {
-    throw new AppError(400, 'ITEM_PROHIBITED', `This item is not allowed (matched "${hit}").`);
+  // Context-aware prohibited-item firewall (Challenge 08).
+  const prohibited = checkProhibited(input.title, input.description, input.category);
+  // Blocked + not asking for review → reject with a specific, actionable reason.
+  if (prohibited.blocked && !input.requestReview) {
+    throw new AppError(
+      400,
+      'ITEM_PROHIBITED',
+      `This looks like ${prohibited.reason} (matched “${prohibited.matchedWord}”). If it isn’t, rephrase or request a manual review.`,
+      { item: [prohibited.reason ?? 'prohibited'] },
+    );
   }
 
   const minDeadline = new Date();
@@ -67,6 +74,8 @@ export async function createRequest(
   }
 
   const expiresAt = new Date(Date.now() + REQUEST_EXPIRY_DAYS * 86_400_000);
+  // A blocked item the sender escalated goes to admin review, not live.
+  const flaggedForReview = prohibited.blocked && input.requestReview === true;
 
   const request = await prisma.deliveryRequest.create({
     data: {
@@ -86,7 +95,10 @@ export async function createRequest(
       deadlineDate: input.deadlineDate,
       isFragile: input.isFragile,
       senderNotes: input.senderNotes ?? null,
-      prohibitedCheckPassed: true,
+      prohibitedCheckPassed: !flaggedForReview,
+      status: flaggedForReview ? 'PENDING_REVIEW' : 'OPEN',
+      declarationAcceptedAt: new Date(),
+      declarationIp: ip ?? null,
       expiresAt,
     },
   });
@@ -121,8 +133,15 @@ export async function updateRequest(
 
   const title = input.title ?? request.title;
   const description = input.description ?? request.description;
-  const hit = findProhibitedKeyword(title, description);
-  if (hit) throw new AppError(400, 'ITEM_PROHIBITED', `This item is not allowed (matched "${hit}").`);
+  const prohibited = checkProhibited(title, description, input.category ?? request.category);
+  if (prohibited.blocked) {
+    throw new AppError(
+      400,
+      'ITEM_PROHIBITED',
+      `This looks like ${prohibited.reason} (matched “${prohibited.matchedWord}”). Please rephrase.`,
+      { item: [prohibited.reason ?? 'prohibited'] },
+    );
+  }
 
   if (input.originAirport && !(INDIA_ORIGIN_AIRPORTS as readonly string[]).includes(input.originAirport)) {
     throw new AppError(400, 'INVALID_AIRPORT', `Unsupported origin airport: ${input.originAirport}`);

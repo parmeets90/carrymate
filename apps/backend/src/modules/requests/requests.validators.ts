@@ -20,6 +20,12 @@ export const createRequestSchema = z.object({
   deadlineDate: z.coerce.date(),
   isFragile: z.coerce.boolean().optional().default(false),
   senderNotes: z.string().trim().max(200).optional(),
+  /** Sender must accept the item declaration to post (Challenge 08). */
+  declarationAccepted: z.literal(true, {
+    errorMap: () => ({ message: 'You must accept the item declaration to post.' }),
+  }),
+  /** When a prohibited-rule blocks the item, the sender can ask for manual review. */
+  requestReview: z.boolean().optional().default(false),
 });
 
 export type CreateRequestInput = z.infer<typeof createRequestSchema>;

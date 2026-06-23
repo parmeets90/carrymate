@@ -317,7 +317,7 @@ export type SlaLevel = 'green' | 'amber' | 'red';
 
 /** A single actionable item in the unified admin work queue (B1). */
 export interface AdminQueueItem {
-  kind: 'DISPUTE' | 'FRAUD' | 'KYC' | 'PAYOUT';
+  kind: 'DISPUTE' | 'FRAUD' | 'REVIEW' | 'KYC' | 'PAYOUT';
   /** Entity id (disputeId / orderId / userId) for the relevant action. */
   id: string;
   title: string;

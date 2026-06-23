@@ -11,6 +11,7 @@ import {
   postSetStatus,
   getRequests,
   postExpireRequest,
+  postApproveReview,
   getOrders,
   postRefundOrder,
   getDisputes,
@@ -44,6 +45,7 @@ adminRouter.post('/users/:userId/status', validateBody(setStatusSchema), postSet
 
 adminRouter.get('/requests', getRequests);
 adminRouter.post('/requests/:requestId/expire', postExpireRequest);
+adminRouter.post('/requests/:requestId/approve-review', postApproveReview);
 
 adminRouter.get('/orders', getOrders);
 adminRouter.post('/orders/:orderId/refund', postRefundOrder);

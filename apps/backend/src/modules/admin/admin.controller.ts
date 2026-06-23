@@ -9,6 +9,7 @@ import {
   setUserStatus,
   listRequests,
   forceExpireRequest,
+  approveReviewRequest,
   getMetrics,
   getAdminQueue,
 } from './admin.service';
@@ -87,6 +88,11 @@ export const getRequests: RequestHandler = async (req, res) => {
 
 export const postExpireRequest: RequestHandler = async (req, res) => {
   await forceExpireRequest(req.params.requestId!);
+  ok(res, { success: true });
+};
+
+export const postApproveReview: RequestHandler = async (req, res) => {
+  await approveReviewRequest(req.params.requestId!, req.user!.id);
   ok(res, { success: true });
 };
 

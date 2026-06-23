@@ -86,6 +86,44 @@ export const PROHIBITED_KEYWORDS = [
   'jewellery',
 ] as const;
 
+/**
+ * Context-aware prohibited-item rules (Challenge 08). Reduces false positives
+ * over the flat keyword list: a trigger word only flags when the context fits.
+ * - `amplifiers`: trigger + amplifier in the same text → flag (e.g. "samsung tablet").
+ * - `safeCategories`: trigger flags only when the category is NOT safe (e.g. a
+ *   "tablet" is fine in FOOD but suspicious elsewhere = medicine).
+ * - neither: the trigger always flags (e.g. weapons, currency).
+ */
+export const PROHIBITED_CONTEXTS = {
+  electronics: {
+    triggers: ['tablet', 'phone', 'laptop', 'device', 'charger', 'cable', 'smartwatch', 'earbuds', 'headphone', 'camera', 'console', 'drone', 'router', 'powerbank'],
+    amplifiers: ['android', 'samsung', 'apple', 'ipad', 'iphone', 'dell', 'hp', 'lenovo', 'macbook', 'oneplus', 'xiaomi', 'sony', 'bluetooth', 'wireless', 'gaming', 'electronic', 'smart'],
+  },
+  medicine: {
+    triggers: ['capsule', 'syrup', 'medicine', 'drug', 'pill', 'injection', 'ointment', 'antibiotic', 'supplement', 'vitamin', 'tablet'],
+    safeCategories: ['FOOD'],
+  },
+  liquids: {
+    triggers: ['perfume', 'alcohol', 'aerosol', 'spray', 'liquor', 'wine'],
+    safeCategories: ['FOOD'],
+  },
+  valuables: {
+    triggers: ['gold', 'silver', 'jewelry', 'jewellery', 'cash', 'currency', 'bullion', 'diamond'],
+  },
+  weapons: {
+    triggers: ['gun', 'knife', 'weapon', 'ammunition', 'blade', 'pistol', 'explosive'],
+  },
+} as const;
+
+/** Legal declaration the sender must accept before posting a request (Challenge 08). */
+export const ITEM_DECLARATIONS = [
+  'My item is not electronics or electrical devices',
+  'My item is not medicine, vitamins, or supplements',
+  'My item is not liquids or aerosols',
+  'My item is not worth more than ₹10,000',
+  'I declare all information is accurate and truthful',
+] as const;
+
 /** Standard API error codes (extend per feature). */
 export const ERROR_CODES = {
   NO_TOKEN: 'NO_TOKEN',
