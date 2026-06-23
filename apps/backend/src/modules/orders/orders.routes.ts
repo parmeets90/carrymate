@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { UserRole } from '@carrymate/shared';
-import { authenticate, requireKyc, requireRole } from '../../middleware/auth.middleware';
+import { authenticate, requireKyc, requireRole, requireVerifiedPhone } from '../../middleware/auth.middleware';
 import { validateBody } from '../../middleware/validate';
 import {
   getMyOrders,
@@ -22,7 +22,7 @@ ordersRouter.get('/', getMyOrders);
 ordersRouter.get('/:orderId', getOrderById);
 
 // Sender: fund escrow, then release on receipt.
-ordersRouter.post('/:orderId/pay', requireRole(UserRole.SENDER), postPay);
+ordersRouter.post('/:orderId/pay', requireRole(UserRole.SENDER), requireVerifiedPhone, postPay);
 ordersRouter.post('/:orderId/release', requireRole(UserRole.SENDER), postRelease);
 
 // Traveler: open-box at pickup, then deliver with handover code + proof.

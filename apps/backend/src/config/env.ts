@@ -61,6 +61,12 @@ const envSchema = z.object({
   // AviationStack (flight/PNR check). Blank → flights verified manually by admin.
   AVIATIONSTACK_API_KEY: z.string().optional(),
 
+  // Firebase Admin (verifies Google/Firebase login tokens). Blank → Google
+  // sign-in is disabled; phone-OTP login still works.
+  FIREBASE_PROJECT_ID: z.string().optional(),
+  FIREBASE_CLIENT_EMAIL: z.string().optional(),
+  FIREBASE_PRIVATE_KEY: z.string().optional(),
+
   // Feature flags (off by default; flipped per phase)
   ENABLE_REAL_PAYMENTS: z.coerce.boolean().default(false),
   ENABLE_AUTO_KYC: z.coerce.boolean().default(false),
@@ -127,3 +133,8 @@ export const isIdfyConfigured = Boolean(
 
 /** True when AviationStack is configured; else flights are verified manually. */
 export const isAviationStackConfigured = Boolean(env.AVIATIONSTACK_API_KEY);
+
+/** True when Firebase Admin is configured; else Google sign-in is disabled. */
+export const isFirebaseConfigured = Boolean(
+  env.FIREBASE_PROJECT_ID && env.FIREBASE_CLIENT_EMAIL && env.FIREBASE_PRIVATE_KEY,
+);

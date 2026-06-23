@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { UserRole } from '@carrymate/shared';
-import { authenticate, requireKyc, requireRole } from '../../middleware/auth.middleware';
+import { authenticate, requireKyc, requireRole, requireVerifiedPhone } from '../../middleware/auth.middleware';
 import { validateBody } from '../../middleware/validate';
 import { createRequestSchema, updateRequestSchema } from './requests.validators';
 import {
@@ -28,7 +28,7 @@ requestsRouter.get('/available', requireRole(UserRole.TRAVELER), getAvailableReq
 requestsRouter.get('/stats/today', getTodayPulseHandler);
 
 // Sender: manage own requests.
-requestsRouter.post('/', requireRole(UserRole.SENDER), validateBody(createRequestSchema), postRequest);
+requestsRouter.post('/', requireRole(UserRole.SENDER), requireVerifiedPhone, validateBody(createRequestSchema), postRequest);
 requestsRouter.get('/', requireRole(UserRole.SENDER), getMyRequests);
 requestsRouter.get('/:requestId', requireRole(UserRole.SENDER), getRequestById);
 requestsRouter.get('/:requestId/insights', requireRole(UserRole.SENDER), getRequestInsightsHandler);
@@ -42,5 +42,6 @@ requestsRouter.get('/:requestId/bids', requireRole(UserRole.SENDER), getRequestB
 requestsRouter.post(
   '/:requestId/bids/:bidId/accept',
   requireRole(UserRole.SENDER),
+  requireVerifiedPhone,
   postAcceptBid,
 );

@@ -53,8 +53,10 @@ enum KycDocStatus {
 
 model User {
   id           String     @id @default(uuid()) @db.Uuid
-  phone        String     @unique @db.VarChar(15) // E.164, e.g. +919876543210
+  // Optional now that Google (Firebase) sign-up exists; verified later in profile.
+  phone        String?    @unique @db.VarChar(15) // E.164, e.g. +919876543210
   email        String?    @unique @db.VarChar(255)
+  firebaseUid  String?    @unique @map("firebase_uid") // set for Google/Firebase accounts
   fullName     String?    @map("full_name") @db.VarChar(100)
   role         UserRole   @default(SENDER)
   status       UserStatus @default(ACTIVE)

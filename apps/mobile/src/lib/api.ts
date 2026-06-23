@@ -179,6 +179,13 @@ export const api = {
     post<{ phoneMasked: string; expiresInSeconds: number }>('/v1/auth/send-otp', { phone }),
   verifyOtp: (phone: string, code: string, fcmToken?: string) =>
     post<AuthResult>('/v1/auth/verify-otp', { phone, code, fcmToken }),
+  googleAuth: (idToken: string, fcmToken?: string) =>
+    post<AuthResult>('/v1/auth/google', { idToken, fcmToken }),
+  // Attach + verify a phone on the logged-in account (profile flow).
+  startPhoneVerify: (phone: string) =>
+    post<{ phoneMasked: string; expiresInSeconds: number }>('/v1/auth/phone/start', { phone }),
+  confirmPhoneVerify: (phone: string, code: string) =>
+    post<PublicUser>('/v1/auth/phone/verify', { phone, code }),
   refresh: (refreshToken: string) => post<AuthTokens>('/v1/auth/refresh', { refreshToken }),
   me: () => get<PublicUser>('/v1/auth/me'),
   updateProfile: (data: { fullName?: string; email?: string; role?: string }) =>

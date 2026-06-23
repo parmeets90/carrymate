@@ -21,6 +21,7 @@ import { ConversationsScreen } from '@/screens/chat/ConversationsScreen';
 import { ChatScreen } from '@/screens/chat/ChatScreen';
 import { NotificationsScreen } from '@/screens/notifications/NotificationsScreen';
 import { AllowedItemsScreen } from '@/screens/sender/AllowedItemsScreen';
+import { AddPhoneScreen } from '@/screens/profile/AddPhoneScreen';
 import { ProfileTabScreen } from '@/screens/profile/ProfileTabScreen';
 
 const Tab = createBottomTabNavigator();
@@ -114,6 +115,7 @@ export function MainNavigator() {
       />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       <Stack.Screen name="AllowedItems" component={AllowedItemsScreen} options={{ title: 'What can I send?' }} />
+      <Stack.Screen name="AddPhone" component={AddPhoneScreen} options={{ title: 'Verify phone' }} />
     </Stack.Navigator>
   );
 }

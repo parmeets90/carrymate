@@ -8,11 +8,17 @@ import {
   refreshSchema,
   updateProfileSchema,
   adminLoginSchema,
+  googleAuthSchema,
+  startPhoneSchema,
+  verifyPhoneSchema,
 } from './auth.validators';
 import {
   postSendOtp,
   postVerifyOtp,
   postAdminLogin,
+  postGoogleAuth,
+  postStartPhone,
+  postVerifyPhone,
   postRefresh,
   postLogout,
   getMe,
@@ -41,6 +47,10 @@ const loginLimiter = rateLimit({
 authRouter.post('/admin/login', loginLimiter, validateBody(adminLoginSchema), postAdminLogin);
 authRouter.post('/send-otp', otpLimiter, validateBody(sendOtpSchema), postSendOtp);
 authRouter.post('/verify-otp', validateBody(verifyOtpSchema), postVerifyOtp);
+authRouter.post('/google', loginLimiter, validateBody(googleAuthSchema), postGoogleAuth);
+// Attach + verify a phone on the logged-in account (profile flow).
+authRouter.post('/phone/start', authenticate, otpLimiter, validateBody(startPhoneSchema), postStartPhone);
+authRouter.post('/phone/verify', authenticate, validateBody(verifyPhoneSchema), postVerifyPhone);
 authRouter.post('/refresh', validateBody(refreshSchema), postRefresh);
 authRouter.post('/logout', validateBody(refreshSchema), postLogout);
 authRouter.get('/me', authenticate, getMe);

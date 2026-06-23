@@ -8,6 +8,9 @@ import {
   logout,
   updateProfile,
   adminLogin,
+  googleAuth,
+  startPhoneVerification,
+  confirmPhoneVerification,
 } from './auth.service';
 import type {
   SendOtpInput,
@@ -15,6 +18,9 @@ import type {
   RefreshInput,
   UpdateProfileInput,
   AdminLoginInput,
+  GoogleAuthInput,
+  StartPhoneInput,
+  VerifyPhoneInput,
 } from './auth.validators';
 
 /** Mask a phone for display, keeping country code + last 2 digits. */
@@ -33,6 +39,22 @@ export const postVerifyOtp: RequestHandler = async (req, res) => {
   const { phone, code, fcmToken } = req.body as VerifyOtpInput;
   const result = await verifyLoginOtp(phone, code, fcmToken);
   ok(res, result);
+};
+
+export const postGoogleAuth: RequestHandler = async (req, res) => {
+  const { idToken, fcmToken } = req.body as GoogleAuthInput;
+  ok(res, await googleAuth(idToken, fcmToken));
+};
+
+export const postStartPhone: RequestHandler = async (req, res) => {
+  const { phone } = req.body as StartPhoneInput;
+  const { expiresInSeconds } = await startPhoneVerification(req.user!.id, phone);
+  ok(res, { phoneMasked: maskPhone(phone), expiresInSeconds });
+};
+
+export const postVerifyPhone: RequestHandler = async (req, res) => {
+  const { phone, code } = req.body as VerifyPhoneInput;
+  ok(res, await confirmPhoneVerification(req.user!.id, phone, code));
 };
 
 export const postAdminLogin: RequestHandler = async (req, res) => {

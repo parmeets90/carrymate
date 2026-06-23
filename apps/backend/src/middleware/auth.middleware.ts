@@ -30,6 +30,14 @@ export const requireKyc: RequestHandler = (req, _res, next) => {
   next();
 };
 
+/** Require a verified phone. Use on transaction routes (Google users add it in profile). */
+export const requireVerifiedPhone: RequestHandler = (req, _res, next) => {
+  if (!req.user?.phoneVerified) {
+    throw AppError.forbidden('Add and verify your phone number to continue', 'PHONE_NOT_VERIFIED');
+  }
+  next();
+};
+
 /**
  * Require one of the given roles. ADMIN passes everything; a BOTH user satisfies
  * SENDER/TRAVELER requirements but never an ADMIN-only requirement.

@@ -5,6 +5,7 @@ import { toPublicUser } from '../users/user.serializer';
 import { verifyPassword } from '../../utils/crypto';
 import { requestOtp, verifyOtp } from './otp.service';
 import { issueTokens, rotateRefreshToken, revokeRefreshToken } from './token.service';
+import { verifyFirebaseToken } from '../../lib/firebase';
 
 /** Step 1: send a login OTP to a phone number. */
 export async function sendLoginOtp(phone: string): Promise<{ expiresInSeconds: number }> {
@@ -38,6 +39,79 @@ export async function verifyLoginOtp(
 
   const tokens = await issueTokens(user.id);
   return { user: toPublicUser(user), tokens, isNewUser };
+}
+
+/**
+ * Sign in / sign up with Google (Firebase). Verifies the Firebase ID token,
+ * then matches an existing account by firebaseUid or email, else creates one.
+ * Phone stays unset until the user verifies it in their profile.
+ */
+export async function googleAuth(idToken: string, fcmToken?: string): Promise<AuthResult> {
+  const identity = await verifyFirebaseToken(idToken);
+
+  let user =
+    (await prisma.user.findUnique({ where: { firebaseUid: identity.uid } })) ??
+    (identity.email ? await prisma.user.findUnique({ where: { email: identity.email } }) : null);
+
+  if (user && user.status === 'BANNED') {
+    throw new AppError(403, 'USER_BANNED', 'This account has been banned.');
+  }
+
+  const isNewUser = !user;
+  if (user) {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        firebaseUid: identity.uid,
+        email: user.email ?? identity.email,
+        lastActiveAt: new Date(),
+        ...(fcmToken ? { fcmToken } : {}),
+      },
+    });
+  } else {
+    user = await prisma.user.create({
+      data: {
+        firebaseUid: identity.uid,
+        email: identity.email,
+        fullName: identity.name,
+        lastActiveAt: new Date(),
+        fcmToken: fcmToken ?? null,
+      },
+    });
+  }
+
+  const tokens = await issueTokens(user.id);
+  return { user: toPublicUser(user), tokens, isNewUser };
+}
+
+/** Send an OTP to attach/verify a phone on the logged-in account (profile flow). */
+export async function startPhoneVerification(
+  userId: string,
+  phone: string,
+): Promise<{ expiresInSeconds: number }> {
+  const clash = await prisma.user.findUnique({ where: { phone } });
+  if (clash && clash.id !== userId) {
+    throw new AppError(409, 'PHONE_IN_USE', 'That phone number is already linked to another account.');
+  }
+  return requestOtp(phone);
+}
+
+/** Verify the OTP and attach the (now verified) phone to the logged-in account. */
+export async function confirmPhoneVerification(
+  userId: string,
+  phone: string,
+  code: string,
+): Promise<ReturnType<typeof toPublicUser>> {
+  const clash = await prisma.user.findUnique({ where: { phone } });
+  if (clash && clash.id !== userId) {
+    throw new AppError(409, 'PHONE_IN_USE', 'That phone number is already linked to another account.');
+  }
+  await verifyOtp(phone, code);
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { phone, phoneVerified: true },
+  });
+  return toPublicUser(user);
 }
 
 /** Update the current user's profile (name, email, role). */

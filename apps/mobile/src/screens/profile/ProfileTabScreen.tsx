@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { Card, Badge } from '@/components/Card';
 import { Avatar } from '@/components/widgets';
+import { Icon } from '@/components/Icon';
 import { SecondaryButton } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
+import type { RootStackParamList } from '@/navigation/types';
 
 type Role = 'SENDER' | 'TRAVELER' | 'BOTH';
 
@@ -19,6 +23,7 @@ const ROLES: { value: Role; label: string; hint: string }[] = [
 
 export function ProfileTabScreen() {
   const insets = useSafeAreaInsets();
+  const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const qc = useQueryClient();
   const { user, setUser, signOut } = useAuth();
   const [saving, setSaving] = useState<Role | null>(null);
@@ -56,6 +61,25 @@ export function ProfileTabScreen() {
           )}
         </View>
       </Card>
+
+      <Text style={styles.sectionLabel}>PHONE NUMBER</Text>
+      {user?.phoneVerified ? (
+        <Card style={styles.phoneRow}>
+          <Icon name="verified" size={20} color={colors.mintPrimary} weight="fill" />
+          <Text style={styles.phoneText}>{user.phone} · verified</Text>
+        </Card>
+      ) : (
+        <Pressable onPress={() => nav.navigate('AddPhone')}>
+          <Card style={styles.phoneRow}>
+            <Icon name="alert" size={20} color={colors.cautionAmber} weight="fill" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.phoneText}>Add &amp; verify your phone</Text>
+              <Text style={styles.phoneHint}>Required to post, bid, or pay</Text>
+            </View>
+            <Icon name="chevronRight" size={18} color={colors.textHint} />
+          </Card>
+        </Pressable>
+      )}
 
       <Text style={styles.sectionLabel}>YOUR ROLE</Text>
       <Card style={{ gap: spacing.sm }}>
@@ -99,6 +123,9 @@ const styles = StyleSheet.create({
   phone: { ...typography.bodyM, color: colors.textSecondary },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm, justifyContent: 'center' },
   sectionLabel: { ...typography.label, color: colors.textSecondary, marginTop: spacing.xl, marginBottom: spacing.sm, marginLeft: spacing.xs },
+  phoneRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  phoneText: { ...typography.bodyL, fontWeight: '600', color: colors.textPrimary },
+  phoneHint: { ...typography.caption, color: colors.textSecondary, marginTop: 1 },
   roleRow: {
     flexDirection: 'row',
     alignItems: 'center',

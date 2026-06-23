@@ -20,6 +20,18 @@ export const refreshSchema = z.object({
   refreshToken: z.string().trim().min(1, 'refreshToken is required'),
 });
 
+export const googleAuthSchema = z.object({
+  idToken: z.string().trim().min(1, 'idToken is required'),
+  fcmToken: z.string().trim().min(1).optional(),
+});
+
+export const startPhoneSchema = z.object({ phone });
+
+export const verifyPhoneSchema = z.object({
+  phone,
+  code: z.string().trim().regex(/^\d{4,8}$/, 'Enter the code sent to your phone.'),
+});
+
 export const adminLoginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(1, 'Password is required'),
@@ -36,6 +48,9 @@ export const updateProfileSchema = z
   });
 
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
+export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;
+export type StartPhoneInput = z.infer<typeof startPhoneSchema>;
+export type VerifyPhoneInput = z.infer<typeof verifyPhoneSchema>;
 export type SendOtpInput = z.infer<typeof sendOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type RefreshInput = z.infer<typeof refreshSchema>;

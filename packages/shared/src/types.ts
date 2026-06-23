@@ -34,7 +34,7 @@ export interface Paginated<T> {
 /** A user as exposed to clients (no sensitive fields). */
 export interface PublicUser {
   id: string;
-  phone: string;
+  phone: string | null;
   email: string | null;
   fullName: string | null;
   role: string;
