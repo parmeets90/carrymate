@@ -8,6 +8,7 @@ import { Card, Badge, statusTone } from '@/components/Card';
 import { PrimaryButton, SecondaryButton } from '@/components/ui';
 import { Avatar, Timeline, EmptyState } from '@/components/widgets';
 import { Icon } from '@/components/Icon';
+import { PlaneTrack, SuccessPop } from '@/components/anim';
 import { api } from '@/lib/api';
 import type { OrderView } from '@carrymate/shared';
 import type { RootStackParamList } from '@/navigation/types';
@@ -44,6 +45,12 @@ export function OrdersScreen() {
 
         {['MATCHED', 'IN_TRANSIT', 'DELIVERED', 'CONFIRMED'].includes(item.requestStatus) && (
           <Timeline status={item.requestStatus} />
+        )}
+
+        {item.requestStatus === 'IN_TRANSIT' && (
+          <PlaneTrack
+            label={`${item.counterpartyName ?? (isSender ? 'Your traveler' : 'You')} ${isSender ? 'is on the way to' : 'are carrying this to'} ${item.destinationCity}…`}
+          />
         )}
 
         <View style={styles.amountRow}>
@@ -88,7 +95,13 @@ export function OrdersScreen() {
             <PrimaryButton label="Confirm receipt & release" onPress={() => release.mutate(item.id)} loading={release.isPending} />
           )}
           {item.status === 'COMPLETED' && (
-            <PrimaryButton label="Rate" onPress={() => nav.navigate('Rate', { orderId: item.id, counterparty: item.counterpartyName ?? 'them' })} />
+            <SuccessPop>
+              <View style={styles.doneRow}>
+                <Icon name="check" size={16} color="#096438" weight="fill" />
+                <Text style={styles.doneText}>Delivered & released</Text>
+              </View>
+              <PrimaryButton label="Rate" onPress={() => nav.navigate('Rate', { orderId: item.id, counterparty: item.counterpartyName ?? 'them' })} />
+            </SuccessPop>
           )}
           {item.escrowHeldAt && (
             <SecondaryButton
@@ -148,4 +161,7 @@ const styles = StyleSheet.create({
   actions: { marginTop: spacing.md, gap: spacing.sm },
   disputeLink: { ...typography.bodyM, color: colors.dangerRed, marginTop: spacing.md, textAlign: 'center', fontWeight: '600' },
   fema: { ...typography.caption, color: colors.textHint, fontSize: 10, lineHeight: 14, marginTop: spacing.xs },
+  doneRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: spacing.sm },
+  doneText: { ...typography.bodyM, color: '#096438', fontWeight: '700' },
 });
+
