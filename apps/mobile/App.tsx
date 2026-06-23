@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { SplashScreen } from '@/screens/SplashScreen';
+import { AlertHost } from '@/components/AlertHost';
 import { useAuth } from '@/store/auth';
 import { registerForPush, navigationRef } from '@/lib/push';
 import { colors } from '@/theme';
@@ -54,6 +55,7 @@ function App(): React.JSX.Element {
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
         {splashDone ? <Gate /> : <SplashScreen onDone={() => setSplashDone(true)} />}
+        <AlertHost />
       </SafeAreaProvider>
     </QueryClientProvider>
   );

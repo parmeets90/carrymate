@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Text, Pressable, StyleSheet, ActivityIndicator, Alert, View, Linking } from 'react-native';
+import { Text, Pressable, StyleSheet, ActivityIndicator, View, Linking } from 'react-native';
+import { Alert } from './AlertHost';
 import {
   launchImageLibrary,
   launchCamera,

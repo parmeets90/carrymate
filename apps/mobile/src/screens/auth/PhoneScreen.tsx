@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Pressable, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Pressable, TextInput } from 'react-native';
+import { Alert } from '@/components/AlertHost';
 import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { GradientHero } from '@/components/Screen';
 import { PrimaryButton } from '@/components/ui';
