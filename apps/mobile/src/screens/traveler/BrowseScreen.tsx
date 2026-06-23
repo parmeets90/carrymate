@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { BrandLoader } from '@/components/BrandLoader';
 import { useQuery } from '@tanstack/react-query';
 import { colors, spacing, typography, sizing } from '@/theme';
 import { Card, Badge } from '@/components/Card';
@@ -16,7 +17,7 @@ export function BrowseScreen({ route, navigation }: ScreenProps<'Browse'>) {
     <View style={styles.container}>
       <Text style={styles.title}>Requests on this trip</Text>
       {isLoading ? (
-        <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing.xl }} />
+        <BrandLoader style={{ marginTop: spacing.xl }} />
       ) : (
         <FlatList
           data={data ?? []}

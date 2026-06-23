@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Text, Pressable, StyleSheet, ActivityIndicator, View, Linking } from 'react-native';
+import { Text, Pressable, StyleSheet, View, Linking } from 'react-native';
+import { BrandLoader } from './BrandLoader';
 import { Alert } from './AlertHost';
 import {
   launchImageLibrary,
@@ -81,7 +82,7 @@ export function PhotoButton({
   return (
     <Pressable onPress={pick} disabled={busy} style={styles.btn}>
       {busy ? (
-        <ActivityIndicator color={colors.skyBlue} />
+        <BrandLoader size={24} />
       ) : (
         <View style={styles.inner}>
           <Text style={styles.plus}>＋</Text>

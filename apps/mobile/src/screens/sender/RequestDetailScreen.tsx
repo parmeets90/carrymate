@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { BrandLoader } from '@/components/BrandLoader';
 import { Alert } from '@/components/AlertHost';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { colors, spacing, typography, sizing } from '@/theme';
@@ -45,7 +46,7 @@ export function RequestDetailScreen({ route, navigation }: ScreenProps<'RequestD
         </View>
       )}
       {isLoading ? (
-        <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing.xl }} />
+        <BrandLoader style={{ marginTop: spacing.xl }} />
       ) : (
         <FlatList
           data={bids ?? []}

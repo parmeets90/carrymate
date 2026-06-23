@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { BrandLoader } from '@/components/BrandLoader';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -95,7 +96,7 @@ export function NotificationsScreen() {
         }
         ListEmptyComponent={
           isLoading ? (
-            <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing['3xl'] }} />
+            <BrandLoader style={{ marginTop: spacing['3xl'] }} />
           ) : (
             <EmptyState icon="bell" title="You're all caught up" body="Updates about your bids, orders and deliveries will appear here." />
           )

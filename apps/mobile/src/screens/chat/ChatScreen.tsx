@@ -8,15 +8,18 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, radius, sizing } from '@/theme';
 import { Icon } from '@/components/Icon';
+import { BrandLoader } from '@/components/BrandLoader';
 import { api } from '@/lib/api';
 import type { MessageDto } from '@carrymate/shared';
 import type { ScreenProps } from '@/navigation/types';
+
+/** A message in the local cache, optionally still being sent (optimistic). */
+type ChatMessage = MessageDto & { pending?: boolean };
 
 function clock(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
@@ -37,8 +40,30 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
 
   const send = useMutation({
     mutationFn: (body: string) => api.sendMessage(conversationId, body),
-    onSuccess: () => {
+    // Show the message instantly with a "sending" coin loader, then reconcile.
+    onMutate: async (body): Promise<{ prev?: ChatMessage[] }> => {
+      await qc.cancelQueries({ queryKey: ['messages', conversationId] });
+      const prev = qc.getQueryData<ChatMessage[]>(['messages', conversationId]);
+      const optimistic: ChatMessage = {
+        id: `temp-${Date.now()}`,
+        conversationId,
+        senderId: 'me',
+        mine: true,
+        type: 'TEXT',
+        body,
+        piiRedacted: false,
+        createdAt: new Date().toISOString(),
+        pending: true,
+      };
+      qc.setQueryData<ChatMessage[]>(['messages', conversationId], (old = []) => [...old, optimistic]);
       setText('');
+      return { prev };
+    },
+    onError: (_err, _body, ctx) => {
+      // Roll back to the pre-send list so a failed message doesn't linger.
+      if (ctx?.prev) qc.setQueryData(['messages', conversationId], ctx.prev);
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['messages', conversationId] });
       qc.invalidateQueries({ queryKey: ['conversations'] });
     },
@@ -50,7 +75,7 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
     send.mutate(body);
   };
 
-  const renderItem = ({ item }: { item: MessageDto }) => {
+  const renderItem = ({ item }: { item: ChatMessage }) => {
     if (item.type === 'SYSTEM') {
       return <Text style={styles.system}>{item.body}</Text>;
     }
@@ -67,7 +92,11 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
               </Text>
             </View>
           )}
-          <Text style={[styles.time, mine && styles.timeMine]}>{clock(item.createdAt)}</Text>
+          {item.pending ? (
+            <BrandLoader size={14} style={styles.pending} />
+          ) : (
+            <Text style={[styles.time, mine && styles.timeMine]}>{clock(item.createdAt)}</Text>
+          )}
         </View>
       </View>
     );
@@ -80,11 +109,11 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
     >
       {isLoading ? (
-        <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing['3xl'] }} />
+        <BrandLoader style={{ marginTop: spacing['3xl'] }} />
       ) : (
         <FlatList
           ref={listRef}
-          data={data ?? []}
+          data={(data ?? []) as ChatMessage[]}
           keyExtractor={(m) => m.id}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
@@ -149,6 +178,7 @@ const styles = StyleSheet.create({
   redacted: { ...typography.caption, color: colors.textHint, fontStyle: 'italic' },
   redactedMine: { color: 'rgba(255,255,255,0.8)' },
   time: { ...typography.caption, color: colors.textHint, marginTop: 4, alignSelf: 'flex-end', fontSize: 10 },
+  pending: { marginTop: 4, alignSelf: 'flex-end' },
   timeMine: { color: 'rgba(255,255,255,0.75)' },
   system: { ...typography.caption, color: colors.textHint, textAlign: 'center', marginVertical: spacing.xs },
   inputBar: {

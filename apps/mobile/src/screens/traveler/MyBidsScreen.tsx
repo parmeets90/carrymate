@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { BrandLoader } from '@/components/BrandLoader';
 import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing } from '@/theme';
@@ -17,7 +18,7 @@ export function MyBidsScreen() {
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
       <Text style={styles.title}>My bids</Text>
       {isLoading ? (
-        <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing.xl }} />
+        <BrandLoader style={{ marginTop: spacing.xl }} />
       ) : (
         <FlatList
           data={data ?? []}

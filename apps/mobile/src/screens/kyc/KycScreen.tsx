@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ActivityIndicator, Linking } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
+import { BrandLoader } from '@/components/BrandLoader';
 import { colors, spacing, radius, typography, shadows } from '@/theme';
 import { Screen, ScreenHeader } from '@/components/Screen';
 import { PrimaryButton, SecondaryButton, Field } from '@/components/ui';
@@ -102,7 +103,7 @@ export function KycScreen() {
   if (loading) {
     return (
       <Screen>
-        <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing['3xl'] }} />
+        <BrandLoader style={{ marginTop: spacing['3xl'] }} />
       </Screen>
     );
   }
@@ -120,7 +121,7 @@ export function KycScreen() {
 
       {status === 'VERIFYING' ? (
         <Card style={{ gap: spacing.md, alignItems: 'center', paddingVertical: spacing.xl }}>
-          <ActivityIndicator color={colors.skyBlue} />
+          <BrandLoader size={32} />
           <Text style={styles.center}>Complete the verification in your browser. This screen updates automatically when you're done.</Text>
           <PrimaryButton label="I've finished — check status" onPress={refreshStatus} loading={busy} />
         </Card>

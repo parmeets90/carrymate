@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { BrandLoader } from '@/components/BrandLoader';
 import { Alert } from '@/components/AlertHost';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -43,7 +44,7 @@ export function TripsScreen() {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing.xl }} />
+        <BrandLoader style={{ marginTop: spacing.xl }} />
       ) : (
         <FlatList
           data={data ?? []}

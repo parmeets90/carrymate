@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { BrandLoader } from '@/components/BrandLoader';
 import { useNavigation } from '@react-navigation/native';
 import { Alert } from '@/components/AlertHost';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -133,7 +134,7 @@ export function OrdersScreen() {
         contentContainerStyle={[styles.list, { paddingTop: insets.top + spacing.lg }]}
         ListEmptyComponent={
           isLoading ? (
-            <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing['3xl'] }} />
+            <BrandLoader style={{ marginTop: spacing['3xl'] }} />
           ) : (
             <EmptyState icon="orders" title="No orders yet" body="Accept a bid (sender) or get matched (traveler) to start an order." />
           )

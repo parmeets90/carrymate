@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { BrandLoader } from '@/components/BrandLoader';
 import { Alert } from '@/components/AlertHost';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -101,7 +102,7 @@ export function ProfileTabScreen() {
                 <Text style={styles.roleHint}>{r.hint}</Text>
               </View>
               {busy ? (
-                <ActivityIndicator color={colors.skyBlue} />
+                <BrandLoader size={32} />
               ) : (
                 <View style={[styles.radio, active && styles.radioActive]}>
                   {active && <View style={styles.radioDot} />}
