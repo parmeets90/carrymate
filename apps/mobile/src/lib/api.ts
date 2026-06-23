@@ -14,6 +14,8 @@ import type {
   ConversationSummary,
   MessageDto,
   NotificationDto,
+  RequestInsights,
+  MarketplacePulse,
   Paginated,
 } from '@carrymate/shared';
 import { API_BASE_URL } from '../config';
@@ -200,6 +202,9 @@ export const api = {
   updateRequest: (id: string, data: Record<string, unknown>) =>
     patch<DeliveryRequestDto>(`/v1/requests/${id}`, data),
   deleteRequest: (id: string) => del<{ success: boolean }>(`/v1/requests/${id}`),
+  relistRequest: (id: string) => post<DeliveryRequestDto>(`/v1/requests/${id}/relist`),
+  requestInsights: (id: string) => get<RequestInsights>(`/v1/requests/${id}/insights`),
+  todayPulse: () => get<MarketplacePulse>('/v1/requests/stats/today'),
   myRequests: () => get<DeliveryRequestDto[]>('/v1/requests'),
   requestBids: (requestId: string) => get<BidDto[]>(`/v1/requests/${requestId}/bids`),
   acceptBid: (requestId: string, bidId: string) =>

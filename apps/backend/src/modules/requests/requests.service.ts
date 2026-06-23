@@ -1,4 +1,9 @@
-import type { DeliveryRequestDto, DeliveryRequestSummary } from '@carrymate/shared';
+import type {
+  DeliveryRequestDto,
+  DeliveryRequestSummary,
+  RequestInsights,
+  MarketplacePulse,
+} from '@carrymate/shared';
 import { MAX_ACTIVE_REQUESTS_PER_SENDER, MIN_DEADLINE_DAYS, REQUEST_EXPIRY_DAYS } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
@@ -7,6 +12,15 @@ import {
   assertDestinationCity,
   AIRPORT_TO_CITY,
 } from '../../utils/marketplace';
+
+/** UAE destination city → its airports (reverse of AIRPORT_TO_CITY). */
+const CITY_TO_AIRPORTS: Record<string, string[]> = Object.entries(AIRPORT_TO_CITY).reduce(
+  (acc, [airport, city]) => {
+    (acc[city] ??= []).push(airport);
+    return acc;
+  },
+  {} as Record<string, string[]>,
+);
 import { INDIA_ORIGIN_AIRPORTS } from '@carrymate/shared';
 import { toRequestDto, toRequestSummary } from '../marketplace/serializers';
 import type { CreateRequestInput, UpdateRequestInput } from './requests.validators';
@@ -128,6 +142,74 @@ export async function updateRequest(
     data: { ...input, senderNotes: input.senderNotes ?? undefined },
   });
   return toRequestDto(updated);
+}
+
+/** One free re-list of an expired request (Challenge 05, Fix 2). */
+export async function relistRequest(requestId: string, senderId: string): Promise<DeliveryRequestDto> {
+  const request = await ownRequestOrThrow(requestId, senderId);
+  if (request.status !== 'EXPIRED') {
+    throw new AppError(409, 'NOT_EXPIRED', 'Only an expired request can be re-listed.');
+  }
+  if (request.relistCount >= 1) {
+    throw new AppError(409, 'RELIST_USED', 'You’ve already used your free re-list for this request.');
+  }
+  const updated = await prisma.deliveryRequest.update({
+    where: { id: requestId },
+    data: {
+      status: 'OPEN',
+      expiresAt: new Date(Date.now() + REQUEST_EXPIRY_DAYS * 86_400_000),
+      relistCount: { increment: 1 },
+      expiryReminderSentAt: null,
+    },
+  });
+  return toRequestDto(updated);
+}
+
+/** Liquidity signals for a request detail (Challenge 05, Fix 3). */
+export async function getRequestInsights(
+  requestId: string,
+  senderId: string,
+): Promise<RequestInsights> {
+  const request = await ownRequestOrThrow(requestId, senderId);
+  const airports = CITY_TO_AIRPORTS[request.destinationCity] ?? [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const weekEnd = new Date(today.getTime() + 7 * 86_400_000);
+
+  const [activeTravelers, recentOrders] = await Promise.all([
+    prisma.travelRoute.count({
+      where: {
+        status: 'ACTIVE',
+        destinationAirport: { in: airports.length ? airports : ['__none__'] },
+        departureDate: { gte: today, lte: weekEnd },
+      },
+    }),
+    // Historical time-to-match on this route (order created = matched moment).
+    prisma.order.findMany({
+      where: { request: { destinationCity: request.destinationCity } },
+      select: { createdAt: true, request: { select: { createdAt: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    }),
+  ]);
+
+  const days = recentOrders.map(
+    (o) => (o.createdAt.getTime() - o.request.createdAt.getTime()) / 86_400_000,
+  );
+  const avgDaysToMatch = days.length
+    ? Math.max(1, Math.round(days.reduce((a, b) => a + b, 0) / days.length))
+    : null;
+
+  return { activeTravelers, avgDaysToMatch, destinationCity: request.destinationCity };
+}
+
+/** Marketplace pulse for the home screen (Challenge 05, Fix 4). */
+export async function getTodayPulse(): Promise<MarketplacePulse> {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const matchedToday = await prisma.order.count({ where: { createdAt: { gte: start } } });
+  return { matchedToday };
 }
 
 /** Delete a request outright — allowed only before it's matched (cascades any bids). */

@@ -164,6 +164,7 @@ enum RequestStatus {
   CONFIRMED
   DISPUTED
   CANCELLED
+  EXPIRED
 }
 
 enum RouteStatus {
@@ -260,6 +261,9 @@ model DeliveryRequest {
   acceptedBidId         String?         @map("accepted_bid_id") @db.Uuid
   prohibitedCheckPassed Boolean         @default(false) @map("prohibited_check_passed")
   expiresAt             DateTime?       @map("expires_at") @db.Timestamptz
+  // Cold-start UX (Challenge 05): one free re-list, and a 48h pre-expiry nudge.
+  relistCount           Int             @default(0) @map("relist_count")
+  expiryReminderSentAt  DateTime?       @map("expiry_reminder_sent_at") @db.Timestamptz
   createdAt             DateTime        @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime        @updatedAt @map("updated_at") @db.Timestamptz
 

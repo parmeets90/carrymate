@@ -55,6 +55,7 @@ export enum RequestStatus {
   CONFIRMED = 'CONFIRMED',
   DISPUTED = 'DISPUTED',
   CANCELLED = 'CANCELLED',
+  EXPIRED = 'EXPIRED',
 }
 
 export enum RouteStatus {

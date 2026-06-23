@@ -5,10 +5,12 @@ import { prisma } from './lib/prisma';
 import { runAutoConfirm } from './modules/orders/orders.service';
 import { runPaymentReconciliation } from './jobs/payment-reconciliation';
 import { runKycTimeoutSweep } from './jobs/kyc-timeout';
+import { runRequestExpirySweep } from './jobs/request-expiry';
 
 const AUTO_CONFIRM_INTERVAL_MS = 10 * 60_000; // every 10 min
 const RECONCILIATION_INTERVAL_MS = 15 * 60_000; // every 15 min
 const KYC_TIMEOUT_INTERVAL_MS = 5 * 60_000; // every 5 min
+const EXPIRY_SWEEP_INTERVAL_MS = 60 * 60_000; // hourly
 
 async function bootstrap(): Promise<void> {
   const app = createApp();
@@ -37,6 +39,12 @@ async function bootstrap(): Promise<void> {
     runKycTimeoutSweep().catch((err) => logger.error('kyc timeout sweep failed', err));
   }, KYC_TIMEOUT_INTERVAL_MS);
   kycTimeoutTimer.unref();
+
+  // Request expiry + 48h reminder sweep (cold-start UX).
+  const expiryTimer = setInterval(() => {
+    runRequestExpirySweep().catch((err) => logger.error('expiry sweep failed', err));
+  }, EXPIRY_SWEEP_INTERVAL_MS);
+  expiryTimer.unref();
 
   const shutdown = async (signal: string): Promise<void> => {
     logger.info(`${signal} received — shutting down gracefully`);

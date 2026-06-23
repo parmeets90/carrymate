@@ -22,10 +22,20 @@ export function MyRequestsScreen() {
     queryFn: api.myRequests,
   });
 
+  const pulse = useQuery({ queryKey: ['today-pulse'], queryFn: api.todayPulse, refetchInterval: 60_000 });
+
   const del = useMutation({
     mutationFn: (id: string) => api.deleteRequest(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['my-requests'] }),
     onError: (e) => Alert.alert('Could not delete', (e as Error).message),
+  });
+  const relist = useMutation({
+    mutationFn: (id: string) => api.relistRequest(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-requests'] });
+      Alert.alert('Re-listed', 'Your request is live again for another 7 days.');
+    },
+    onError: (e) => Alert.alert('Could not re-list', (e as Error).message),
   });
 
   const confirmDelete = (item: DeliveryRequestDto) =>
@@ -37,6 +47,11 @@ export function MyRequestsScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
       <Text style={styles.title}>My requests</Text>
+      {(pulse.data?.matchedToday ?? 0) > 0 && (
+        <View style={styles.pulse}>
+          <Text style={styles.pulseText}>🤝 {pulse.data!.matchedToday} deliveries matched today</Text>
+        </View>
+      )}
 
       {isLoading ? (
         <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing.xl }} />
@@ -77,6 +92,18 @@ export function MyRequestsScreen() {
                     </Pressable>
                   </View>
                 )}
+                {item.status === 'EXPIRED' && (
+                  <View style={styles.actions}>
+                    <Pressable
+                      style={[styles.action, { backgroundColor: colors.skyLight }]}
+                      onPress={() => relist.mutate(item.id)}
+                      disabled={relist.isPending}
+                    >
+                      <Icon name="calendar" size={16} color={colors.skyBlue} />
+                      <Text style={styles.actionText}>Re-list free (7 more days)</Text>
+                    </Pressable>
+                  </View>
+                )}
               </Card>
             );
           }}
@@ -89,6 +116,8 @@ export function MyRequestsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgApp, paddingHorizontal: sizing.screenPaddingX },
   title: { ...typography.titleL, color: colors.textPrimary },
+  pulse: { marginTop: spacing.sm, backgroundColor: colors.mintLight, borderRadius: 8, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, alignSelf: 'flex-start' },
+  pulseText: { ...typography.bodyM, color: '#096438', fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
   cardTitle: { ...typography.bodyL, fontWeight: '600', color: colors.textPrimary, flex: 1 },
   meta: { ...typography.bodyM, color: colors.textSecondary, marginTop: spacing.xs },

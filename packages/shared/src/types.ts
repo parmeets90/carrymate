@@ -126,6 +126,20 @@ export interface DeliveryRequestDto {
   createdAt: string;
 }
 
+/** Cold-start signals for a request detail (Challenge 05). */
+export interface RequestInsights {
+  /** Travelers with an active trip on this corridor in the next 7 days. */
+  activeTravelers: number;
+  /** Historical avg days from posting to match on this route, or null if unknown. */
+  avgDaysToMatch: number | null;
+  destinationCity: string;
+}
+
+/** Lightweight marketplace pulse for the home screen. */
+export interface MarketplacePulse {
+  matchedToday: number;
+}
+
 /** Browse view of a request (no recipient PII; includes sender trust signals). */
 export interface DeliveryRequestSummary {
   id: string;

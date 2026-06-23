@@ -57,6 +57,8 @@ export function statusTone(status: string): Tone {
     case 'REJECTED':
     case 'DISPUTED':
       return 'danger';
+    case 'EXPIRED':
+      return 'neutral';
     case 'OPEN':
       return 'sky';
     default:

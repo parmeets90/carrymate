@@ -9,6 +9,9 @@ import {
   cancelRequest,
   updateRequest,
   deleteRequest,
+  relistRequest,
+  getRequestInsights,
+  getTodayPulse,
   browseForRoute,
 } from './requests.service';
 import type { CreateRequestInput, UpdateRequestInput } from './requests.validators';
@@ -37,6 +40,18 @@ export const patchRequest: RequestHandler = async (req, res) => {
 export const deleteRequestHandler: RequestHandler = async (req, res) => {
   await deleteRequest(req.params.requestId!, req.user!.id);
   ok(res, { success: true });
+};
+
+export const postRelistRequest: RequestHandler = async (req, res) => {
+  ok(res, await relistRequest(req.params.requestId!, req.user!.id));
+};
+
+export const getRequestInsightsHandler: RequestHandler = async (req, res) => {
+  ok(res, await getRequestInsights(req.params.requestId!, req.user!.id));
+};
+
+export const getTodayPulseHandler: RequestHandler = async (_req, res) => {
+  ok(res, await getTodayPulse());
 };
 
 export const getAvailableRequests: RequestHandler = async (req, res) => {

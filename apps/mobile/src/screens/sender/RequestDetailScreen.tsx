@@ -13,6 +13,10 @@ export function RequestDetailScreen({ route, navigation }: ScreenProps<'RequestD
     queryKey: ['request-bids', requestId],
     queryFn: () => api.requestBids(requestId),
   });
+  const insights = useQuery({
+    queryKey: ['request-insights', requestId],
+    queryFn: () => api.requestInsights(requestId),
+  });
 
   const accept = useMutation({
     mutationFn: (bidId: string) => api.acceptBid(requestId, bidId),
@@ -28,6 +32,17 @@ export function RequestDetailScreen({ route, navigation }: ScreenProps<'RequestD
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Bids</Text>
+      {insights.data && (
+        <View style={styles.insights}>
+          <Text style={styles.insightsText}>
+            ✈️ {insights.data.activeTravelers} traveler{insights.data.activeTravelers === 1 ? '' : 's'} active to{' '}
+            {insights.data.destinationCity} this week
+            {insights.data.avgDaysToMatch != null
+              ? ` · expected match ~${insights.data.avgDaysToMatch} day${insights.data.avgDaysToMatch === 1 ? '' : 's'}`
+              : ''}
+          </Text>
+        </View>
+      )}
       {isLoading ? (
         <ActivityIndicator color={colors.skyBlue} style={{ marginTop: spacing.xl }} />
       ) : (
@@ -73,6 +88,8 @@ export function RequestDetailScreen({ route, navigation }: ScreenProps<'RequestD
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgApp, paddingHorizontal: sizing.screenPaddingX, paddingTop: spacing.md },
   title: { ...typography.titleL, color: colors.textPrimary },
+  insights: { marginTop: spacing.sm, backgroundColor: colors.skyLight, borderRadius: 8, paddingVertical: spacing.sm, paddingHorizontal: spacing.md },
+  insightsText: { ...typography.bodyM, color: '#185FA5', fontWeight: '600' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   name: { ...typography.bodyL, fontWeight: '600', color: colors.textPrimary },
   meta: { ...typography.bodyM, color: colors.textSecondary, marginTop: spacing.xs },
