@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 160" fill="none">
+  <defs>
+    <linearGradient id="routeD" x1="82" y1="25" x2="82" y2="95" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#14B8A6"/>
+    </linearGradient>
+  </defs>
+  <!-- Symbol on dark surfaces -->
+  <g transform="translate(20,20)">
+    <path d="M82 25.36 A40 40 0 1 0 82 94.64" stroke="url(#routeD)" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <rect x="17" y="49" width="10" height="22" rx="5" fill="#3B82F6" stroke="#0F1629" stroke-width="1.5"/>
+    <circle cx="82" cy="25.36" r="6.5" fill="#FFFFFF"/>
+    <circle cx="82" cy="94.64" r="6.5" fill="#14B8A6"/>
+  </g>
+  <text x="172" y="96" font-family="Plus Jakarta Sans, Inter, sans-serif" font-size="58" font-weight="700" letter-spacing="-1" fill="#FFFFFF">CarryMate</text>
+</svg>

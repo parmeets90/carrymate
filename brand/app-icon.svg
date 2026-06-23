@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1E40AF"/>
+      <stop offset="1" stop-color="#3B82F6"/>
+    </linearGradient>
+  </defs>
+  <!-- Squircle app surface -->
+  <rect width="1024" height="1024" rx="232" fill="url(#bg)"/>
+  <!-- Route C (white on brand) -->
+  <path d="M662 252 A300 300 0 1 0 662 772" stroke="#FFFFFF" stroke-width="84" stroke-linecap="round" fill="none" opacity="0.97"/>
+  <!-- Capsule marker -->
+  <rect x="174" y="432" width="76" height="160" rx="38" fill="#FFFFFF"/>
+  <!-- Origin (white) + destination (accent) -->
+  <circle cx="662" cy="252" r="46" fill="#FFFFFF"/>
+  <circle cx="662" cy="772" r="46" fill="#14B8A6"/>
+</svg>
