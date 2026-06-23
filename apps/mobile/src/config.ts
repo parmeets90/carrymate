@@ -15,3 +15,11 @@ export const API_BASE_URL = __DEV__
   ? Platform.select({ android: 'http://10.0.2.2:3000', ios: 'http://localhost:3000' }) ??
     'http://localhost:3000'
   : PROD_API_URL;
+
+/**
+ * Google OAuth Web Client ID (Firebase project carrymate-76583, oauth_client
+ * client_type 3). Used by GoogleSignin.configure to mint an ID token that
+ * Firebase + our backend can verify. Not a secret.
+ */
+export const GOOGLE_WEB_CLIENT_ID =
+  '640582170119-gqur7mtvvovugjccl6ufll095bjn6pso.apps.googleusercontent.com';

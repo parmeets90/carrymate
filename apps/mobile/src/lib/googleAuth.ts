@@ -1,16 +1,34 @@
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import auth from '@react-native-firebase/auth';
+import { GOOGLE_WEB_CLIENT_ID } from '@/config';
+
 /**
  * Google sign-in via Firebase.
- *
- * STUB: the native integration (@react-native-firebase/auth +
- * @react-native-google-signin/google-signin + google-services.json) is wired
- * once the founder provides the Firebase files. Until then this throws a clear,
- * caught message so the button is visible but safe (no broken build).
- *
- * When implemented it returns the Firebase ID token to POST to /v1/auth/google.
+ * Flow: Google account picker → Google ID token → sign in to Firebase with that
+ * credential → return the Firebase ID token, which the backend verifies
+ * (firebase-admin) at POST /v1/auth/google.
  */
-export async function signInWithGoogle(): Promise<string> {
-  throw new Error('Google sign-in will be enabled once setup is complete.');
+let configured = false;
+function ensureConfigured(): void {
+  if (configured) return;
+  GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
+  configured = true;
 }
 
-/** True once the native Google/Firebase modules are wired in. */
-export const isGoogleSignInReady = false;
+export async function signInWithGoogle(): Promise<string> {
+  ensureConfigured();
+  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+
+  const result = await GoogleSignin.signIn();
+  // Support both old ({ idToken }) and new ({ data: { idToken } }) shapes.
+  const googleIdToken =
+    (result as { data?: { idToken?: string | null } }).data?.idToken ??
+    (result as { idToken?: string | null }).idToken;
+  if (!googleIdToken) throw new Error('Google did not return an ID token. Please try again.');
+
+  const credential = auth.GoogleAuthProvider.credential(googleIdToken);
+  const userCredential = await auth().signInWithCredential(credential);
+  return userCredential.user.getIdToken();
+}
+
+export const isGoogleSignInReady = true;

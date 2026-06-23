@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "640582170119",
+    "project_id": "carrymate-76583",
+    "storage_bucket": "carrymate-76583.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:640582170119:android:8a92cade4ac46bda0f9ca2",
+        "android_client_info": {
+          "package_name": "com.carrymate"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "640582170119-tk86sil2r63mptfgdpa4b5aus3rbn0k4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.carrymate",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "640582170119-gqur7mtvvovugjccl6ufll095bjn6pso.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBidfX5ri7R7dqklWvxdcS9m0xd28scdmg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "640582170119-gqur7mtvvovugjccl6ufll095bjn6pso.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
