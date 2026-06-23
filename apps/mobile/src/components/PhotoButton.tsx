@@ -1,10 +1,23 @@
 import { useState } from 'react';
-import { Text, Pressable, StyleSheet, ActivityIndicator, Alert, View } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { Text, Pressable, StyleSheet, ActivityIndicator, Alert, View, Linking } from 'react-native';
+import {
+  launchImageLibrary,
+  launchCamera,
+  type ImagePickerResponse,
+} from 'react-native-image-picker';
 import { colors, spacing, radius, typography } from '@/theme';
 import { uploadPhoto } from '@/lib/api';
 
-/** Pick an image from the library, upload it, and return the stored key. */
+// Resizing forces re-encoding to JPEG — this is how we normalize iOS HEIC photos
+// (Challenge 10, Fix 1) without a native image-manipulation dependency.
+const PICKER_OPTS = {
+  mediaType: 'photo' as const,
+  quality: 0.7 as const,
+  maxWidth: 1600,
+  maxHeight: 1600,
+};
+
+/** Pick (camera or gallery), normalize to JPEG, upload, and return the stored key. */
 export function PhotoButton({
   purpose,
   label = 'Add photo',
@@ -18,16 +31,35 @@ export function PhotoButton({
 }) {
   const [busy, setBusy] = useState(false);
 
-  const pick = async () => {
-    const res = await launchImageLibrary({ mediaType: 'photo', quality: 0.7, selectionLimit: 1 });
+  const handle = async (res: ImagePickerResponse) => {
+    if (res.didCancel) return;
+    // Permission denied → never a blank screen; point the user to Settings (Fix 2).
+    if (res.errorCode === 'permission' || res.errorCode === 'camera_unavailable') {
+      Alert.alert(
+        'Permission needed',
+        'CarryMate needs camera/photos access to upload this. Enable it in Settings.',
+        [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => void Linking.openSettings() },
+        ],
+      );
+      return;
+    }
+    if (res.errorCode) {
+      Alert.alert('Could not get photo', res.errorMessage ?? 'Please try again.');
+      return;
+    }
     const asset = res.assets?.[0];
     if (!asset?.uri) return;
+
     setBusy(true);
     try {
+      // After resize the asset is JPEG; force the name/type so HEIC never reaches the backend.
+      const isHeic = /heic|heif/i.test(asset.type ?? asset.fileName ?? '');
       const key = await uploadPhoto(purpose, {
         uri: asset.uri,
-        type: asset.type,
-        fileName: asset.fileName,
+        type: isHeic ? 'image/jpeg' : asset.type ?? 'image/jpeg',
+        fileName: (asset.fileName ?? 'photo.jpg').replace(/\.(heic|heif)$/i, '.jpg'),
       });
       onUploaded(key);
     } catch (e) {
@@ -35,6 +67,14 @@ export function PhotoButton({
     } finally {
       setBusy(false);
     }
+  };
+
+  const pick = () => {
+    Alert.alert('Add photo', 'Choose a source', [
+      { text: 'Take photo', onPress: () => void launchCamera(PICKER_OPTS).then(handle) },
+      { text: 'Choose from gallery', onPress: () => void launchImageLibrary(PICKER_OPTS).then(handle) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
   };
 
   return (
