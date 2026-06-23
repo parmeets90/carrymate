@@ -1,12 +1,12 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import auth from '@react-native-firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithCredential } from '@react-native-firebase/auth';
 import { GOOGLE_WEB_CLIENT_ID } from '@/config';
 
 /**
- * Google sign-in via Firebase.
- * Flow: Google account picker → Google ID token → sign in to Firebase with that
- * credential → return the Firebase ID token, which the backend verifies
- * (firebase-admin) at POST /v1/auth/google.
+ * Google sign-in via Firebase (modular API — the namespaced statics aren't
+ * reliable in RNFirebase v21).
+ * Flow: Google picker → Google ID token → Firebase credential → Firebase ID
+ * token, which the backend verifies (firebase-admin) at POST /v1/auth/google.
  */
 let configured = false;
 function ensureConfigured(): void {
@@ -26,8 +26,8 @@ export async function signInWithGoogle(): Promise<string> {
     (result as { idToken?: string | null }).idToken;
   if (!googleIdToken) throw new Error('Google did not return an ID token. Please try again.');
 
-  const credential = auth.GoogleAuthProvider.credential(googleIdToken);
-  const userCredential = await auth().signInWithCredential(credential);
+  const credential = GoogleAuthProvider.credential(googleIdToken);
+  const userCredential = await signInWithCredential(getAuth(), credential);
   return userCredential.user.getIdToken();
 }
 

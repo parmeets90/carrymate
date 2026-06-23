@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQueryClient } from '@tanstack/react-query';
@@ -46,7 +46,10 @@ export function ProfileTabScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingTop: insets.top + spacing.lg, paddingBottom: spacing['3xl'] }}
+    >
       <Text style={styles.heading}>Profile</Text>
 
       <Card style={{ alignItems: 'center', gap: spacing.sm, marginTop: spacing.lg, paddingVertical: spacing.xl }}>
@@ -112,7 +115,7 @@ export function ProfileTabScreen() {
       <View style={{ marginTop: spacing.xl }}>
         <SecondaryButton label="Sign out" onPress={signOut} tone="danger" />
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
