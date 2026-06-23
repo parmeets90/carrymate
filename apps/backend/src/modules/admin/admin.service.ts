@@ -209,6 +209,34 @@ export async function approveReviewRequest(requestId: string, adminId: string): 
   });
 }
 
+/** Permanently delete a user. Blocked for admins and anyone with order history. */
+export async function deleteUser(userId: string, adminId: string): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw AppError.notFound('User not found');
+  if (user.role === 'ADMIN') throw AppError.forbidden('Cannot delete an admin account');
+
+  const orders = await prisma.order.count({
+    where: { OR: [{ senderId: userId }, { travelerId: userId }] },
+  });
+  if (orders > 0) {
+    throw new AppError(
+      409,
+      'USER_HAS_ORDERS',
+      'This user has transaction history — ban them instead of deleting.',
+    );
+  }
+
+  // Cascades requests, routes, bids, KYC docs, notifications, bank account, tokens.
+  await prisma.user.delete({ where: { id: userId } });
+  await writeAudit({
+    actorId: adminId,
+    action: 'USER_STATUS_CHANGED',
+    entityType: 'user',
+    entityId: userId,
+    meta: { deleted: true, phone: user.phone },
+  });
+}
+
 export async function setUserStatus(
   userId: string,
   status: 'ACTIVE' | 'SUSPENDED' | 'BANNED',

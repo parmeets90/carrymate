@@ -1,5 +1,7 @@
 import type { RequestHandler } from 'express';
 import { ok } from '../../utils/response';
+import { AppError } from '../../utils/errors';
+import { storage } from '../../lib/storage';
 import {
   listPendingKyc,
   approveKyc,
@@ -7,6 +9,7 @@ import {
   listUsers,
   getUserDetail,
   setUserStatus,
+  deleteUser,
   listRequests,
   forceExpireRequest,
   approveReviewRequest,
@@ -55,6 +58,18 @@ export const getUser: RequestHandler = async (req, res) => {
 export const postSetStatus: RequestHandler = async (req, res) => {
   const { status } = req.body as SetStatusInput;
   ok(res, await setUserStatus(req.params.userId!, status, req.user!.id));
+};
+
+export const deleteUserHandler: RequestHandler = async (req, res) => {
+  await deleteUser(req.params.userId!, req.user!.id);
+  ok(res, { success: true });
+};
+
+/** Short-lived signed URL to view a private file (KYC doc, evidence, proof…). */
+export const getFileUrl: RequestHandler = async (req, res) => {
+  const key = typeof req.query.key === 'string' ? req.query.key : '';
+  if (!key) throw AppError.badRequest('A file key is required.');
+  ok(res, { url: await storage().createDownloadUrl(key, 600) });
 };
 
 export const getMetrics_: RequestHandler = async (_req, res) => {

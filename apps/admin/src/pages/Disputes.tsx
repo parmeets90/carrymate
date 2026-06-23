@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Scale, Check, Undo2 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { Loader2, Scale, Check, Undo2, FileText } from 'lucide-react';
+import { api, openFile } from '@/lib/api';
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
@@ -58,7 +58,17 @@ export function Disputes() {
 
             <p className="mt-3 rounded-lg bg-muted/50 p-3 text-sm">{d.description}</p>
             {d.evidence.length > 0 && (
-              <p className="mt-2 text-xs text-muted-foreground">{d.evidence.length} evidence file(s)</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {d.evidence.map((key, i) => (
+                  <button
+                    key={key}
+                    onClick={() => openFile(key)}
+                    className="flex items-center gap-1 rounded-md border bg-muted/50 px-2 py-1 text-xs hover:bg-muted"
+                  >
+                    <FileText className="h-3.5 w-3.5" /> Evidence {i + 1}
+                  </button>
+                ))}
+              </div>
             )}
 
             <div className="mt-4 flex gap-2">

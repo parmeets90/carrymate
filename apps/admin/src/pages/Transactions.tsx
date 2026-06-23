@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { Loader2, Undo2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { Pagination } from '@/components/Pagination';
 
 const STATUS_STYLE: Record<string, string> = {
   PENDING_PAYMENT: 'bg-amber-100 text-amber-700',
@@ -14,9 +16,10 @@ const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
 export function Transactions() {
   const qc = useQueryClient();
+  const [page, setPage] = useState(1);
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-orders'],
-    queryFn: () => api.orders(),
+    queryKey: ['admin-orders', page],
+    queryFn: () => api.orders(page),
     placeholderData: keepPreviousData,
   });
 
@@ -91,6 +94,7 @@ export function Transactions() {
             )}
           </tbody>
         </table>
+        {data && <Pagination page={data.page} pageSize={data.pageSize} total={data.total} onPage={setPage} />}
       </div>
     </div>
   );

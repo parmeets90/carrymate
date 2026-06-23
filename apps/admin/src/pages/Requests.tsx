@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { Loader2, Ban, Check } from 'lucide-react';
 import { api } from '@/lib/api';
+import { Pagination } from '@/components/Pagination';
 
 const STATUSES = ['', 'PENDING_REVIEW', 'OPEN', 'BIDDING', 'MATCHED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED', 'EXPIRED'];
 
@@ -19,10 +20,11 @@ const STATUS_STYLE: Record<string, string> = {
 export function Requests() {
   const qc = useQueryClient();
   const [status, setStatus] = useState('');
+  const [page, setPage] = useState(1);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-requests', status],
-    queryFn: () => api.requests(status),
+    queryKey: ['admin-requests', status, page],
+    queryFn: () => api.requests(status, page),
     placeholderData: keepPreviousData,
   });
 
@@ -47,7 +49,7 @@ export function Requests() {
         {STATUSES.map((s) => (
           <button
             key={s || 'ALL'}
-            onClick={() => setStatus(s)}
+            onClick={() => { setStatus(s); setPage(1); }}
             className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
               status === s ? 'border-primary bg-primary/10 text-primary' : 'hover:bg-muted'
             }`}
@@ -129,6 +131,7 @@ export function Requests() {
             )}
           </tbody>
         </table>
+        {data && <Pagination page={data.page} pageSize={data.pageSize} total={data.total} onPage={setPage} />}
       </div>
     </div>
   );

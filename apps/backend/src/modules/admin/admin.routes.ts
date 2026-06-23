@@ -9,6 +9,8 @@ import {
   getUsers,
   getUser,
   postSetStatus,
+  deleteUserHandler,
+  getFileUrl,
   getRequests,
   postExpireRequest,
   postApproveReview,
@@ -41,9 +43,11 @@ adminRouter.get('/kyc/pending', getPendingKyc);
 adminRouter.post('/kyc/:userId/approve', postApproveKyc);
 adminRouter.post('/kyc/:userId/reject', validateBody(rejectKycSchema), postRejectKyc);
 
+adminRouter.get('/file', getFileUrl);
 adminRouter.get('/users', getUsers);
 adminRouter.get('/users/:userId', getUser);
 adminRouter.post('/users/:userId/status', validateBody(setStatusSchema), postSetStatus);
+adminRouter.delete('/users/:userId', deleteUserHandler);
 
 adminRouter.get('/requests', getRequests);
 adminRouter.post('/requests/:requestId/expire', postExpireRequest);

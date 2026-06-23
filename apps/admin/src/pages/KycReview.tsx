@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, X, ShieldCheck, Loader2 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { Check, X, ShieldCheck, Loader2, FileText } from 'lucide-react';
+import { api, openFile } from '@/lib/api';
 
 export function KycReview() {
   const qc = useQueryClient();
@@ -87,13 +87,15 @@ export function KycReview() {
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {documents.map((d) => (
-                  <span
+                  <button
                     key={d.id}
-                    className="rounded-lg border bg-muted/50 px-3 py-1.5 text-xs"
-                    title={d.fileKey ?? 'no file'}
+                    onClick={() => d.fileKey && openFile(d.fileKey)}
+                    disabled={!d.fileKey}
+                    className="flex items-center gap-1 rounded-lg border bg-muted/50 px-3 py-1.5 text-xs hover:bg-muted disabled:opacity-50"
+                    title={d.fileKey ? 'View document' : 'No file'}
                   >
-                    {d.docType} · {d.status}
-                  </span>
+                    <FileText className="h-3.5 w-3.5" /> {d.docType} · {d.status}
+                  </button>
                 ))}
                 {documents.length === 0 && (
                   <span className="text-xs text-muted-foreground">No documents uploaded.</span>

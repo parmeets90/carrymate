@@ -99,11 +99,16 @@ export const api = {
     }),
   users: (q: string, page = 1) =>
     authed<Paginated<PublicUser>>(`/v1/admin/users?q=${encodeURIComponent(q)}&page=${page}`),
+  user: (userId: string) => authed<AdminKycReviewItem>(`/v1/admin/users/${userId}`),
   setUserStatus: (userId: string, status: 'ACTIVE' | 'SUSPENDED' | 'BANNED') =>
     authed<PublicUser>(`/v1/admin/users/${userId}/status`, {
       method: 'POST',
       body: JSON.stringify({ status }),
     }),
+  deleteUser: (userId: string) =>
+    authed<{ success: boolean }>(`/v1/admin/users/${userId}`, { method: 'DELETE' }),
+  fileUrl: (key: string) =>
+    authed<{ url: string }>(`/v1/admin/file?key=${encodeURIComponent(key)}`),
   requests: (status: string, page = 1) =>
     authed<Paginated<DeliveryRequestSummary>>(
       `/v1/admin/requests?page=${page}${status ? `&status=${status}` : ''}`,
@@ -135,3 +140,13 @@ export const api = {
   retryPayout: (orderId: string) =>
     authed<{ success: boolean }>(`/v1/admin/orders/${orderId}/retry-payout`, { method: 'POST' }),
 };
+
+/** Fetch a short-lived signed URL for a private file key and open it in a new tab. */
+export async function openFile(key: string): Promise<void> {
+  try {
+    const { url } = await api.fileUrl(key);
+    window.open(url, '_blank', 'noopener');
+  } catch (e) {
+    window.alert(`Could not open file: ${(e as Error).message}`);
+  }
+}
