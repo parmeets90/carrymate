@@ -70,7 +70,13 @@ export function OrdersScreen() {
 
         <View style={styles.actions}>
           {isSender && item.status === 'PENDING_PAYMENT' && (
-            <PrimaryButton label={`Pay ${inr(item.amountInr)} into escrow`} onPress={() => pay.mutate(item.id)} loading={pay.isPending} />
+            <>
+              <PrimaryButton label={`Pay ${inr(item.amountInr)} into escrow`} onPress={() => pay.mutate(item.id)} loading={pay.isPending} />
+              <Text style={styles.fema}>
+                All transactions are personal in nature. CarryMate must not be used for commercial
+                imports, exports, or currency transfer.
+              </Text>
+            </>
           )}
           {!isSender && item.status === 'ESCROW_HELD' && item.requestStatus === 'MATCHED' && (
             <PrimaryButton label="Open-box & pick up" onPress={() => nav.navigate('OpenBox', { orderId: item.id, title: item.requestTitle })} />
@@ -141,4 +147,5 @@ const styles = StyleSheet.create({
   otpCode: { ...typography.display, color: colors.navyDark, letterSpacing: 8, marginTop: 4 },
   actions: { marginTop: spacing.md, gap: spacing.sm },
   disputeLink: { ...typography.bodyM, color: colors.dangerRed, marginTop: spacing.md, textAlign: 'center', fontWeight: '600' },
+  fema: { ...typography.caption, color: colors.textHint, fontSize: 10, lineHeight: 14, marginTop: spacing.xs },
 });

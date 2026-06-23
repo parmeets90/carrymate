@@ -29,8 +29,8 @@ export function PhoneScreen({ navigation }: ScreenProps<'Phone'>) {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
       <GradientHero
         eyebrow="CarryMate"
-        title="Send anything, with someone flying there."
-        subtitle="Cheaper and faster than courier — trust built into every step."
+        title="Send personal items with a traveler heading there."
+        subtitle="Connect with trusted community members flying your route — with trust built into every step."
       />
       <View style={styles.body}>
         <View style={styles.pills}>
@@ -49,6 +49,11 @@ export function PhoneScreen({ navigation }: ScreenProps<'Phone'>) {
         />
         <PrimaryButton label="Send code" onPress={onContinue} loading={busy} />
         <Text style={styles.terms}>We'll text you a 6-digit code. Standard rates may apply.</Text>
+        <Text style={styles.disclaimer}>
+          CarryMate is a technology platform connecting individuals. It is not a courier company,
+          freight forwarder, or customs agent. The traveler assumes full responsibility for items
+          carried as personal luggage. By continuing you agree to our Terms.
+        </Text>
       </View>
     </KeyboardAvoidingView>
   );
@@ -59,4 +64,5 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: sizing.screenPaddingX, paddingTop: spacing.xl, gap: spacing.lg },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   terms: { ...typography.caption, color: colors.textHint, textAlign: 'center' },
+  disclaimer: { ...typography.caption, color: colors.textHint, textAlign: 'center', lineHeight: 15, fontSize: 10 },
 });

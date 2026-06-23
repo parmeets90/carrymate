@@ -108,6 +108,9 @@ export function CreateRequestScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.title}>{editing ? 'Edit request' : 'Send a package'}</Text>
+      <Pressable onPress={() => nav.navigate('AllowedItems' as never)}>
+        <Text style={styles.guideLink}>What can I send? →</Text>
+      </Pressable>
 
       <Field label="Title" value={form.title} onChangeText={set('title')} placeholder="e.g. Homemade pickle for Diwali" />
       <Field label="Description" value={form.description} onChangeText={set('description')} placeholder="What's inside?" multiline />
@@ -192,6 +195,7 @@ function Pills({ options, value, onChange }: { options: string[]; value: string;
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgApp, paddingHorizontal: sizing.screenPaddingX },
   title: { ...typography.titleL, color: colors.textPrimary },
+  guideLink: { ...typography.bodyM, color: colors.skyBlue, fontWeight: '600' },
   sectionLabel: { ...typography.label, color: colors.textSecondary },
   two: { flexDirection: 'row', gap: spacing.md },
   flex: { flex: 1 },

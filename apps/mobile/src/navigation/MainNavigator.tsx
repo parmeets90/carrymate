@@ -20,6 +20,7 @@ import { RateScreen } from '@/screens/fulfillment/RateScreen';
 import { ConversationsScreen } from '@/screens/chat/ConversationsScreen';
 import { ChatScreen } from '@/screens/chat/ChatScreen';
 import { NotificationsScreen } from '@/screens/notifications/NotificationsScreen';
+import { AllowedItemsScreen } from '@/screens/sender/AllowedItemsScreen';
 import { ProfileTabScreen } from '@/screens/profile/ProfileTabScreen';
 
 const Tab = createBottomTabNavigator();
@@ -112,6 +113,7 @@ export function MainNavigator() {
         options={({ route }) => ({ title: route.params.counterparty ?? 'Chat' })}
       />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
+      <Stack.Screen name="AllowedItems" component={AllowedItemsScreen} options={{ title: 'What can I send?' }} />
     </Stack.Navigator>
   );
 }

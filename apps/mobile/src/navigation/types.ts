@@ -22,6 +22,7 @@ export type RootStackParamList = {
   Rate: { orderId: string; counterparty: string };
   Chat: { conversationId: string; title: string; counterparty?: string | null };
   Notifications: undefined;
+  AllowedItems: undefined;
 };
 
 export type ScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<
