@@ -8,6 +8,8 @@ import type { DeliveryRequestDto } from '@carrymate/shared';
 import { ITEM_DECLARATIONS } from '@carrymate/shared';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
+import { Autocomplete, type Suggestion } from '@/components/Autocomplete';
+import { IN_AIRPORTS } from '@/data/airports';
 import { DateField } from '@/components/DateField';
 import { PhotoButton } from '@/components/PhotoButton';
 import { Icon } from '@/components/Icon';
@@ -17,6 +19,19 @@ const MIN_DEADLINE = new Date(Date.now() + 3 * 86_400_000); // 3+ days out (serv
 
 const CATEGORIES = ['FOOD', 'DOCUMENTS', 'CLOTHING', 'GIFTS', 'OTHER'];
 const CITIES = ['Dubai', 'Abu Dhabi', 'Sharjah'];
+
+// City suggestions (one entry per city; the first airport is the default).
+const CITY_SUGGESTIONS: Suggestion[] = Array.from(
+  IN_AIRPORTS.reduce((m, a) => (m.has(a.city) ? m : m.set(a.city, a)), new Map<string, (typeof IN_AIRPORTS)[number]>()).values(),
+).map((a) => ({ value: a.city, label: a.city, hint: `${a.code} · ${a.name}`, keywords: a.code }));
+
+// Airport suggestions keyed by IATA code.
+const AIRPORT_SUGGESTIONS: Suggestion[] = IN_AIRPORTS.map((a) => ({
+  value: a.code,
+  label: `${a.code} — ${a.city}`,
+  hint: a.name,
+  keywords: `${a.city} ${a.name}`,
+}));
 
 export function CreateRequestScreen() {
   const insets = useSafeAreaInsets();
@@ -125,8 +140,33 @@ export function CreateRequestScreen() {
       </View>
 
       <View style={styles.two}>
-        <View style={styles.flex}><Field label="Origin city" value={form.originCity} onChangeText={set('originCity')} placeholder="Delhi" /></View>
-        <View style={styles.flex}><Field label="Origin airport" value={form.originAirport} onChangeText={set('originAirport')} autoCapitalize="characters" maxLength={3} /></View>
+        <View style={styles.flex}>
+          <Autocomplete
+            label="Origin city"
+            value={form.originCity}
+            onChangeText={set('originCity')}
+            suggestions={CITY_SUGGESTIONS}
+            onPick={(s) => {
+              const airport = IN_AIRPORTS.find((a) => a.city === s.value);
+              setForm((f) => ({ ...f, originCity: s.value, originAirport: airport?.code ?? f.originAirport }));
+            }}
+            placeholder="Delhi"
+          />
+        </View>
+        <View style={styles.flex}>
+          <Autocomplete
+            label="Origin airport"
+            value={form.originAirport}
+            onChangeText={(v) => set('originAirport')(v.toUpperCase())}
+            suggestions={AIRPORT_SUGGESTIONS}
+            onPick={(s) => {
+              const ap = IN_AIRPORTS.find((a) => a.code === s.value);
+              setForm((f) => ({ ...f, originAirport: s.value, originCity: f.originCity || ap?.city || '' }));
+            }}
+            autoCapitalize="characters"
+            maxLength={3}
+          />
+        </View>
       </View>
 
       <Text style={styles.sectionLabel}>Destination city (UAE)</Text>

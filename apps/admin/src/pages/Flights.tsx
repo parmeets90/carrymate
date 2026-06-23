@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, PlaneTakeoff, BadgeCheck } from 'lucide-react';
-import { api } from '@/lib/api';
+import { Loader2, PlaneTakeoff, BadgeCheck, FileText } from 'lucide-react';
+import { api, openFile } from '@/lib/api';
 
 export function Flights() {
   const qc = useQueryClient();
@@ -48,7 +48,12 @@ export function Flights() {
             </div>
             <div className="flex items-center gap-2">
               {r.ticketFileKey ? (
-                <span className="text-xs text-muted-foreground">ticket on file</span>
+                <button
+                  onClick={() => openFile(r.ticketFileKey!)}
+                  className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-accent"
+                >
+                  <FileText className="h-4 w-4" /> View ticket
+                </button>
               ) : (
                 <span className="text-xs text-red-600">no ticket</span>
               )}
