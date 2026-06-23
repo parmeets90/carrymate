@@ -15,10 +15,14 @@ export async function verifyFlight(input: {
 }): Promise<boolean> {
   if (!isAviationStackConfigured || !input.flightNumber) return false;
 
+  // Normalise user input ("EK 511", "ek-511") → "EK511" for the IATA query.
+  const flightIata = input.flightNumber.replace(/[\s-]/g, '').toUpperCase();
+  if (!/^[A-Z0-9]{2,8}$/.test(flightIata)) return false;
+
   try {
     const url = new URL('https://api.aviationstack.com/v1/flights');
     url.searchParams.set('access_key', env.AVIATIONSTACK_API_KEY!);
-    url.searchParams.set('flight_iata', input.flightNumber);
+    url.searchParams.set('flight_iata', flightIata);
     const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error(`AviationStack ${res.status}`);
 
