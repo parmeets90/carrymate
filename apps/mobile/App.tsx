@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { RootNavigator } from '@/navigation/RootNavigator';
+import { SplashScreen } from '@/screens/SplashScreen';
 import { useAuth } from '@/store/auth';
 import { registerForPush, navigationRef } from '@/lib/push';
 import { colors } from '@/theme';
@@ -48,10 +49,11 @@ function Gate(): React.JSX.Element {
 }
 
 function App(): React.JSX.Element {
+  const [splashDone, setSplashDone] = useState(false);
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
-        <Gate />
+        {splashDone ? <Gate /> : <SplashScreen onDone={() => setSplashDone(true)} />}
       </SafeAreaProvider>
     </QueryClientProvider>
   );
