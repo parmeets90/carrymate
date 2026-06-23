@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
+import { Alert } from '@/components/AlertHost';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
 import { DateField } from '@/components/DateField';
@@ -36,10 +37,22 @@ export function AddRouteScreen({ navigation, route }: ScreenProps<'AddRoute'>) {
     try {
       const payload: Record<string, unknown> = { ...form, capacityKg: Number(form.capacityKg) };
       if (ticketFileKey) payload.ticketFileKey = ticketFileKey;
-      if (editing) await api.updateRoute(editing.id, payload);
-      else await api.createRoute(payload);
-      qc.invalidateQueries({ queryKey: ['my-routes'] });
-      navigation.goBack();
+      if (editing) {
+        await api.updateRoute(editing.id, payload);
+        qc.invalidateQueries({ queryKey: ['my-routes'] });
+        navigation.goBack();
+      } else {
+        const created = await api.createRoute(payload);
+        qc.invalidateQueries({ queryKey: ['my-routes'] });
+        navigation.goBack();
+        // Tell the traveler whether the flight auto-verified or needs review.
+        Alert.alert(
+          created.ticketVerified ? 'Trip added — flight confirmed ✈️' : 'Trip added',
+          created.ticketVerified
+            ? 'We matched your flight automatically. Your trip shows a “Flight confirmed” badge to senders.'
+            : 'Your trip is live. We’ll verify your flight from the ticket shortly — it’ll show “Flight confirmed” once approved.',
+        );
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {

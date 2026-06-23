@@ -66,6 +66,13 @@ export function TripsScreen() {
                   </Text>
                   <Badge label={item.status} tone={statusTone(item.status)} />
                 </View>
+                <View style={styles.badgeRow}>
+                  {item.ticketVerified ? (
+                    <Badge label="Flight confirmed" tone="gold" />
+                  ) : (
+                    <Badge label="Verification pending" tone="amber" />
+                  )}
+                </View>
                 <Text style={styles.meta}>
                   {item.departureDate} · {item.flightNumber ?? 'flight'} · {remaining.toFixed(1)}kg free
                 </Text>
@@ -104,6 +111,7 @@ const styles = StyleSheet.create({
   },
   addBtnText: { ...typography.label, color: '#185FA5', fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  badgeRow: { flexDirection: 'row', marginTop: spacing.xs },
   cardTitle: { ...typography.bodyL, fontWeight: '700', color: colors.textPrimary },
   meta: { ...typography.bodyM, color: colors.textSecondary, marginTop: spacing.xs },
   cta: { ...typography.label, color: colors.skyBlue, marginTop: spacing.sm, fontWeight: '600' },
