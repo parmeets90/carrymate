@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Text, Pressable, StyleSheet, View, Linking } from 'react-native';
+import { Text, Pressable, StyleSheet, View, Linking, Platform, PermissionsAndroid } from 'react-native';
 import { BrandLoader } from './BrandLoader';
 import { Alert } from './AlertHost';
 import {
@@ -71,9 +71,37 @@ export function PhotoButton({
     }
   };
 
+  // react-native-image-picker requires us to hold CAMERA at runtime whenever the
+  // permission is declared in the manifest (it is, for ticket/open-box capture).
+  const takePhoto = async () => {
+    if (Platform.OS === 'android') {
+      const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA, {
+        title: 'Camera access',
+        message: 'CarryMate needs your camera to take this photo.',
+        buttonPositive: 'Allow',
+        buttonNegative: 'Not now',
+      });
+      if (result !== PermissionsAndroid.RESULTS.GRANTED) {
+        if (result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+          Alert.alert(
+            'Camera permission needed',
+            'Enable camera access for CarryMate in Settings to take a photo.',
+            [
+              { text: 'Not now', style: 'cancel' },
+              { text: 'Open Settings', onPress: () => void Linking.openSettings() },
+            ],
+          );
+        }
+        return;
+      }
+    }
+    const res = await launchCamera(PICKER_OPTS);
+    await handle(res);
+  };
+
   const pick = () => {
     Alert.alert('Add photo', 'Choose a source', [
-      { text: 'Take photo', onPress: () => void launchCamera(PICKER_OPTS).then(handle) },
+      { text: 'Take photo', onPress: () => void takePhoto() },
       { text: 'Choose from gallery', onPress: () => void launchImageLibrary(PICKER_OPTS).then(handle) },
       { text: 'Cancel', style: 'cancel' },
     ]);
