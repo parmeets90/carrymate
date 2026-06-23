@@ -20,19 +20,69 @@ interface RiskInput {
   declaredValueInr: number;
 }
 
+/** The raw signals scoring depends on — gathered from the DB, then scored purely. */
+export interface RiskFacts {
+  /** Age of the sender's account in ms (now − createdAt). */
+  senderAccountAgeMs: number;
+  senderRatingAvg: number;
+  senderRatingCount: number;
+  /** Disputes resolved against the sender (found at fault). */
+  senderDisputesLost: number;
+  /** Sender orders created in the last 24h. */
+  recentOrders: number;
+  declaredValueInr: number;
+  /** Sender/traveler share a KYC document-number hash with another account. */
+  duplicateKyc: boolean;
+}
+
 const NEW_ACCOUNT_MS = 48 * 3_600_000;
 const BURST_WINDOW_MS = 24 * 3_600_000;
 
 /**
- * Rule-based risk scoring computed when an order is created. Deterministic and
- * explainable (every point maps to a named factor) — no ML, per MVP scope.
- * Persists the score on the order; ≥HOLD freezes escrow release for admin review.
+ * Pure, deterministic risk score (0–100) from gathered facts. Every point maps
+ * to a named factor so the result is explainable — no ML, per MVP scope. Kept
+ * side-effect free so it can be unit-tested exhaustively.
  */
-export async function scoreOrder(input: RiskInput): Promise<RiskResult> {
+export function computeRiskScore(facts: RiskFacts): RiskResult {
   const factors: string[] = [];
   let score = 0;
 
-  const [sender, recentOrders, senderDisputesLost, dupKyc, highValueShare] = await Promise.all([
+  if (facts.senderAccountAgeMs < NEW_ACCOUNT_MS) {
+    score += 15;
+    factors.push('NEW_SENDER');
+  }
+  if (facts.senderRatingCount >= 3 && facts.senderRatingAvg < 4) {
+    score += 20;
+    factors.push('LOW_RATING');
+  }
+  if (facts.senderDisputesLost > 0) {
+    score += Math.min(30, facts.senderDisputesLost * 15);
+    factors.push('DISPUTE_HISTORY');
+  }
+  if (facts.declaredValueInr >= MAX_DECLARED_VALUE_INR * 0.8) {
+    score += 15;
+    factors.push('HIGH_VALUE');
+  }
+  if (facts.recentOrders >= 3) {
+    score += 15;
+    factors.push('BURST_ORDERS');
+  }
+  if (facts.duplicateKyc) {
+    score += 40;
+    factors.push('DUPLICATE_KYC');
+  }
+
+  score = Math.min(100, score);
+  return { score, factors, hold: score >= RISK_HOLD_THRESHOLD };
+}
+
+/**
+ * Rule-based risk scoring computed when an order is created. Gathers signals from
+ * the DB, scores them via {@link computeRiskScore}, then persists the result;
+ * ≥HOLD freezes escrow release for admin review.
+ */
+export async function scoreOrder(input: RiskInput): Promise<RiskResult> {
+  const [sender, recentOrders, senderDisputesLost, dupKyc] = await Promise.all([
     prisma.user.findUnique({
       where: { id: input.senderId },
       select: { createdAt: true, ratingAvg: true, ratingCount: true },
@@ -46,38 +96,17 @@ export async function scoreOrder(input: RiskInput): Promise<RiskResult> {
     }),
     // Same government ID hash shared with any other account (sender or traveler).
     sharesKycHash([input.senderId, input.travelerId]),
-    Promise.resolve(input.declaredValueInr >= MAX_DECLARED_VALUE_INR * 0.8),
   ]);
 
-  if (sender) {
-    if (Date.now() - sender.createdAt.getTime() < NEW_ACCOUNT_MS) {
-      score += 15;
-      factors.push('NEW_SENDER');
-    }
-    if (sender.ratingCount >= 3 && Number(sender.ratingAvg) < 4) {
-      score += 20;
-      factors.push('LOW_RATING');
-    }
-  }
-  if (senderDisputesLost > 0) {
-    score += Math.min(30, senderDisputesLost * 15);
-    factors.push('DISPUTE_HISTORY');
-  }
-  if (highValueShare) {
-    score += 15;
-    factors.push('HIGH_VALUE');
-  }
-  if (recentOrders >= 3) {
-    score += 15;
-    factors.push('BURST_ORDERS');
-  }
-  if (dupKyc) {
-    score += 40;
-    factors.push('DUPLICATE_KYC');
-  }
-
-  score = Math.min(100, score);
-  const hold = score >= RISK_HOLD_THRESHOLD;
+  const { score, factors, hold } = computeRiskScore({
+    senderAccountAgeMs: sender ? Date.now() - sender.createdAt.getTime() : Number.MAX_SAFE_INTEGER,
+    senderRatingAvg: sender ? Number(sender.ratingAvg) : 5,
+    senderRatingCount: sender?.ratingCount ?? 0,
+    senderDisputesLost,
+    recentOrders,
+    declaredValueInr: input.declaredValueInr,
+    duplicateKyc: dupKyc,
+  });
 
   await prisma.order.update({
     where: { id: input.orderId },
