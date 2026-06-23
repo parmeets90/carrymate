@@ -32,6 +32,8 @@ export const verifyPhoneSchema = z.object({
   code: z.string().trim().regex(/^\d{4,8}$/, 'Enter the code sent to your phone.'),
 });
 
+export const fcmTokenSchema = z.object({ token: z.string().trim().min(1) });
+
 export const adminLoginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(1, 'Password is required'),
@@ -51,6 +53,7 @@ export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
 export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;
 export type StartPhoneInput = z.infer<typeof startPhoneSchema>;
 export type VerifyPhoneInput = z.infer<typeof verifyPhoneSchema>;
+export type FcmTokenInput = z.infer<typeof fcmTokenSchema>;
 export type SendOtpInput = z.infer<typeof sendOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type RefreshInput = z.infer<typeof refreshSchema>;

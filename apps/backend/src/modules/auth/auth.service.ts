@@ -114,6 +114,11 @@ export async function confirmPhoneVerification(
   return toPublicUser(user);
 }
 
+/** Register/refresh the logged-in user's FCM device token for push. */
+export async function updateFcmToken(userId: string, token: string): Promise<void> {
+  await prisma.user.update({ where: { id: userId }, data: { fcmToken: token } });
+}
+
 /** Update the current user's profile (name, email, role). */
 export async function updateProfile(
   userId: string,

@@ -10,7 +10,7 @@ import { AppError } from '../utils/errors';
  */
 let app: App | null = null;
 
-function firebaseApp(): App {
+export function firebaseApp(): App {
   if (!isFirebaseConfigured) {
     throw new AppError(503, 'GOOGLE_AUTH_DISABLED', 'Google sign-in is not available right now.');
   }

@@ -186,6 +186,7 @@ export const api = {
     post<{ phoneMasked: string; expiresInSeconds: number }>('/v1/auth/phone/start', { phone }),
   confirmPhoneVerify: (phone: string, code: string) =>
     post<PublicUser>('/v1/auth/phone/verify', { phone, code }),
+  registerFcmToken: (token: string) => post<{ success: boolean }>('/v1/auth/fcm-token', { token }),
   refresh: (refreshToken: string) => post<AuthTokens>('/v1/auth/refresh', { refreshToken }),
   me: () => get<PublicUser>('/v1/auth/me'),
   updateProfile: (data: { fullName?: string; email?: string; role?: string }) =>

@@ -11,6 +11,7 @@ import {
   googleAuth,
   startPhoneVerification,
   confirmPhoneVerification,
+  updateFcmToken,
 } from './auth.service';
 import type {
   SendOtpInput,
@@ -21,6 +22,7 @@ import type {
   GoogleAuthInput,
   StartPhoneInput,
   VerifyPhoneInput,
+  FcmTokenInput,
 } from './auth.validators';
 
 /** Mask a phone for display, keeping country code + last 2 digits. */
@@ -77,6 +79,12 @@ export const postLogout: RequestHandler = async (req, res) => {
 
 export const getMe: RequestHandler = (req, res) => {
   ok(res, toPublicUser(req.user!));
+};
+
+export const postFcmToken: RequestHandler = async (req, res) => {
+  const { token } = req.body as FcmTokenInput;
+  await updateFcmToken(req.user!.id, token);
+  ok(res, { success: true });
 };
 
 export const patchProfile: RequestHandler = async (req, res) => {

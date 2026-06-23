@@ -11,6 +11,7 @@ import {
   googleAuthSchema,
   startPhoneSchema,
   verifyPhoneSchema,
+  fcmTokenSchema,
 } from './auth.validators';
 import {
   postSendOtp,
@@ -19,6 +20,7 @@ import {
   postGoogleAuth,
   postStartPhone,
   postVerifyPhone,
+  postFcmToken,
   postRefresh,
   postLogout,
   getMe,
@@ -53,5 +55,6 @@ authRouter.post('/phone/start', authenticate, otpLimiter, validateBody(startPhon
 authRouter.post('/phone/verify', authenticate, validateBody(verifyPhoneSchema), postVerifyPhone);
 authRouter.post('/refresh', validateBody(refreshSchema), postRefresh);
 authRouter.post('/logout', validateBody(refreshSchema), postLogout);
+authRouter.post('/fcm-token', authenticate, validateBody(fcmTokenSchema), postFcmToken);
 authRouter.get('/me', authenticate, getMe);
 authRouter.patch('/profile', authenticate, validateBody(updateProfileSchema), patchProfile);
