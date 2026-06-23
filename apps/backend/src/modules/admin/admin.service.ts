@@ -7,6 +7,7 @@ import type {
   PublicUser,
   Paginated,
   DeliveryRequestSummary,
+  PendingRouteItem,
 } from '@carrymate/shared';
 import { NotificationType, REQUEST_EXPIRY_DAYS } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
@@ -148,6 +149,39 @@ export async function forceExpireRequest(requestId: string): Promise<void> {
   await prisma.deliveryRequest.update({
     where: { id: requestId },
     data: { status: 'CANCELLED' },
+  });
+}
+
+/** Trips whose ticket isn't auto-verified — the manual PNR queue (Challenge 09). */
+export async function listPendingRoutes(): Promise<PendingRouteItem[]> {
+  const routes = await prisma.travelRoute.findMany({
+    where: { status: 'ACTIVE', ticketVerified: false },
+    include: { traveler: true },
+    orderBy: { departureDate: 'asc' },
+    take: 100,
+  });
+  return routes.map((r) => ({
+    id: r.id,
+    travelerName: r.traveler.fullName,
+    flightNumber: r.flightNumber,
+    airline: r.airline,
+    route: `${r.originAirport} → ${r.destinationAirport}`,
+    departureDate: r.departureDate.toISOString().slice(0, 10),
+    ticketFileKey: r.ticketFileKey,
+  }));
+}
+
+/** Admin manually verifies a flight ticket (PNR override, Challenge 09). */
+export async function verifyRouteTicket(routeId: string, adminId: string): Promise<void> {
+  const route = await prisma.travelRoute.findUnique({ where: { id: routeId } });
+  if (!route) throw AppError.notFound('Trip not found');
+  await prisma.travelRoute.update({ where: { id: routeId }, data: { ticketVerified: true } });
+  await createNotification({
+    userId: route.travelerId,
+    type: NotificationType.SYSTEM,
+    title: 'Flight verified ✈️',
+    body: `Your ${route.originAirport}→${route.destinationAirport} trip is verified.`,
+    data: { routeId },
   });
 }
 

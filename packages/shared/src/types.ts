@@ -349,6 +349,17 @@ export interface BankAccountDto {
   updatedAt: string;
 }
 
+/** A trip whose flight ticket needs manual verification (Challenge 09). */
+export interface PendingRouteItem {
+  id: string;
+  travelerName: string | null;
+  flightNumber: string | null;
+  airline: string | null;
+  route: string; // "DEL → DXB"
+  departureDate: string;
+  ticketFileKey: string | null;
+}
+
 /** An order whose payout failed, for the admin recovery queue. */
 export interface FailedPayoutItem {
   orderId: string;

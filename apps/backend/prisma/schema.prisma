@@ -173,6 +173,7 @@ enum RouteStatus {
   FULL
   COMPLETED
   CANCELLED
+  EXPIRED // departure date passed — no longer accepts bids (Challenge 09, Layer 3)
 }
 
 enum BidStatus {

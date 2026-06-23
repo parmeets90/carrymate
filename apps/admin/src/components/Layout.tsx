@@ -25,6 +25,7 @@ const NAV = [
   { to: '/transactions', label: 'Transactions', icon: Wallet },
   { to: '/users', label: 'Users', icon: Users },
   { to: '/risk', label: 'Risk & Fraud', icon: AlertTriangle },
+  { to: '/flights', label: 'Flight Verify', icon: Plane },
   { to: '/payouts', label: 'Failed Payouts', icon: Banknote },
 ];
 

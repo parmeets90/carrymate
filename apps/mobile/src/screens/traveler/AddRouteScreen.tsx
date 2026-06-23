@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
 import { DateField } from '@/components/DateField';
+import { PhotoButton } from '@/components/PhotoButton';
 import { api } from '@/lib/api';
 import type { ScreenProps } from '@/navigation/types';
 
@@ -23,15 +24,18 @@ export function AddRouteScreen({ navigation, route }: ScreenProps<'AddRoute'>) {
     flightNumber: editing?.flightNumber ?? '',
     airline: editing?.airline ?? '',
   });
+  const [ticketFileKey, setTicketFileKey] = useState<string | undefined>(undefined);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   const set = (k: keyof typeof form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async () => {
+    if (!editing && !ticketFileKey) return setError('Add a photo of your flight ticket to continue.');
     setBusy(true);
     setError(undefined);
     try {
-      const payload = { ...form, capacityKg: Number(form.capacityKg) };
+      const payload: Record<string, unknown> = { ...form, capacityKg: Number(form.capacityKg) };
+      if (ticketFileKey) payload.ticketFileKey = ticketFileKey;
       if (editing) await api.updateRoute(editing.id, payload);
       else await api.createRoute(payload);
       qc.invalidateQueries({ queryKey: ['my-routes'] });
@@ -62,6 +66,13 @@ export function AddRouteScreen({ navigation, route }: ScreenProps<'AddRoute'>) {
         <View style={styles.flex}><Field label="Flight no." value={form.flightNumber} onChangeText={set('flightNumber')} autoCapitalize="characters" placeholder="EK512" /></View>
         <View style={styles.flex}><Field label="Airline" value={form.airline} onChangeText={set('airline')} placeholder="Emirates" /></View>
       </View>
+      <Text style={styles.label}>Flight ticket {editing ? '(re-upload to update)' : '(required)'}</Text>
+      <PhotoButton
+        purpose="ticket"
+        label={ticketFileKey ? 'Ticket photo added ✓' : 'Upload flight ticket photo'}
+        count={ticketFileKey ? 1 : 0}
+        onUploaded={setTicketFileKey}
+      />
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <PrimaryButton label={editing ? 'Save changes' : 'Add trip'} onPress={submit} loading={busy} />

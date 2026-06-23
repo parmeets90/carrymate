@@ -2,6 +2,7 @@ import type { TravelRouteDto } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import { assertCorridor } from '../../utils/marketplace';
+import { verifyFlight } from './aviationstack';
 import { toRouteDto } from '../marketplace/serializers';
 import type { CreateRouteInput, UpdateRouteInput } from './routes.validators';
 
@@ -24,6 +25,15 @@ export async function createRoute(
     throw new AppError(400, 'VALIDATION_ERROR', 'Arrival cannot be before departure.');
   }
 
+  // Layer 1 (Challenge 09): auto-verify via AviationStack when configured;
+  // otherwise the ticket photo + admin override path applies.
+  const ticketVerified = await verifyFlight({
+    flightNumber: input.flightNumber,
+    originAirport: input.originAirport,
+    destinationAirport: input.destinationAirport,
+    departureDate: input.departureDate,
+  });
+
   const route = await prisma.travelRoute.create({
     data: {
       travelerId,
@@ -36,8 +46,8 @@ export async function createRoute(
       airline: input.airline ?? null,
       deliveryArea: input.deliveryArea ?? null,
       notes: input.notes ?? null,
-      // Ticket verification is a stub in MVP (real flow: OCR + schedule check).
-      ticketVerified: false,
+      ticketFileKey: input.ticketFileKey, // Layer 2 evidence
+      ticketVerified,
     },
   });
 

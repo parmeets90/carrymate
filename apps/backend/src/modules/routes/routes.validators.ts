@@ -10,6 +10,8 @@ export const createRouteSchema = z.object({
   airline: z.string().trim().max(50).optional(),
   deliveryArea: z.string().trim().max(100).optional(),
   notes: z.string().trim().max(500).optional(),
+  // Layer 2 (Challenge 09): a ticket photo is always required as evidence.
+  ticketFileKey: z.string().trim().min(1, 'A flight ticket photo is required.'),
 });
 
 export type CreateRouteInput = z.infer<typeof createRouteSchema>;

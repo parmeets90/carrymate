@@ -6,6 +6,7 @@ import { runAutoConfirm } from './modules/orders/orders.service';
 import { runPaymentReconciliation } from './jobs/payment-reconciliation';
 import { runKycTimeoutSweep } from './jobs/kyc-timeout';
 import { runRequestExpirySweep } from './jobs/request-expiry';
+import { runRouteExpirySweep } from './jobs/route-expiry';
 
 const AUTO_CONFIRM_INTERVAL_MS = 10 * 60_000; // every 10 min
 const RECONCILIATION_INTERVAL_MS = 15 * 60_000; // every 15 min
@@ -43,6 +44,7 @@ async function bootstrap(): Promise<void> {
   // Request expiry + 48h reminder sweep (cold-start UX).
   const expiryTimer = setInterval(() => {
     runRequestExpirySweep().catch((err) => logger.error('expiry sweep failed', err));
+    runRouteExpirySweep().catch((err) => logger.error('route expiry sweep failed', err));
   }, EXPIRY_SWEEP_INTERVAL_MS);
   expiryTimer.unref();
 

@@ -10,6 +10,8 @@ import {
   listRequests,
   forceExpireRequest,
   approveReviewRequest,
+  listPendingRoutes,
+  verifyRouteTicket,
   getMetrics,
   getAdminQueue,
 } from './admin.service';
@@ -93,6 +95,15 @@ export const postExpireRequest: RequestHandler = async (req, res) => {
 
 export const postApproveReview: RequestHandler = async (req, res) => {
   await approveReviewRequest(req.params.requestId!, req.user!.id);
+  ok(res, { success: true });
+};
+
+export const getPendingRoutes: RequestHandler = async (_req, res) => {
+  ok(res, await listPendingRoutes());
+};
+
+export const postVerifyRoute: RequestHandler = async (req, res) => {
+  await verifyRouteTicket(req.params.routeId!, req.user!.id);
   ok(res, { success: true });
 };
 

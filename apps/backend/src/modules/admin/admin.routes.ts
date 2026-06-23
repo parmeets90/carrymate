@@ -12,6 +12,8 @@ import {
   getRequests,
   postExpireRequest,
   postApproveReview,
+  getPendingRoutes,
+  postVerifyRoute,
   getOrders,
   postRefundOrder,
   getDisputes,
@@ -46,6 +48,9 @@ adminRouter.post('/users/:userId/status', validateBody(setStatusSchema), postSet
 adminRouter.get('/requests', getRequests);
 adminRouter.post('/requests/:requestId/expire', postExpireRequest);
 adminRouter.post('/requests/:requestId/approve-review', postApproveReview);
+
+adminRouter.get('/routes/pending', getPendingRoutes);
+adminRouter.post('/routes/:routeId/verify', postVerifyRoute);
 
 adminRouter.get('/orders', getOrders);
 adminRouter.post('/orders/:orderId/refund', postRefundOrder);

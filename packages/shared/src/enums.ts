@@ -64,6 +64,7 @@ export enum RouteStatus {
   FULL = 'FULL',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
+  EXPIRED = 'EXPIRED',
 }
 
 export enum BidStatus {

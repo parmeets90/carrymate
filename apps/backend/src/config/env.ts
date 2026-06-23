@@ -58,6 +58,9 @@ const envSchema = z.object({
   IDFY_API_KEY: z.string().optional(),
   IDFY_ACCOUNT_ID: z.string().optional(),
 
+  // AviationStack (flight/PNR check). Blank → flights verified manually by admin.
+  AVIATIONSTACK_API_KEY: z.string().optional(),
+
   // Feature flags (off by default; flipped per phase)
   ENABLE_REAL_PAYMENTS: z.coerce.boolean().default(false),
   ENABLE_AUTO_KYC: z.coerce.boolean().default(false),
@@ -121,3 +124,6 @@ export const isPushConfigured = Boolean(env.FCM_SERVER_KEY);
 export const isIdfyConfigured = Boolean(
   env.ENABLE_AUTO_KYC && env.IDFY_BASE_URL && env.IDFY_API_KEY && env.IDFY_ACCOUNT_ID,
 );
+
+/** True when AviationStack is configured; else flights are verified manually. */
+export const isAviationStackConfigured = Boolean(env.AVIATIONSTACK_API_KEY);

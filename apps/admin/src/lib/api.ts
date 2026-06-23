@@ -13,6 +13,7 @@ import type {
   FraudQueueItem,
   FailedPayoutItem,
   AdminQueueItem,
+  PendingRouteItem,
 } from '@carrymate/shared';
 
 type AdminOrder = OrderView & { senderName: string | null; travelerName: string | null };
@@ -124,6 +125,9 @@ export const api = {
   // Phase 6 — safety & ops
   metrics: () => authed<AdminMetrics>('/v1/admin/metrics'),
   queue: () => authed<AdminQueueItem[]>('/v1/admin/queue'),
+  pendingRoutes: () => authed<PendingRouteItem[]>('/v1/admin/routes/pending'),
+  verifyRoute: (routeId: string) =>
+    authed<{ success: boolean }>(`/v1/admin/routes/${routeId}/verify`, { method: 'POST' }),
   fraudQueue: () => authed<FraudQueueItem[]>('/v1/admin/fraud/queue'),
   clearHold: (orderId: string) =>
     authed<{ success: boolean }>(`/v1/admin/orders/${orderId}/clear-hold`, { method: 'POST' }),
