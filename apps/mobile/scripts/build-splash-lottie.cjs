@@ -85,8 +85,7 @@ const layers = [];
 // BG_Gradient
 layers.push(layer('BG_Gradient', [group('bg', [
   rect([W, H], 0, [0, 0]),
-  { ty: 'gf', nm: 'Grad', o: val(100), r: 1, t: 2, s: val([0, -200]), e: val([0, 820]), h: val(0), a: val(0),
-    g: { p: 3, k: val([0, 0.965, 0.976, 1, 0.5, 0.985, 0.99, 1, 1, 1, 1, 1]) } },
+  fill(C.pale, 100),
   trGroup({ p: val([W / 2, H / 2]) }),
 ])], { p: val([540, 960, 0]) }));
 
@@ -115,10 +114,8 @@ PS.forEach((p, i) => layers.push(layer(`Particles_${i + 1}`, [group('p', [ellips
 
 // Route_Base — the "C" route drawing in (Scene 1), gradient stroke.
 layers.push(layer('Route_Base', [group('route', [
-  { ...{ ty: 'sh', nm: 'C', ks: val(routePath()) } },
-  { ty: 'gs', nm: 'GradStroke', o: val(100), w: val(34), lc: 2, lj: 2, ml: 4, t: 1,
-    s: val([ORIGIN[0], ORIGIN[1]]), e: val([DEST[0], DEST[1]]), h: val(0), a: val(0),
-    g: { p: 3, k: val([0, 0.118, 0.251, 0.686, 0.5, 0.231, 0.51, 0.965, 1, 0.078, 0.722, 0.651]) } },
+  { ty: 'sh', nm: 'C', ks: val(routePath()) },
+  stroke(C.secondary, 34),
   { ty: 'tm', nm: 'Draw', s: val(0), e: anim([kf(10, [0], 'out'), kf(80, [100], 'out')]), o: val(0), m: 1 },
   trGroup(),
 ])], { o: anim([kf(8, [0], 'out'), kf(20, [100])]) }, 8));
@@ -192,8 +189,7 @@ layers.push(layer('Token', [
 // Success_Glow — bloom at destination.
 layers.push(layer('Success_Glow', [group('g', [
   ellipse([300, 300]),
-  { ty: 'gf', nm: 'Grad', o: val(100), r: 1, t: 2, s: val([0, 0]), e: val([150, 0]), h: val(0), a: val(0),
-    g: { p: 3, k: val([0, 0.078, 0.722, 0.651, 0.6, 0.231, 0.51, 0.965, 1, 1, 1, 1, 0, 0, 0]) } },
+  fill(C.accent, 100),
   trGroup(),
 ])], {
   p: val([DEST[0], DEST[1], 0]),

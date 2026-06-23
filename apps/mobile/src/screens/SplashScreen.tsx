@@ -49,7 +49,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
         source={splash}
         autoPlay
         loop={false}
-        resizeMode="cover"
+        resizeMode="contain"
         style={StyleSheet.absoluteFill}
         onAnimationFinish={done}
       />
