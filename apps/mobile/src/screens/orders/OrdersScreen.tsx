@@ -26,7 +26,7 @@ export function OrdersScreen() {
   const release = useMutation({ mutationFn: (id: string) => api.releaseOrder(id), onSuccess: () => { invalidate(); Alert.alert('Released', 'Escrow released to the traveler.'); }, onError: (e) => Alert.alert('Could not release', (e as Error).message) });
   const chat = useMutation({
     mutationFn: async (o: OrderView) => ({ conv: await api.conversationForOrder(o.id), order: o }),
-    onSuccess: ({ conv, order }) => nav.navigate('Chat', { conversationId: conv.id, title: order.requestTitle, counterparty: order.counterpartyName }),
+    onSuccess: ({ conv, order }) => nav.navigate('ChatThread', { conversationId: conv.id, title: order.requestTitle, counterparty: order.counterpartyName }),
     onError: (e) => Alert.alert('Chat unavailable', (e as Error).message),
   });
 

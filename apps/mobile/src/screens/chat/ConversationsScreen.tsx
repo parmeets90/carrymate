@@ -40,7 +40,7 @@ export function ConversationsScreen() {
   const renderItem = ({ item }: { item: ConversationSummary }) => (
     <Pressable3D
       onPress={() =>
-        nav.navigate('Chat', {
+        nav.navigate('ChatThread', {
           conversationId: item.id,
           title: item.requestTitle,
           counterparty: item.counterpartyName,

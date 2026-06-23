@@ -108,7 +108,7 @@ export function MainNavigator() {
       <Stack.Screen name="Dispute" component={DisputeScreen} options={{ title: 'Dispute' }} />
       <Stack.Screen name="Rate" component={RateScreen} options={{ title: 'Rate' }} />
       <Stack.Screen
-        name="Chat"
+        name="ChatThread"
         component={ChatScreen}
         options={({ route }) => ({ title: route.params.counterparty ?? 'Chat' })}
       />

@@ -54,7 +54,7 @@ export function NotificationsScreen() {
   const open = (n: NotificationDto) => {
     if (!n.read) markRead.mutate(n.id);
     const convId = n.data?.conversationId as string | undefined;
-    if (convId) nav.navigate('Chat', { conversationId: convId, title: 'Chat' });
+    if (convId) nav.navigate('ChatThread', { conversationId: convId, title: 'Chat' });
   };
 
   const renderItem = ({ item }: { item: NotificationDto }) => (

@@ -22,7 +22,7 @@ function clock(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 }
 
-export function ChatScreen({ route }: ScreenProps<'Chat'>) {
+export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
   const { conversationId } = route.params;
   const qc = useQueryClient();
   const insets = useSafeAreaInsets();
