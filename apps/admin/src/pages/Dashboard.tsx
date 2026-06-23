@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Activity, TrendingUp, Package, ShieldCheck, IndianRupee, Lock, Scale, ShieldAlert } from 'lucide-react';
+import { Activity, TrendingUp, Package, ShieldCheck, IndianRupee, Lock, Scale, ShieldAlert, Clock, Timer, AlarmClock } from 'lucide-react';
 import { api } from '@/lib/api';
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
@@ -27,6 +27,9 @@ export function Dashboard() {
     { label: 'Escrow Held', value: dash(m?.escrowHeld), hint: 'Funds in escrow', icon: Lock },
     { label: 'Open Disputes', value: m ? `${m.disputesOpen} (${m.disputeRate}%)` : '—', hint: 'Of all orders', icon: Scale },
     { label: 'Fraud Holds', value: dash(m?.fraudHolds), hint: 'Awaiting review', icon: ShieldAlert },
+    { label: 'Avg KYC Review', value: m ? `${m.avgKycReviewMins}m` : '—', hint: 'Target < 120m', icon: Clock },
+    { label: 'Avg Dispute Resolution', value: m ? `${m.avgDisputeResolutionHours}h` : '—', hint: 'Target < 24h', icon: Timer },
+    { label: 'Oldest Open Dispute', value: m ? `${m.oldestOpenDisputeHours}h` : '—', hint: 'Alert if > 24h', icon: AlarmClock },
   ];
 
   const dbUp = health.data?.checks.database;

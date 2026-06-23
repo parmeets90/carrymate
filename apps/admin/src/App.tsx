@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
+import { Queue } from './pages/Queue';
 import { KycReview } from './pages/KycReview';
 import { Users } from './pages/Users';
 import { Requests } from './pages/Requests';
@@ -30,6 +31,7 @@ export function App() {
     <Layout>
       <Routes>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/queue" element={<Queue />} />
         <Route path="/kyc" element={<KycReview />} />
         <Route path="/users" element={<Users />} />
         <Route path="/disputes" element={<Disputes />} />

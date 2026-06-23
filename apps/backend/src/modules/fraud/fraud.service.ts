@@ -94,6 +94,9 @@ export async function scoreOrder(input: RiskInput): Promise<RiskResult> {
         meta: { score, factors },
       });
     }
+  } else {
+    // B1 Fix 3 — low risk auto-clears: no admin queue entry, no human time.
+    logger.info(`[fraud] order ${input.orderId} auto-cleared (score ${score})`);
   }
 
   return { score, factors, hold };

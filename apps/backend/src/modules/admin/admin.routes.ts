@@ -16,6 +16,7 @@ import {
   getDisputes,
   postResolveDispute,
   getMetrics_,
+  getQueue,
   getFraudQueue,
   postClearHold,
   getFailedPayouts,
@@ -27,6 +28,7 @@ export const adminRouter = Router();
 adminRouter.use(authenticate, requireAdmin);
 
 adminRouter.get('/metrics', getMetrics_);
+adminRouter.get('/queue', getQueue);
 adminRouter.get('/fraud/queue', getFraudQueue);
 adminRouter.post('/orders/:orderId/clear-hold', postClearHold);
 adminRouter.get('/payouts/failed', getFailedPayouts);

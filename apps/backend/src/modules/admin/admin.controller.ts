@@ -10,6 +10,7 @@ import {
   listRequests,
   forceExpireRequest,
   getMetrics,
+  getAdminQueue,
 } from './admin.service';
 import {
   listAllOrders,
@@ -55,6 +56,10 @@ export const postSetStatus: RequestHandler = async (req, res) => {
 
 export const getMetrics_: RequestHandler = async (_req, res) => {
   ok(res, await getMetrics());
+};
+
+export const getQueue: RequestHandler = async (_req, res) => {
+  ok(res, await getAdminQueue());
 };
 
 export const getFraudQueue: RequestHandler = async (_req, res) => {

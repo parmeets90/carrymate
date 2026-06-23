@@ -2,6 +2,8 @@ import type { Prisma } from '@prisma/client';
 import type {
   AdminKycReviewItem,
   AdminMetrics,
+  AdminQueueItem,
+  SlaLevel,
   PublicUser,
   Paginated,
   DeliveryRequestSummary,
@@ -212,6 +214,40 @@ export async function getMetrics(): Promise<AdminMetrics> {
   const matchRate = requestsTotal ? Math.round((requestsMatched / requestsTotal) * 100) : 0;
   const disputeRate = ordersTotal ? Math.round((disputesOpen / ordersTotal) * 100) : 0;
 
+  // SLA stats (computed in JS over recent rows — no portable date-diff in Prisma).
+  const [reviewedDocs, resolvedDisputes, openDisputes] = await Promise.all([
+    prisma.kycDocument.findMany({
+      where: { reviewedAt: { not: null } },
+      select: { createdAt: true, reviewedAt: true },
+      orderBy: { reviewedAt: 'desc' },
+      take: 200,
+    }),
+    prisma.dispute.findMany({
+      where: { resolvedAt: { not: null } },
+      select: { createdAt: true, resolvedAt: true },
+      orderBy: { resolvedAt: 'desc' },
+      take: 200,
+    }),
+    prisma.dispute.findMany({
+      where: { status: { in: ['OPEN', 'UNDER_REVIEW'] } },
+      select: { createdAt: true },
+      orderBy: { createdAt: 'asc' },
+      take: 1,
+    }),
+  ]);
+
+  const avg = (xs: number[]): number =>
+    xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : 0;
+  const avgKycReviewMins = avg(
+    reviewedDocs.map((d) => (d.reviewedAt!.getTime() - d.createdAt.getTime()) / 60_000),
+  );
+  const avgDisputeResolutionHours = avg(
+    resolvedDisputes.map((d) => (d.resolvedAt!.getTime() - d.createdAt.getTime()) / 3_600_000),
+  );
+  const oldestOpenDisputeHours = openDisputes.length
+    ? Math.round((Date.now() - openDisputes[0]!.createdAt.getTime()) / 3_600_000)
+    : 0;
+
   return {
     users,
     kycBacklog,
@@ -226,5 +262,111 @@ export async function getMetrics(): Promise<AdminMetrics> {
     disputesOpen,
     disputeRate,
     fraudHolds,
+    avgKycReviewMins,
+    avgDisputeResolutionHours,
+    oldestOpenDisputeHours,
   };
+}
+
+// ── Unified admin work queue (B1) ──────────────────────────────
+
+function hoursSince(d: Date): number {
+  return (Date.now() - d.getTime()) / 3_600_000;
+}
+function slaOf(ageHours: number, amber: number, red: number): SlaLevel {
+  return ageHours >= red ? 'red' : ageHours >= amber ? 'amber' : 'green';
+}
+
+/**
+ * One prioritized list of everything needing a human, with SLA color per item
+ * (Challenge 06). Priority across kinds: DISPUTE > FRAUD > KYC > PAYOUT; within a
+ * kind, oldest first.
+ */
+export async function getAdminQueue(): Promise<AdminQueueItem[]> {
+  const [disputes, fraudOrders, kycUsers, failedPayouts] = await Promise.all([
+    prisma.dispute.findMany({
+      where: { status: { in: ['OPEN', 'UNDER_REVIEW'] } },
+      include: { order: { include: { request: true } } },
+    }),
+    prisma.order.findMany({
+      where: { fraudHold: true },
+      include: { request: true },
+    }),
+    prisma.user.findMany({
+      where: { kycStatus: 'IN_REVIEW' },
+      select: { id: true, fullName: true, kycFailureReason: true, kycSubmittedAt: true, updatedAt: true },
+    }),
+    prisma.order.findMany({
+      where: { payoutStatus: 'FAILED' },
+      include: { traveler: true, request: true },
+    }),
+  ]);
+
+  const items: AdminQueueItem[] = [];
+
+  for (const d of disputes) {
+    const created = d.createdAt;
+    const ageHours = hoursSince(created);
+    items.push({
+      kind: 'DISPUTE',
+      id: d.id,
+      title: `Dispute · ${d.order.request.title}`,
+      subtitle: d.reason.replace(/_/g, ' ').toLowerCase(),
+      createdAt: created.toISOString(),
+      ageHours: Math.round(ageHours),
+      sla: slaOf(ageHours, 12, 24),
+      priority: 0,
+      link: '/disputes',
+    });
+  }
+
+  for (const o of fraudOrders) {
+    const ageHours = hoursSince(o.createdAt);
+    items.push({
+      kind: 'FRAUD',
+      id: o.id,
+      title: `Fraud hold · ${o.request.title}`,
+      subtitle: `risk ${o.riskScore} · ${o.riskFactors.join(', ').toLowerCase() || 'flagged'}`,
+      createdAt: o.createdAt.toISOString(),
+      ageHours: Math.round(ageHours),
+      sla: slaOf(ageHours, 2, 12),
+      priority: 1,
+      link: '/risk',
+    });
+  }
+
+  for (const u of kycUsers) {
+    const created = u.kycSubmittedAt ?? u.updatedAt;
+    const ageHours = hoursSince(created);
+    items.push({
+      kind: 'KYC',
+      id: u.id,
+      title: `KYC · ${u.fullName ?? 'Unnamed user'}`,
+      subtitle: u.kycFailureReason ?? 'manual review',
+      createdAt: created.toISOString(),
+      ageHours: Math.round(ageHours),
+      sla: slaOf(ageHours, 1, 2),
+      priority: 2,
+      link: '/kyc',
+    });
+  }
+
+  for (const o of failedPayouts) {
+    const created = o.payoutInitiatedAt ?? o.createdAt;
+    const ageHours = hoursSince(created);
+    items.push({
+      kind: 'PAYOUT',
+      id: o.id,
+      title: `Payout failed · ${o.traveler.fullName ?? 'Traveler'}`,
+      subtitle: `₹${o.payoutInr.toLocaleString('en-IN')} · ${o.request.title}`,
+      createdAt: created.toISOString(),
+      ageHours: Math.round(ageHours),
+      sla: slaOf(ageHours, 2, 12),
+      priority: 3,
+      link: '/payouts',
+    });
+  }
+
+  // Priority across kinds, then oldest first within a kind.
+  return items.sort((a, b) => a.priority - b.priority || b.ageHours - a.ageHours);
 }

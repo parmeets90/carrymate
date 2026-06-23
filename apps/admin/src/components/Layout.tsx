@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
+  Inbox,
   ShieldCheck,
   Scale,
   Package,
@@ -17,6 +18,7 @@ import type { ReactNode } from 'react';
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/queue', label: 'Work Queue', icon: Inbox },
   { to: '/kyc', label: 'KYC Review', icon: ShieldCheck },
   { to: '/disputes', label: 'Disputes', icon: Scale },
   { to: '/requests', label: 'Requests', icon: Package },
