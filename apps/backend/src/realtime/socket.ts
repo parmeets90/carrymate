@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import { verifyAccessToken } from '../modules/auth/token.service';
 import { prisma } from '../lib/prisma';
 import { logger } from '../utils/logger';
+import { isOriginAllowed } from '../lib/cors';
 
 /**
  * Realtime chat transport (Socket.IO).
@@ -16,7 +17,12 @@ let io: Server | null = null;
 
 export function initRealtime(server: HttpServer): Server {
   io = new Server(server, {
-    cors: { origin: '*' },
+    // Same allowlist as the HTTP API. Note: every socket is still
+    // JWT-authenticated below — Origin is defense-in-depth, not the auth gate.
+    cors: {
+      origin: (origin, callback) => callback(null, isOriginAllowed(origin)),
+      credentials: true,
+    },
     // Keep idle connections cheap; the client reconnects automatically.
     pingInterval: 25_000,
     pingTimeout: 20_000,

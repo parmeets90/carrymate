@@ -73,6 +73,11 @@ const envSchema = z.object({
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
 
+  // CORS: comma-separated origin allowlist (e.g. admin web URLs). Enforced in
+  // production; dev/test reflect any origin so local tooling just works.
+  // Mobile/native and server-to-server clients send no Origin and are always allowed.
+  CORS_ORIGINS: z.string().optional(),
+
   // Feature flags (off by default; flipped per phase)
   ENABLE_REAL_PAYMENTS: z.coerce.boolean().default(false),
   ENABLE_AUTO_KYC: z.coerce.boolean().default(false),

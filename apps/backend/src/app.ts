@@ -10,22 +10,28 @@ import { v1Router } from './routes';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 import { isProd } from './config/env';
+import { corsOptions } from './lib/cors';
 
 export function createApp(): Express {
   const app = express();
 
   app.set('trust proxy', 1);
   // API is consumed cross-origin (admin web + mobile); don't let CORP block responses.
-  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(
-    cors({
-      origin: true, // reflect the request origin (admin dev, prod admin, mobile)
-      credentials: true,
-      methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      // Force HTTPS for a year (incl. subdomains) and allow preload-list inclusion.
+      hsts: { maxAge: 31_536_000, includeSubDomains: true, preload: true },
+      // This server only ever returns JSON — lock the CSP all the way down so a
+      // reflected payload can never load scripts/styles/frames. No-op in dev to
+      // keep error pages / tooling readable.
+      contentSecurityPolicy: isProd
+        ? { useDefaults: false, directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] } }
+        : false,
     }),
   );
-  app.options('*', cors());
+  app.use(cors(corsOptions));
+  app.options('*', cors(corsOptions));
   app.use(compression());
   // Capture the raw body so webhook handlers can verify HMAC signatures.
   app.use(
