@@ -39,14 +39,52 @@ export function initRealtime(server: HttpServer): Server {
     socket.join(`user:${userId}`);
 
     // Join a conversation room — only if the user is actually a participant.
+    // On join we also hand the joiner the counterparty's current read position
+    // so an already-"seen" thread renders correctly without waiting for an event.
     socket.on('chat:join', async (conversationId: string) => {
+      if (typeof conversationId !== 'string') return;
+      const conv = await prisma.conversation
+        .findUnique({
+          where: { id: conversationId },
+          select: { senderId: true, travelerId: true, senderLastReadAt: true, travelerLastReadAt: true },
+        })
+        .catch(() => null);
+      if (!conv || (conv.senderId !== userId && conv.travelerId !== userId)) return;
+      socket.join(`conversation:${conversationId}`);
+
+      const isSender = conv.senderId === userId;
+      const otherId = isSender ? conv.travelerId : conv.senderId;
+      const otherReadAt = isSender ? conv.travelerLastReadAt : conv.senderLastReadAt;
+      if (otherReadAt) {
+        socket.emit('chat:seen', {
+          conversationId,
+          readerId: otherId,
+          readAt: otherReadAt.toISOString(),
+        });
+      }
+    });
+
+    // The viewer read the thread → persist their read position and tell the
+    // other party live so their sent messages flip to "Seen".
+    socket.on('chat:read', async (conversationId: string) => {
       if (typeof conversationId !== 'string') return;
       const conv = await prisma.conversation
         .findUnique({ where: { id: conversationId }, select: { senderId: true, travelerId: true } })
         .catch(() => null);
-      if (conv && (conv.senderId === userId || conv.travelerId === userId)) {
-        socket.join(`conversation:${conversationId}`);
-      }
+      if (!conv || (conv.senderId !== userId && conv.travelerId !== userId)) return;
+      const isSender = conv.senderId === userId;
+      const readAt = new Date();
+      await prisma.conversation
+        .update({
+          where: { id: conversationId },
+          data: isSender ? { senderLastReadAt: readAt } : { travelerLastReadAt: readAt },
+        })
+        .catch(() => undefined);
+      io?.to(`conversation:${conversationId}`).emit('chat:seen', {
+        conversationId,
+        readerId: userId,
+        readAt: readAt.toISOString(),
+      });
     });
 
     socket.on('chat:leave', (conversationId: string) => {
