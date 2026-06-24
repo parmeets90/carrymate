@@ -6,7 +6,6 @@
 export enum UserRole {
   SENDER = 'SENDER',
   TRAVELER = 'TRAVELER',
-  BOTH = 'BOTH',
   ADMIN = 'ADMIN',
 }
 

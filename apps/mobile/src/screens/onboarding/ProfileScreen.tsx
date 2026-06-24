@@ -8,11 +8,10 @@ import { Icon, type IconName } from '@/components/Icon';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
 
-type Role = 'SENDER' | 'TRAVELER' | 'BOTH';
+type Role = 'SENDER' | 'TRAVELER';
 const ROLES: { value: Role; icon: IconName; title: string; desc: string }[] = [
   { value: 'SENDER', icon: 'package', title: 'Send items', desc: 'Send things to people abroad.' },
   { value: 'TRAVELER', icon: 'trips', title: 'Carry items', desc: 'Earn on trips you already take.' },
-  { value: 'BOTH', icon: 'handshake', title: 'Both', desc: 'Send and carry.' },
 ];
 
 export function ProfileScreen() {

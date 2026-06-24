@@ -43,7 +43,7 @@ export const updateProfileSchema = z
   .object({
     fullName: z.string().trim().min(2).max(100).optional(),
     email: z.string().trim().email().max(255).optional(),
-    role: z.enum(['SENDER', 'TRAVELER', 'BOTH']).optional(),
+    role: z.enum(['SENDER', 'TRAVELER']).optional(),
   })
   .refine((v) => v.fullName !== undefined || v.email !== undefined || v.role !== undefined, {
     message: 'Provide at least one field to update',

@@ -75,7 +75,7 @@ function RoleTabs() {
     );
   }
 
-  // SENDER or BOTH
+  // SENDER
   return (
     <Tab.Navigator screenOptions={tabScreenOptions}>
       <Tab.Screen name="Requests" component={MyRequestsScreen} options={{ tabBarIcon: tabIcon('Requests') }} />

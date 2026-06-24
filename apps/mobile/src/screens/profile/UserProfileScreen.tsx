@@ -21,7 +21,6 @@ function memberSinceLabel(iso: string): string {
 const roleLabel: Record<string, string> = {
   SENDER: 'Sender',
   TRAVELER: 'Traveler',
-  BOTH: 'Sender & Traveler',
 };
 
 /** A platform-issued badge → its visual treatment. Trust-stack only, no PII. */
@@ -102,8 +101,11 @@ export function UserProfileScreen({ route }: ScreenProps<'UserProfile'>) {
   }
 
   const p: TrustProfile = data;
-  const isTraveler = p.role === 'TRAVELER' || p.role === 'BOTH';
-  const isSender = p.role === 'SENDER' || p.role === 'BOTH';
+  // A user can switch roles over time, so show a stat tile when it's relevant to
+  // their current role OR they have history on that side.
+  const s = p.stats;
+  const showTravelerStats = p.role === 'TRAVELER' || s.deliveriesCompleted > 0 || s.tripsPosted > 0;
+  const showSenderStats = p.role === 'SENDER' || s.requestsPosted > 0 || s.requestsCompleted > 0;
   const rated = p.ratingCount > 0;
 
   return (
@@ -135,10 +137,10 @@ export function UserProfileScreen({ route }: ScreenProps<'UserProfile'>) {
       <Text style={styles.sectionTitle}>Track record</Text>
       <Card>
         <View style={styles.statGrid}>
-          {isTraveler && <Stat icon="check" value={p.stats.deliveriesCompleted} label="Deliveries" />}
-          {isTraveler && <Stat icon="trips" value={p.stats.tripsPosted} label="Trips posted" />}
-          {isSender && <Stat icon="package" value={p.stats.requestsPosted} label="Requests" />}
-          {isSender && <Stat icon="handshake" value={p.stats.requestsCompleted} label="Completed" />}
+          {showTravelerStats && <Stat icon="check" value={s.deliveriesCompleted} label="Deliveries" />}
+          {showTravelerStats && <Stat icon="trips" value={s.tripsPosted} label="Trips posted" />}
+          {showSenderStats && <Stat icon="package" value={s.requestsPosted} label="Requests" />}
+          {showSenderStats && <Stat icon="handshake" value={s.requestsCompleted} label="Completed" />}
         </View>
       </Card>
 

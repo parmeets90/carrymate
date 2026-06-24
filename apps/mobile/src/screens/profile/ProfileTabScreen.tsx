@@ -15,12 +15,11 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
 import type { RootStackParamList } from '@/navigation/types';
 
-type Role = 'SENDER' | 'TRAVELER' | 'BOTH';
+type Role = 'SENDER' | 'TRAVELER';
 
 const ROLES: { value: Role; label: string; hint: string }[] = [
   { value: 'SENDER', label: 'Sender', hint: 'Send packages with travelers' },
   { value: 'TRAVELER', label: 'Traveler', hint: 'Carry items on your trips' },
-  { value: 'BOTH', label: 'Both', hint: 'Send and carry' },
 ];
 
 export function ProfileTabScreen() {

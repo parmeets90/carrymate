@@ -416,7 +416,7 @@ export interface TrustProfile {
   id: string;
   /** Display name only — no contact details are ever included. */
   fullName: string | null;
-  role: string; // SENDER | TRAVELER | BOTH
+  role: string; // SENDER | TRAVELER
   /** Account creation time; UI renders "Member since Jun 2026". */
   memberSince: string;
   kycVerified: boolean;

@@ -39,17 +39,14 @@ export const requireVerifiedPhone: RequestHandler = (req, _res, next) => {
 };
 
 /**
- * Require one of the given roles. ADMIN passes everything; a BOTH user satisfies
- * SENDER/TRAVELER requirements but never an ADMIN-only requirement.
+ * Require one of the given roles. ADMIN passes everything. Users switch between
+ * SENDER and TRAVELER from their profile, so a role gate reflects their current mode.
  */
 export function requireRole(...roles: UserRole[]): RequestHandler {
   return (req, _res, next) => {
     const role = req.user?.role as UserRole | undefined;
     if (!role) throw AppError.unauthorized();
-    const satisfiesBoth =
-      role === UserRole.BOTH &&
-      roles.some((r) => r === UserRole.SENDER || r === UserRole.TRAVELER);
-    const allowed = role === UserRole.ADMIN || roles.includes(role) || satisfiesBoth;
+    const allowed = role === UserRole.ADMIN || roles.includes(role);
     if (!allowed) throw AppError.forbidden('You do not have access to this resource');
     next();
   };

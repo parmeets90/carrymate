@@ -123,9 +123,9 @@ function daysFromNow(d: number): Date {
 }
 
 async function seedDemoMarketplace(): Promise<void> {
-  const roles: Array<'SENDER' | 'TRAVELER' | 'BOTH'> = [];
+  const roles: Array<'SENDER' | 'TRAVELER'> = [];
   for (let i = 0; i < NAMES.length; i++) {
-    roles.push(i % 5 === 4 ? 'BOTH' : i % 2 === 0 ? 'SENDER' : 'TRAVELER');
+    roles.push(i % 2 === 0 ? 'SENDER' : 'TRAVELER');
   }
 
   for (let i = 0; i < NAMES.length; i++) {
@@ -145,8 +145,8 @@ async function seedDemoMarketplace(): Promise<void> {
       },
     });
 
-    const isSender = role === 'SENDER' || role === 'BOTH';
-    const isTraveler = role === 'TRAVELER' || role === 'BOTH';
+    const isSender = role === 'SENDER';
+    const isTraveler = role === 'TRAVELER';
 
     // Senders post 1–2 open requests (skip if they already have some).
     if (isSender) {
