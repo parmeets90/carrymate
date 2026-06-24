@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, type ViewStyle, type StyleProp } from 'react-na
 import type { ReactNode } from 'react';
 import { colors, spacing, radius, typography, shadows } from '@/theme';
 import { Pressable3D } from './ui';
+import { Icon, type IconName } from './Icon';
 
 export function Card({
   children,
@@ -19,23 +20,62 @@ export function Card({
 
 type Tone = 'neutral' | 'gold' | 'mint' | 'amber' | 'danger' | 'sky';
 
-const TONES: Record<Tone, { bg: string; fg: string; dot: string }> = {
-  neutral: { bg: colors.bgSecondary, fg: colors.textSecondary, dot: colors.textHint },
-  gold: { bg: colors.goldLight, fg: colors.goldPrimary, dot: colors.goldPrimary },
-  mint: { bg: colors.mintLight, fg: '#096438', dot: colors.mintPrimary },
-  amber: { bg: colors.cautionLight, fg: '#946A00', dot: colors.cautionAmber },
-  danger: { bg: colors.dangerLight, fg: '#921010', dot: colors.dangerRed },
-  sky: { bg: colors.skyLight, fg: '#185FA5', dot: colors.skyBlue },
+const TONES: Record<Tone, { bg: string; fg: string; dot: string; border: string }> = {
+  neutral: { bg: colors.bgSecondary, fg: colors.textSecondary, dot: colors.textHint, border: colors.borderLight },
+  gold: { bg: colors.goldLight, fg: colors.goldPrimary, dot: colors.goldPrimary, border: colors.goldBorder },
+  mint: { bg: colors.mintLight, fg: '#096438', dot: colors.mintPrimary, border: colors.mintBorder },
+  amber: { bg: colors.cautionLight, fg: '#946A00', dot: colors.cautionAmber, border: '#FFE066' },
+  danger: { bg: colors.dangerLight, fg: '#921010', dot: colors.dangerRed, border: '#FF9090' },
+  sky: { bg: colors.skyLight, fg: '#185FA5', dot: colors.skyBlue, border: '#80BBED' },
 };
 
-export function Badge({ label, tone = 'neutral' }: { label: string; tone?: Tone }) {
+/**
+ * Status / trust pill. Backward compatible: `<Badge label tone />` still renders
+ * the leading dot. Pass `icon` to swap the dot for a Phosphor glyph — this is the
+ * canonical trust-badge anatomy from CLAUDE.md ([icon 13px] [label 11px/600]).
+ */
+export function Badge({
+  label,
+  tone = 'neutral',
+  icon,
+}: {
+  label: string;
+  tone?: Tone;
+  icon?: IconName;
+}) {
   const t = TONES[tone];
   return (
-    <View style={[styles.badge, { backgroundColor: t.bg }]}>
-      <View style={[styles.dot, { backgroundColor: t.dot }]} />
+    <View style={[styles.badge, { backgroundColor: t.bg, borderColor: t.border }]}>
+      {icon ? (
+        <Icon name={icon} size={13} color={t.fg} weight="fill" />
+      ) : (
+        <View style={[styles.dot, { backgroundColor: t.dot }]} />
+      )}
       <Text style={[styles.badgeText, { color: t.fg }]}>{label}</Text>
     </View>
   );
+}
+
+/**
+ * Named trust badges — the spec's exact variants (KYC, flight, escrow, …). Use
+ * these instead of raw <Badge> wherever a trust signal is shown so the icon,
+ * label, and color stay identical across every screen.
+ */
+const TRUST = {
+  kycVerified: { tone: 'gold', icon: 'identity', label: 'KYC verified' },
+  flightConfirmed: { tone: 'gold', icon: 'trips', label: 'Flight confirmed' },
+  trustedCarrier: { tone: 'sky', icon: 'verified', label: 'Trusted carrier' },
+  escrowHeld: { tone: 'mint', icon: 'lock', label: 'Escrow secured' },
+  delivered: { tone: 'mint', icon: 'check', label: 'Delivered' },
+  prohibited: { tone: 'danger', icon: 'alert', label: 'Prohibited item' },
+  inTransit: { tone: 'amber', icon: 'inTransit', label: 'In transit' },
+} as const satisfies Record<string, { tone: Tone; icon: IconName; label: string }>;
+
+export type TrustVariant = keyof typeof TRUST;
+
+export function TrustBadge({ variant, label }: { variant: TrustVariant; label?: string }) {
+  const v = TRUST[variant];
+  return <Badge tone={v.tone} icon={v.icon} label={label ?? v.label} />;
 }
 
 export function statusTone(status: string): Tone {
@@ -78,10 +118,11 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     alignSelf: 'flex-start',
     borderRadius: radius.chip,
-    paddingVertical: 5,
+    borderWidth: 0.5,
+    paddingVertical: 4,
     paddingHorizontal: 10,
   },
   dot: { width: 6, height: 6, borderRadius: 3 },

@@ -1,5 +1,6 @@
 import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, sizing, radius } from '@/theme';
+import { Icon, type IconName } from '@/components/Icon';
 
 const SECTIONS = [
   {
@@ -31,10 +32,10 @@ const SECTIONS = [
   },
 ];
 
-const TONE: Record<'mint' | 'danger' | 'amber', { bg: string; fg: string }> = {
-  mint: { bg: colors.mintLight, fg: '#096438' },
-  danger: { bg: colors.dangerLight, fg: '#921010' },
-  amber: { bg: colors.cautionLight, fg: '#946A00' },
+const TONE: Record<'mint' | 'danger' | 'amber', { bg: string; fg: string; border: string; icon: IconName }> = {
+  mint: { bg: colors.mintLight, fg: '#096438', border: colors.mintBorder, icon: 'check' },
+  danger: { bg: colors.dangerLight, fg: '#921010', border: '#FF9090', icon: 'cross' },
+  amber: { bg: colors.cautionLight, fg: '#946A00', border: '#FFE066', icon: 'warning' },
 };
 
 export function AllowedItemsScreen() {
@@ -49,12 +50,16 @@ export function AllowedItemsScreen() {
       {SECTIONS.map((s) => {
         const t = TONE[s.tone];
         return (
-          <View key={s.heading} style={[styles.card, { backgroundColor: t.bg }]}>
-            <Text style={[styles.heading, { color: t.fg }]}>{s.heading}</Text>
+          <View key={s.heading} style={[styles.card, { backgroundColor: t.bg, borderColor: t.border }]}>
+            <View style={styles.headingRow}>
+              <Icon name={t.icon} size={18} color={t.fg} weight="fill" />
+              <Text style={[styles.heading, { color: t.fg }]}>{s.heading}</Text>
+            </View>
             {s.items.map((i) => (
-              <Text key={i} style={[styles.item, { color: t.fg }]}>
-                •  {i}
-              </Text>
+              <View key={i} style={styles.itemRow}>
+                <Icon name={t.icon} size={14} color={t.fg} />
+                <Text style={[styles.item, { color: t.fg }]}>{i}</Text>
+              </View>
             ))}
           </View>
         );
@@ -72,8 +77,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgApp, paddingHorizontal: sizing.screenPaddingX },
   title: { ...typography.titleL, color: colors.textPrimary },
   intro: { ...typography.bodyM, color: colors.textSecondary, lineHeight: 21 },
-  card: { borderRadius: radius.card, padding: spacing.lg, gap: 4 },
-  heading: { ...typography.titleM, fontWeight: '700', marginBottom: spacing.xs },
-  item: { ...typography.bodyM, lineHeight: 22 },
+  card: { borderRadius: radius.card, borderWidth: 0.5, padding: spacing.lg, gap: spacing.xs },
+  headingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
+  heading: { ...typography.titleM, fontWeight: '700' },
+  itemRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  item: { ...typography.bodyM, lineHeight: 22, flex: 1 },
   footer: { ...typography.caption, color: colors.textHint, lineHeight: 16, marginTop: spacing.sm },
 });

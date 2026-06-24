@@ -10,7 +10,7 @@ import { Card, Badge, statusTone } from '@/components/Card';
 import { PrimaryButton, SecondaryButton } from '@/components/ui';
 import { Avatar, Timeline, EmptyState } from '@/components/widgets';
 import { Icon } from '@/components/Icon';
-import { PlaneTrack, SuccessPop } from '@/components/anim';
+import { PlaneTrack, SuccessPop, FadeInUp } from '@/components/anim';
 import { api } from '@/lib/api';
 import type { OrderView } from '@carrymate/shared';
 import type { RootStackParamList } from '@/navigation/types';
@@ -32,9 +32,10 @@ export function OrdersScreen() {
     onError: (e) => Alert.alert('Chat unavailable', (e as Error).message),
   });
 
-  const renderItem = ({ item }: { item: OrderView }) => {
+  const renderItem = ({ item, index }: { item: OrderView; index: number }) => {
     const isSender = item.role === 'SENDER';
     return (
+      <FadeInUp index={index}>
       <Card>
         <View style={styles.row}>
           <Avatar name={item.counterpartyName} size={40} />
@@ -119,6 +120,7 @@ export function OrdersScreen() {
           </Pressable>
         )}
       </Card>
+      </FadeInUp>
     );
   };
 

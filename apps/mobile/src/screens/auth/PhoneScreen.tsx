@@ -56,9 +56,9 @@ export function PhoneScreen({ navigation }: ScreenProps<'Phone'>) {
       />
       <View style={styles.body}>
         <View style={styles.pills}>
-          <Badge label="India → UAE" tone="sky" />
-          <Badge label="Verified travelers" tone="gold" />
-          <Badge label="Escrow protected" tone="mint" />
+          <Badge label="India → UAE" tone="sky" icon="trips" />
+          <Badge label="Verified travelers" tone="gold" icon="identity" />
+          <Badge label="Escrow protected" tone="mint" icon="lock" />
         </View>
 
         <Text style={styles.label}>Phone number</Text>

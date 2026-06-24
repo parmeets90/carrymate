@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
+import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
 import type { ScreenProps } from '@/navigation/types';
 
@@ -43,7 +44,12 @@ export function DisputeScreen({ route, navigation }: ScreenProps<'Dispute'>) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.md }}>
       <Text style={styles.title}>Raise a dispute</Text>
-      <Text style={styles.sub}>{title} — escrow stays frozen until an admin resolves it.</Text>
+      <Text style={styles.sub}>{title}</Text>
+
+      <View style={styles.frozen}>
+        <Icon name="lock" size={15} color="#946A00" weight="fill" />
+        <Text style={styles.frozenText}>Your escrow is frozen — funds stay safe until an admin resolves this.</Text>
+      </View>
 
       <Text style={styles.label}>Reason</Text>
       <View style={styles.pills}>
@@ -67,6 +73,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgApp, paddingHorizontal: sizing.screenPaddingX },
   title: { ...typography.titleL, color: colors.textPrimary },
   sub: { ...typography.bodyM, color: colors.textSecondary },
+  frozen: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.cautionLight,
+    borderRadius: radius.input,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  frozenText: { ...typography.caption, color: '#946A00', fontWeight: '600', flex: 1 },
   label: { ...typography.label, color: colors.textSecondary },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   pill: { borderWidth: 0.5, borderColor: colors.borderLight, borderRadius: radius.chip, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, backgroundColor: colors.bgCard },

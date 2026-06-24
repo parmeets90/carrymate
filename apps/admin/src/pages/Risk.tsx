@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, ShieldCheck, ShieldAlert, Unlock } from 'lucide-react';
 import { api } from '@/lib/api';
+import { Pill, type Tone } from '@/components/StatusBadge';
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
-function scoreColor(score: number): string {
-  if (score >= 70) return 'bg-red-100 text-red-700';
-  if (score >= 50) return 'bg-amber-100 text-amber-700';
-  return 'bg-muted text-muted-foreground';
+function scoreTone(score: number): Tone {
+  if (score >= 70) return 'danger';
+  if (score >= 50) return 'pending';
+  return 'neutral';
 }
 
 export function Risk() {
@@ -58,9 +59,9 @@ export function Risk() {
                   {o.senderName ?? 'Sender'} → {o.travelerName ?? 'Traveler'} · {o.originCity} → {o.destinationCity}
                 </p>
               </div>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${scoreColor(o.riskScore)}`}>
+              <Pill tone={scoreTone(o.riskScore)} size="md" className="shrink-0 font-bold">
                 Risk {o.riskScore}
-              </span>
+              </Pill>
             </div>
 
             {o.riskFactors.length > 0 && (

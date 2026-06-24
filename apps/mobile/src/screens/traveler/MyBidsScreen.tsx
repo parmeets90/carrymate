@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing } from '@/theme';
 import { Card, Badge, statusTone } from '@/components/Card';
 import { EmptyState } from '@/components/widgets';
+import { FadeInUp } from '@/components/anim';
 import { api } from '@/lib/api';
 
 export function MyBidsScreen() {
@@ -29,17 +30,19 @@ export function MyBidsScreen() {
           ListEmptyComponent={
             <EmptyState icon="bids" title="No bids yet" body="Browse requests from your trips to place a bid." />
           }
-          renderItem={({ item }) => (
-            <Card>
-              <View style={styles.row}>
-                <Text style={styles.route}>
-                  {item.route.originAirport} → {item.route.destinationAirport}
-                </Text>
-                <Badge label={item.status} tone={statusTone(item.status)} />
-              </View>
-              <Text style={styles.fee}>You receive ₹{item.payoutInr.toLocaleString('en-IN')}</Text>
-              <Text style={styles.meta}>Est. delivery {item.estimatedDeliveryDate}</Text>
-            </Card>
+          renderItem={({ item, index }) => (
+            <FadeInUp index={index}>
+              <Card>
+                <View style={styles.row}>
+                  <Text style={styles.route}>
+                    {item.route.originAirport} → {item.route.destinationAirport}
+                  </Text>
+                  <Badge label={item.status} tone={statusTone(item.status)} />
+                </View>
+                <Text style={styles.fee}>You receive ₹{item.payoutInr.toLocaleString('en-IN')}</Text>
+                <Text style={styles.meta}>Est. delivery {item.estimatedDeliveryDate}</Text>
+              </Card>
+            </FadeInUp>
           )}
         />
       )}

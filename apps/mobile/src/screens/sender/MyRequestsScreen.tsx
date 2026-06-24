@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing } from '@/theme';
 import { Card, Badge, statusTone } from '@/components/Card';
 import { EmptyState } from '@/components/widgets';
+import { FadeInUp } from '@/components/anim';
 import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
 import type { DeliveryRequestDto } from '@carrymate/shared';
@@ -51,7 +52,8 @@ export function MyRequestsScreen() {
       <Text style={styles.title}>My requests</Text>
       {(pulse.data?.matchedToday ?? 0) > 0 && (
         <View style={styles.pulse}>
-          <Text style={styles.pulseText}>🤝 {pulse.data!.matchedToday} deliveries matched today</Text>
+          <Icon name="handshake" size={15} color="#096438" weight="fill" />
+          <Text style={styles.pulseText}>{pulse.data!.matchedToday} deliveries matched today</Text>
         </View>
       )}
 
@@ -67,9 +69,10 @@ export function MyRequestsScreen() {
           ListEmptyComponent={
             <EmptyState icon="package" title="No requests yet" body="Use the Post tab to send your first item." />
           }
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const editable = EDITABLE.includes(item.status);
             return (
+              <FadeInUp index={index}>
               <Card onPress={() => nav.navigate('RequestDetail', { requestId: item.id })}>
                 <View style={styles.row}>
                   <Text style={styles.cardTitle} numberOfLines={1}>
@@ -107,6 +110,7 @@ export function MyRequestsScreen() {
                   </View>
                 )}
               </Card>
+              </FadeInUp>
             );
           }}
         />
@@ -118,7 +122,7 @@ export function MyRequestsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgApp, paddingHorizontal: sizing.screenPaddingX },
   title: { ...typography.titleL, color: colors.textPrimary },
-  pulse: { marginTop: spacing.sm, backgroundColor: colors.mintLight, borderRadius: 8, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, alignSelf: 'flex-start' },
+  pulse: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm, backgroundColor: colors.mintLight, borderRadius: 8, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, alignSelf: 'flex-start' },
   pulseText: { ...typography.bodyM, color: '#096438', fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
   cardTitle: { ...typography.bodyL, fontWeight: '600', color: colors.textPrimary, flex: 1 },

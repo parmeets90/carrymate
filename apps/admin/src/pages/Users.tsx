@@ -3,12 +3,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tansta
 import { Search, Loader2, ChevronDown, ChevronRight, Trash2, FileText } from 'lucide-react';
 import { api, openFile } from '@/lib/api';
 import { Pagination } from '@/components/Pagination';
-
-const STATUS_STYLES: Record<string, string> = {
-  ACTIVE: 'bg-emerald-100 text-emerald-700',
-  SUSPENDED: 'bg-amber-100 text-amber-700',
-  BANNED: 'bg-red-100 text-red-700',
-};
+import { StatusBadge } from '@/components/StatusBadge';
 
 /** Expandable detail row: the user's KYC docs with view links. */
 function UserDetail({ userId }: { userId: string }) {
@@ -122,11 +117,11 @@ export function Users() {
                   <td className="px-4 py-3 font-medium">{u.fullName ?? '—'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{u.phone}</td>
                   <td className="px-4 py-3">{u.role}</td>
-                  <td className="px-4 py-3">{u.kycStatus}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[u.status] ?? ''}`}>
-                      {u.status}
-                    </span>
+                    <StatusBadge status={u.kycStatus} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={u.status} />
                   </td>
                   <td className="px-4 py-3">
                     {u.role !== 'ADMIN' && (

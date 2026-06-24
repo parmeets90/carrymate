@@ -3,19 +3,9 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tansta
 import { Loader2, Ban, Check } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Pagination } from '@/components/Pagination';
+import { StatusBadge } from '@/components/StatusBadge';
 
 const STATUSES = ['', 'PENDING_REVIEW', 'OPEN', 'BIDDING', 'MATCHED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED', 'EXPIRED'];
-
-const STATUS_STYLE: Record<string, string> = {
-  PENDING_REVIEW: 'bg-orange-100 text-orange-700',
-  OPEN: 'bg-sky-100 text-sky-700',
-  BIDDING: 'bg-indigo-100 text-indigo-700',
-  MATCHED: 'bg-emerald-100 text-emerald-700',
-  IN_TRANSIT: 'bg-amber-100 text-amber-700',
-  DELIVERED: 'bg-emerald-100 text-emerald-700',
-  CANCELLED: 'bg-red-100 text-red-700',
-  EXPIRED: 'bg-muted text-muted-foreground',
-};
 
 export function Requests() {
   const qc = useQueryClient();
@@ -94,11 +84,7 @@ export function Requests() {
                   {r.senderName ?? '—'} · {r.senderRating.toFixed(1)}★
                 </td>
                 <td className="px-4 py-3">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[r.status] ?? ''}`}
-                  >
-                    {r.status}
-                  </span>
+                  <StatusBadge status={r.status} />
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1.5">

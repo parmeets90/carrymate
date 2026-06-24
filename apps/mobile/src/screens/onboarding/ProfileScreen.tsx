@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { colors, spacing, radius, typography, shadows } from '@/theme';
 import { Screen, ScreenHeader } from '@/components/Screen';
 import { PrimaryButton, Field } from '@/components/ui';
+import { FadeInUp } from '@/components/anim';
 import { Icon, type IconName } from '@/components/Icon';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
@@ -40,19 +41,21 @@ export function ProfileScreen() {
       <Field label="Full name" value={name} onChangeText={setName} placeholder="e.g. Anjali Sharma" error={error} />
 
       <Text style={styles.sectionLabel}>I want to…</Text>
-      {ROLES.map((r) => {
+      {ROLES.map((r, i) => {
         const active = role === r.value;
         return (
-          <Pressable key={r.value} onPress={() => setRole(r.value)} style={[styles.role, active && styles.roleActive]}>
-            <View style={[styles.roleIcon, active && styles.roleIconActive]}>
-              <Icon name={r.icon} size={22} color={active ? colors.skyBlue : colors.textSecondary} weight={active ? 'fill' : 'regular'} />
-            </View>
-            <View style={styles.roleText}>
-              <Text style={[styles.roleTitle, active && { color: colors.navyMid }]}>{r.title}</Text>
-              <Text style={styles.roleDesc}>{r.desc}</Text>
-            </View>
-            <View style={[styles.radio, active && styles.radioOn]}>{active && <View style={styles.radioDot} />}</View>
-          </Pressable>
+          <FadeInUp key={r.value} index={i}>
+            <Pressable onPress={() => setRole(r.value)} style={[styles.role, active && styles.roleActive]}>
+              <View style={[styles.roleIcon, active && styles.roleIconActive]}>
+                <Icon name={r.icon} size={22} color={active ? colors.skyBlue : colors.textSecondary} weight={active ? 'fill' : 'regular'} />
+              </View>
+              <View style={styles.roleText}>
+                <Text style={[styles.roleTitle, active && { color: colors.navyMid }]}>{r.title}</Text>
+                <Text style={styles.roleDesc}>{r.desc}</Text>
+              </View>
+              <View style={[styles.radio, active && styles.radioOn]}>{active && <View style={styles.radioDot} />}</View>
+            </Pressable>
+          </FadeInUp>
         );
       })}
 

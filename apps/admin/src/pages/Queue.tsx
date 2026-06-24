@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, Inbox, Scale, ShieldAlert, ShieldCheck, Banknote, PackageSearch } from 'lucide-react';
 import type { AdminQueueItem, SlaLevel } from '@carrymate/shared';
 import { api } from '@/lib/api';
+import { Pill, type Tone } from '@/components/StatusBadge';
 
 const KIND_ICON = {
   DISPUTE: Scale,
@@ -12,10 +13,10 @@ const KIND_ICON = {
   PAYOUT: Banknote,
 } as const;
 
-const SLA_STYLE: Record<SlaLevel, string> = {
-  green: 'bg-emerald-100 text-emerald-700',
-  amber: 'bg-amber-100 text-amber-700',
-  red: 'bg-red-100 text-red-700',
+const SLA_TONE: Record<SlaLevel, Tone> = {
+  green: 'success',
+  amber: 'pending',
+  red: 'danger',
 };
 
 function age(h: number): string {
@@ -72,9 +73,9 @@ export function Queue() {
                 <p className="truncate text-xs text-muted-foreground">{item.subtitle}</p>
               </div>
               <span className="text-xs text-muted-foreground">{age(item.ageHours)}</span>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-bold uppercase ${SLA_STYLE[item.sla]}`}>
+              <Pill tone={SLA_TONE[item.sla]} uppercase>
                 {item.sla}
-              </span>
+              </Pill>
             </button>
           );
         })}

@@ -85,12 +85,14 @@ export function toBidDto(b: Bid & { traveler: User; route: TravelRoute }): BidDt
       fullName: b.traveler.fullName,
       ratingAvg: Number(b.traveler.ratingAvg),
       ratingCount: b.traveler.ratingCount,
+      kycStatus: b.traveler.kycStatus,
     },
     route: {
       originAirport: b.route.originAirport,
       destinationAirport: b.route.destinationAirport,
       departureDate: dateOnly(b.route.departureDate),
       flightNumber: b.route.flightNumber,
+      flightVerified: b.route.ticketVerified,
     },
   };
 }

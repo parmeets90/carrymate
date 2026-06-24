@@ -14,6 +14,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, spacing, radius, typography, sizing, gradients, shadows } from '@/theme';
 import type { ReactNode } from 'react';
+import { Icon, type IconName } from './Icon';
 
 /** Pressable with a subtle scale-down on press (premium tactile feel). */
 export function Pressable3D({
@@ -42,22 +43,37 @@ export function Pressable3D({
   );
 }
 
+type ButtonTone = 'sky' | 'gold' | 'mint' | 'danger';
+
+const BUTTON_GRADIENT: Record<ButtonTone, readonly [string, string]> = {
+  sky: gradients.sky,
+  gold: gradients.gold,
+  mint: gradients.mint,
+  danger: ['#F0584F', '#D8392F'],
+};
+
 export function PrimaryButton({
   label,
   onPress,
   loading,
   disabled,
+  icon,
+  tone = 'sky',
 }: {
   label: string;
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
+  /** Leading glyph — e.g. `lock` on the escrow CTA. */
+  icon?: IconName;
+  /** Semantic CTA color: sky (default), gold=trust, mint=money, danger. */
+  tone?: ButtonTone;
 }) {
   const isDisabled = disabled || loading;
   return (
     <Pressable3D onPress={onPress} disabled={isDisabled}>
       <LinearGradient
-        colors={isDisabled ? ['#A9C7E2', '#A9C7E2'] : [...gradients.sky]}
+        colors={isDisabled ? ['#AEB6C2', '#AEB6C2'] : [...BUTTON_GRADIENT[tone]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.btn, !isDisabled && shadows.sm]}
@@ -65,7 +81,10 @@ export function PrimaryButton({
         {loading ? (
           <ActivityIndicator color={colors.white} />
         ) : (
-          <Text style={styles.btnLabel}>{label}</Text>
+          <View style={styles.btnRow}>
+            {icon ? <Icon name={icon} size={18} color={colors.white} weight="bold" /> : null}
+            <Text style={styles.btnLabel}>{label}</Text>
+          </View>
         )}
       </LinearGradient>
     </Pressable3D>
@@ -125,6 +144,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  btnRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   btnLabel: { ...typography.bodyL, fontWeight: '700', color: colors.white, letterSpacing: 0.2 },
   secondaryBtn: {
     height: sizing.buttonSecondary,

@@ -7,7 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing, radius } from '@/theme';
-import { Card, Badge } from '@/components/Card';
+import { Card, Badge, TrustBadge } from '@/components/Card';
 import { Avatar } from '@/components/widgets';
 import { Icon } from '@/components/Icon';
 import { SecondaryButton } from '@/components/ui';
@@ -59,10 +59,10 @@ export function ProfileTabScreen() {
         <Text style={styles.name}>{user?.fullName ?? 'CarryMate user'}</Text>
         <Text style={styles.phone}>{user?.phone}</Text>
         <View style={styles.badges}>
-          {user?.kycStatus === 'VERIFIED' && <Badge label="KYC verified" tone="gold" />}
+          {user?.kycStatus === 'VERIFIED' && <TrustBadge variant="kycVerified" />}
           <Badge label={current} tone="sky" />
           {typeof user?.ratingAvg === 'number' && user.ratingCount > 0 && (
-            <Badge label={`★ ${user.ratingAvg.toFixed(1)}`} tone="neutral" />
+            <Badge label={user.ratingAvg.toFixed(1)} tone="neutral" icon="star" />
           )}
         </View>
       </Card>

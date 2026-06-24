@@ -3,14 +3,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tansta
 import { Loader2, Undo2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Pagination } from '@/components/Pagination';
-
-const STATUS_STYLE: Record<string, string> = {
-  PENDING_PAYMENT: 'bg-amber-100 text-amber-700',
-  ESCROW_HELD: 'bg-emerald-100 text-emerald-700',
-  COMPLETED: 'bg-emerald-100 text-emerald-700',
-  REFUNDED: 'bg-red-100 text-red-700',
-  DISPUTED: 'bg-red-100 text-red-700',
-};
+import { StatusBadge } from '@/components/StatusBadge';
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
@@ -66,11 +59,7 @@ export function Transactions() {
                 <td className="px-4 py-3">{inr(o.commissionInr)}</td>
                 <td className="px-4 py-3">{inr(o.payoutInr)}</td>
                 <td className="px-4 py-3">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[o.status] ?? 'bg-muted text-muted-foreground'}`}
-                  >
-                    {o.status}
-                  </span>
+                  <StatusBadge status={o.status} />
                 </td>
                 <td className="px-4 py-3">
                   {['PENDING_PAYMENT', 'ESCROW_HELD', 'DISPUTED'].includes(o.status) && (

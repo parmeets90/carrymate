@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { colors, spacing, typography, sizing } from '@/theme';
+import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
 import { PhotoButton } from '@/components/PhotoButton';
+import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
 import type { ScreenProps } from '@/navigation/types';
 
@@ -58,8 +59,13 @@ export function DeliverScreen({ route, navigation }: ScreenProps<'Deliver'>) {
         />
       </View>
 
+      <View style={styles.escrow}>
+        <Icon name="wallet" size={15} color="#096438" weight="fill" />
+        <Text style={styles.escrowText}>Escrow releases to you once the sender confirms receipt.</Text>
+      </View>
+
       <View style={styles.footer}>
-        <PrimaryButton label="Mark as delivered" onPress={submit} loading={busy} />
+        <PrimaryButton label="Mark as delivered" icon="check" tone="mint" onPress={submit} loading={busy} />
       </View>
     </View>
   );
@@ -71,5 +77,16 @@ const styles = StyleSheet.create({
   sub: { ...typography.bodyM, color: colors.textSecondary, marginBottom: spacing.md },
   help: { ...typography.bodyM, color: colors.textSecondary, marginBottom: spacing.lg },
   note: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.sm },
+  escrow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.lg,
+    backgroundColor: colors.mintLight,
+    borderRadius: radius.input,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  escrowText: { ...typography.caption, color: '#096438', fontWeight: '600', flex: 1 },
   footer: { marginTop: spacing.xl },
 });

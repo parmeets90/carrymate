@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, typography, radius, sizing } from '@/theme';
+import LinearGradient from 'react-native-linear-gradient';
+import { colors, spacing, typography, radius, sizing, gradients } from '@/theme';
 import { Icon } from '@/components/Icon';
 import { BrandLoader } from '@/components/BrandLoader';
 import { api } from '@/lib/api';
@@ -80,24 +81,38 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
       return <Text style={styles.system}>{item.body}</Text>;
     }
     const mine = item.mine;
+    const content = (
+      <>
+        <Text style={[styles.msgText, mine && styles.msgTextMine]}>{item.body}</Text>
+        {item.piiRedacted && (
+          <View style={styles.redactedRow}>
+            <Icon name="lock" size={12} color={mine ? 'rgba(255,255,255,0.85)' : colors.textHint} />
+            <Text style={[styles.redacted, mine && styles.redactedMine]}>
+              Contact details hidden for your safety
+            </Text>
+          </View>
+        )}
+        {item.pending ? (
+          <BrandLoader size={14} style={styles.pending} />
+        ) : (
+          <Text style={[styles.time, mine && styles.timeMine]}>{clock(item.createdAt)}</Text>
+        )}
+      </>
+    );
     return (
       <View style={[styles.bubbleRow, mine ? styles.rowMine : styles.rowTheirs]}>
-        <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
-          <Text style={[styles.msgText, mine && styles.msgTextMine]}>{item.body}</Text>
-          {item.piiRedacted && (
-            <View style={styles.redactedRow}>
-              <Icon name="lock" size={12} color={mine ? 'rgba(255,255,255,0.85)' : colors.textHint} />
-              <Text style={[styles.redacted, mine && styles.redactedMine]}>
-                Contact details hidden for your safety
-              </Text>
-            </View>
-          )}
-          {item.pending ? (
-            <BrandLoader size={14} style={styles.pending} />
-          ) : (
-            <Text style={[styles.time, mine && styles.timeMine]}>{clock(item.createdAt)}</Text>
-          )}
-        </View>
+        {mine ? (
+          <LinearGradient
+            colors={[...gradients.sky]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.bubble, styles.bubbleMine]}
+          >
+            {content}
+          </LinearGradient>
+        ) : (
+          <View style={[styles.bubble, styles.bubbleTheirs]}>{content}</View>
+        )}
       </View>
     );
   };
@@ -120,6 +135,7 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
           ListHeaderComponent={
             <View style={styles.notice}>
+              <Icon name="verified" size={16} color="#185FA5" weight="fill" />
               <Text style={styles.noticeText}>
                 Keep chat on CarryMate. Phone numbers, emails & payment handles are removed
                 automatically to protect both of you.
@@ -139,12 +155,15 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
           multiline
           maxLength={2000}
         />
-        <Pressable
-          onPress={onSend}
-          disabled={!text.trim() || send.isPending}
-          style={[styles.sendBtn, (!text.trim() || send.isPending) && styles.sendBtnDisabled]}
-        >
-          <Icon name="send" size={20} color={colors.white} weight="fill" />
+        <Pressable onPress={onSend} disabled={!text.trim() || send.isPending}>
+          <LinearGradient
+            colors={!text.trim() || send.isPending ? ['#AEB6C2', '#AEB6C2'] : [...gradients.sky]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.sendBtn}
+          >
+            <Icon name="send" size={20} color={colors.white} weight="fill" />
+          </LinearGradient>
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -155,12 +174,15 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgApp },
   list: { padding: sizing.screenPaddingX, gap: spacing.sm, paddingBottom: spacing.lg },
   notice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
     backgroundColor: colors.skyLight,
     borderRadius: radius.card,
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
-  noticeText: { ...typography.caption, color: '#185FA5', lineHeight: 16 },
+  noticeText: { ...typography.caption, color: '#185FA5', lineHeight: 16, flex: 1 },
   bubbleRow: { flexDirection: 'row' },
   rowMine: { justifyContent: 'flex-end' },
   rowTheirs: { justifyContent: 'flex-start' },
@@ -209,9 +231,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.skyBlue,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendBtnDisabled: { backgroundColor: '#A9C7E2' },
 });

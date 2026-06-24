@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, X, ShieldCheck, Loader2, FileText } from 'lucide-react';
 import { api, openFile } from '@/lib/api';
+import { StatusBadge } from '@/components/StatusBadge';
 
 export function KycReview() {
   const qc = useQueryClient();
@@ -63,9 +64,7 @@ export function KycReview() {
                     {user.phone} · {user.role}
                   </p>
                 </div>
-                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
-                  {user.kycStatus}
-                </span>
+                <StatusBadge status={user.kycStatus} size="md" />
               </div>
 
               {(failureReason || faceMatchScore != null) && (

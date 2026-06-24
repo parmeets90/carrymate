@@ -175,12 +175,16 @@ export interface BidDto {
     fullName: string | null;
     ratingAvg: number;
     ratingCount: number;
+    /** KYC lifecycle state (e.g. 'VERIFIED') — drives the identity trust badge. */
+    kycStatus: string;
   };
   route: {
     originAirport: string;
     destinationAirport: string;
     departureDate: string;
     flightNumber: string | null;
+    /** Ticket/flight verified against the airline feed — drives the flight trust badge. */
+    flightVerified: boolean;
   };
 }
 

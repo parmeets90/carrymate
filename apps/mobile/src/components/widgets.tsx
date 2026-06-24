@@ -1,7 +1,9 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, spacing, typography, radius, gradients } from '@/theme';
 import { Icon, type IconName } from './Icon';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 /** Gradient circle with initials. */
 export function Avatar({ name, size = 44 }: { name?: string | null; size?: number }) {
@@ -26,6 +28,35 @@ export function Avatar({ name, size = 44 }: { name?: string | null; size?: numbe
 const STEPS = ['MATCHED', 'IN_TRANSIT', 'DELIVERED', 'CONFIRMED'];
 const LABELS = ['Matched', 'In transit', 'Delivered', 'Confirmed'];
 
+/** The current step's node — a mint dot with a softly pulsing halo. */
+function ActiveNode() {
+  const reduced = useReducedMotion();
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (reduced) return;
+    const loop = Animated.loop(
+      Animated.timing(v, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [reduced, v]);
+  return (
+    <View style={[styles.node, styles.nodeDone, styles.nodeActiveRing]}>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.halo,
+          {
+            opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }),
+            transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 2.1] }) }],
+          },
+        ]}
+      />
+      <Icon name="check" size={13} color={colors.white} weight="bold" />
+    </View>
+  );
+}
+
 /** Premium 4-step delivery timeline driven by request status. */
 export function Timeline({ status }: { status: string }) {
   const idx = STEPS.indexOf(status);
@@ -37,10 +68,16 @@ export function Timeline({ status }: { status: string }) {
         return (
           <View key={s} style={styles.col}>
             {i > 0 && <View style={[styles.line, done && styles.lineDone]} />}
-            <View style={[styles.node, done && styles.nodeDone, active && styles.nodeActive]}>
-              {done && <Text style={styles.check}>✓</Text>}
-            </View>
-            <Text style={[styles.label, done && styles.labelDone]}>{LABELS[i]}</Text>
+            {active ? (
+              <ActiveNode />
+            ) : (
+              <View style={[styles.node, done && styles.nodeDone]}>
+                {done && <Icon name="check" size={12} color={colors.white} weight="bold" />}
+              </View>
+            )}
+            <Text style={[styles.label, done && styles.labelDone, active && styles.labelActive]}>
+              {LABELS[i]}
+            </Text>
           </View>
         );
       })}
@@ -91,10 +128,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   nodeDone: { backgroundColor: colors.mintPrimary, borderColor: colors.mintPrimary },
-  nodeActive: { transform: [{ scale: 1.15 }] },
-  check: { color: colors.white, fontSize: 12, fontWeight: '800' },
+  nodeActiveRing: { borderColor: '#0B8C57' },
+  halo: {
+    position: 'absolute',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.mintPrimary,
+  },
   label: { ...typography.caption, color: colors.textHint, marginTop: 6 },
   labelDone: { color: colors.textPrimary, fontWeight: '600' },
+  labelActive: { color: '#096438', fontWeight: '700' },
   empty: { alignItems: 'center', marginTop: spacing['3xl'], paddingHorizontal: spacing.xl, gap: spacing.sm },
   emptyIcon: {
     width: 64,

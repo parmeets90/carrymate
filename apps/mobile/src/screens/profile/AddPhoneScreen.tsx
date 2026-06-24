@@ -2,10 +2,20 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView } from 'react-native';
 import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { PrimaryButton } from '@/components/ui';
+import { Icon } from '@/components/Icon';
 import { CountryCodePicker, COUNTRIES, type Country } from '@/components/CountryCodePicker';
 import { api, firstFieldError } from '@/lib/api';
 import { useAuth } from '@/store/auth';
 import type { ScreenProps } from '@/navigation/types';
+
+function ErrorRow({ message }: { message: string }) {
+  return (
+    <View style={styles.errorRow}>
+      <Icon name="warning" size={15} color={colors.dangerRed} weight="fill" />
+      <Text style={styles.error}>{message}</Text>
+    </View>
+  );
+}
 
 export function AddPhoneScreen({ navigation }: ScreenProps<'AddPhone'>) {
   const setUser = useAuth((s) => s.setUser);
@@ -48,9 +58,12 @@ export function AddPhoneScreen({ navigation }: ScreenProps<'AddPhone'>) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.md }}>
       <Text style={styles.title}>Add your phone</Text>
-      <Text style={styles.sub}>
-        A verified phone is required to post, bid, and pay — it keeps the community reachable and accountable.
-      </Text>
+      <View style={styles.trustHint}>
+        <Icon name="verified" size={15} color="#185FA5" weight="fill" />
+        <Text style={styles.trustHintText}>
+          A verified phone is required to post, bid, and pay — it keeps the community reachable and accountable.
+        </Text>
+      </View>
 
       {step === 'phone' ? (
         <>
@@ -67,7 +80,7 @@ export function AddPhoneScreen({ navigation }: ScreenProps<'AddPhone'>) {
               style={styles.numInput}
             />
           </View>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <ErrorRow message={error} /> : null}
           <PrimaryButton label="Send code" onPress={sendCode} loading={busy} />
         </>
       ) : (
@@ -75,15 +88,17 @@ export function AddPhoneScreen({ navigation }: ScreenProps<'AddPhone'>) {
           <Text style={styles.label}>Enter the code sent to {fullPhone}</Text>
           <TextInput
             value={code}
-            onChangeText={setCode}
+            onChangeText={(v) => setCode(v.replace(/\D/g, ''))}
             keyboardType="number-pad"
             autoFocus
             maxLength={8}
-            placeholder="6-digit code"
+            placeholder="••••••"
             placeholderTextColor={colors.textHint}
+            textContentType="oneTimeCode"
+            autoComplete="sms-otp"
             style={styles.codeInput}
           />
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <ErrorRow message={error} /> : null}
           <PrimaryButton label="Verify phone" onPress={verify} loading={busy} />
           <Text style={styles.resend} onPress={() => setStep('phone')}>
             Change number
@@ -97,7 +112,16 @@ export function AddPhoneScreen({ navigation }: ScreenProps<'AddPhone'>) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgApp, paddingHorizontal: sizing.screenPaddingX },
   title: { ...typography.titleL, color: colors.textPrimary },
-  sub: { ...typography.bodyM, color: colors.textSecondary, lineHeight: 21 },
+  trustHint: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: colors.skyLight,
+    borderRadius: radius.input,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  trustHintText: { ...typography.caption, color: '#185FA5', lineHeight: 16, flex: 1, fontWeight: '600' },
   label: { ...typography.label, color: colors.textSecondary },
   phoneRow: { flexDirection: 'row', gap: spacing.sm },
   numInput: {
@@ -112,16 +136,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgCard,
   },
   codeInput: {
-    height: sizing.input,
+    height: 56,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: colors.skyBlue,
     borderRadius: radius.input,
     paddingHorizontal: spacing.md,
-    fontSize: 22,
-    letterSpacing: 6,
+    fontSize: 24,
+    fontWeight: '700',
+    letterSpacing: 10,
+    textAlign: 'center',
     color: colors.textPrimary,
-    backgroundColor: colors.bgCard,
+    backgroundColor: colors.white,
   },
-  error: { ...typography.caption, color: colors.dangerRed },
+  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  error: { ...typography.bodyM, color: colors.dangerRed, flex: 1 },
   resend: { ...typography.bodyM, color: colors.skyBlue, fontWeight: '600', textAlign: 'center', marginTop: spacing.sm },
 });

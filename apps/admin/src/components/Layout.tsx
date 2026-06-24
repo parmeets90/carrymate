@@ -33,17 +33,17 @@ export function Layout({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
   return (
     <div className="flex min-h-screen bg-muted/30">
-      <aside className="hidden w-64 flex-col border-r bg-card md:flex">
-        <div className="flex items-center gap-2 px-6 py-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+      <aside className="hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+        <div className="flex items-center gap-2.5 px-6 py-5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-sidebar-accent text-white shadow-sm">
             <Plane className="h-5 w-5" />
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-bold">CarryMate</p>
-            <p className="text-xs text-muted-foreground">Admin</p>
+            <p className="text-sm font-bold text-white">CarryMate</p>
+            <p className="text-xs text-sidebar-muted">Operations</p>
           </div>
         </div>
-        <nav className="flex-1 space-y-1 px-3 py-2">
+        <nav className="flex-1 space-y-0.5 px-3 py-2">
           {NAV.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -53,17 +53,23 @@ export function Layout({ children }: { children: ReactNode }) {
                 cn(
                   'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    ? 'bg-white/10 text-white'
+                    : 'text-sidebar-foreground hover:bg-white/5 hover:text-white',
                 )
               }
             >
-              <Icon className="h-4 w-4" />
-              {label}
+              {({ isActive }) => (
+                <>
+                  <Icon
+                    className={cn('h-4 w-4', isActive ? 'text-sidebar-accent' : 'text-sidebar-muted')}
+                  />
+                  {label}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
-        <div className="px-6 py-4 text-xs text-muted-foreground">v0.1.0 · Phase 0</div>
+        <div className="px-6 py-4 text-xs text-sidebar-muted">v0.1.0 · India → UAE corridor</div>
       </aside>
 
       <div className="flex flex-1 flex-col">

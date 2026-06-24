@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Scale, Check, Undo2, FileText } from 'lucide-react';
 import { api, openFile } from '@/lib/api';
+import { Pill } from '@/components/StatusBadge';
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
@@ -51,9 +52,9 @@ export function Disputes() {
                   <span className="font-medium">{d.raisedByRole}</span>
                 </p>
               </div>
-              <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700">
+              <Pill tone="danger" size="md">
                 {d.reason.replace(/_/g, ' ')}
-              </span>
+              </Pill>
             </div>
 
             <p className="mt-3 rounded-lg bg-muted/50 p-3 text-sm">{d.description}</p>

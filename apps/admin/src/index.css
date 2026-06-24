@@ -2,46 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * CarryMate admin — brand-aligned to the mobile app (navy + sky-blue).
+ * Primary = a deepened sky that clears WCAG AA (white text ≥4.5:1).
+ * Accent = gold, reserved for identity/trust signals (matches mobile).
+ * Sidebar = navy (the brand anchor, mirroring the app's navy nav bar).
+ */
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 240 28% 14%;
+    --foreground: 222 32% 14%;
     --card: 0 0% 100%;
-    --card-foreground: 240 28% 14%;
-    --primary: 347 78% 60%;
+    --card-foreground: 222 32% 14%;
+    --primary: 207 74% 40%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 20% 96%;
-    --secondary-foreground: 240 28% 14%;
-    --muted: 240 16% 96%;
-    --muted-foreground: 240 8% 46%;
-    --accent: 38 92% 55%;
-    --accent-foreground: 240 28% 14%;
-    --destructive: 0 72% 51%;
+    --secondary: 220 22% 96%;
+    --secondary-foreground: 222 32% 16%;
+    --muted: 220 18% 96%;
+    --muted-foreground: 220 13% 40%;
+    --accent: 37 85% 48%;
+    --accent-foreground: 222 35% 14%;
+    --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 12% 90%;
-    --input: 240 12% 90%;
-    --ring: 347 78% 60%;
+    --success: 154 72% 38%;
+    --success-foreground: 0 0% 100%;
+    --border: 220 16% 90%;
+    --input: 220 16% 90%;
+    --ring: 207 74% 44%;
     --radius: 0.65rem;
+
+    /* Navy sidebar (brand anchor) */
+    --sidebar: 224 46% 11%;
+    --sidebar-foreground: 214 18% 74%;
+    --sidebar-muted: 216 14% 56%;
+    --sidebar-border: 222 28% 20%;
+    --sidebar-accent: 205 78% 62%;
   }
 
   .dark {
-    --background: 240 28% 10%;
+    --background: 224 40% 9%;
     --foreground: 0 0% 98%;
-    --card: 240 26% 13%;
+    --card: 223 33% 12%;
     --card-foreground: 0 0% 98%;
-    --primary: 347 78% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 20% 18%;
+    --primary: 205 78% 58%;
+    --primary-foreground: 224 46% 11%;
+    --secondary: 222 24% 18%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 240 20% 18%;
-    --muted-foreground: 240 10% 64%;
-    --accent: 38 92% 55%;
-    --accent-foreground: 240 28% 14%;
-    --destructive: 0 62% 46%;
+    --muted: 222 24% 18%;
+    --muted-foreground: 218 14% 66%;
+    --accent: 37 88% 56%;
+    --accent-foreground: 224 40% 9%;
+    --destructive: 0 64% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 18% 22%;
-    --input: 240 18% 22%;
-    --ring: 347 78% 60%;
+    --success: 154 64% 46%;
+    --success-foreground: 224 40% 9%;
+    --border: 222 22% 22%;
+    --input: 222 22% 22%;
+    --ring: 205 78% 58%;
+
+    --sidebar: 226 44% 9%;
+    --sidebar-foreground: 214 18% 74%;
+    --sidebar-muted: 216 14% 56%;
+    --sidebar-border: 222 28% 18%;
+    --sidebar-accent: 205 80% 64%;
   }
 
   * {
@@ -56,5 +79,30 @@
       BlinkMacSystemFont,
       'Segoe UI',
       sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Tabular figures for money/ID columns in dense tables. */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Visible, on-brand keyboard focus everywhere. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer utilities {
+  /* Functional transitions only — honor reduced motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

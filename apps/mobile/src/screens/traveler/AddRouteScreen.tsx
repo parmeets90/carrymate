@@ -6,6 +6,7 @@ import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
 import { DateField } from '@/components/DateField';
 import { PhotoButton } from '@/components/PhotoButton';
+import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
 import type { ScreenProps } from '@/navigation/types';
 
@@ -80,13 +81,24 @@ export function AddRouteScreen({ navigation, route }: ScreenProps<'AddRoute'>) {
         <View style={styles.flex}><Field label="Airline" value={form.airline} onChangeText={set('airline')} placeholder="Emirates" /></View>
       </View>
       <Text style={styles.label}>Flight ticket {editing ? '(re-upload to update)' : '(required)'}</Text>
+      <View style={styles.trustHint}>
+        <Icon name="trips" size={15} color={colors.goldPrimary} weight="fill" />
+        <Text style={styles.trustHintText}>
+          Verified flights earn a gold “Flight confirmed” badge — senders trust them and you get matched faster.
+        </Text>
+      </View>
       <PhotoButton
         purpose="ticket"
-        label={ticketFileKey ? 'Ticket photo added ✓' : 'Upload flight ticket photo'}
+        label={ticketFileKey ? 'Ticket photo added' : 'Upload flight ticket photo'}
         count={ticketFileKey ? 1 : 0}
         onUploaded={setTicketFileKey}
       />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <View style={styles.errorRow}>
+          <Icon name="warning" size={15} color={colors.dangerRed} weight="fill" />
+          <Text style={styles.error}>{error}</Text>
+        </View>
+      ) : null}
 
       <PrimaryButton label={editing ? 'Save changes' : 'Add trip'} onPress={submit} loading={busy} />
     </ScrollView>
@@ -114,7 +126,20 @@ const styles = StyleSheet.create({
   label: { ...typography.label, color: colors.textSecondary },
   two: { flexDirection: 'row', gap: spacing.md },
   flex: { flex: 1 },
-  error: { ...typography.bodyM, color: colors.dangerRed },
+  trustHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.goldLight,
+    borderWidth: 0.5,
+    borderColor: colors.goldBorder,
+    borderRadius: radius.input,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  trustHintText: { ...typography.caption, color: colors.goldPrimary, fontWeight: '600', flex: 1, lineHeight: 16 },
+  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  error: { ...typography.bodyM, color: colors.dangerRed, flex: 1 },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   pill: {
     borderWidth: 0.5,

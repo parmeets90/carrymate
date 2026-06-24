@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton } from '@/components/ui';
+import { Icon } from '@/components/Icon';
 import { PhotoButton } from '@/components/PhotoButton';
 import { api } from '@/lib/api';
 import { getCurrentCoords } from '@/lib/location';
@@ -67,8 +68,14 @@ export function OpenBoxScreen({ route, navigation }: ScreenProps<'OpenBox'>) {
       {ITEMS.map((i) => {
         const on = checks[i.key];
         return (
-          <Pressable key={i.key} onPress={() => setChecks((c) => ({ ...c, [i.key]: !c[i.key] }))} style={styles.checkRow}>
-            <View style={[styles.box, on && styles.boxOn]}>{on && <Text style={styles.tick}>✓</Text>}</View>
+          <Pressable
+            key={i.key}
+            onPress={() => setChecks((c) => ({ ...c, [i.key]: !c[i.key] }))}
+            style={[styles.checkRow, on && styles.checkRowOn]}
+          >
+            <View style={[styles.box, on && styles.boxOn]}>
+              {on && <Icon name="check" size={15} color={colors.white} weight="bold" />}
+            </View>
             <Text style={styles.checkLabel}>{i.label}</Text>
           </Pressable>
         );
@@ -76,7 +83,10 @@ export function OpenBoxScreen({ route, navigation }: ScreenProps<'OpenBox'>) {
 
       <PhotoButton purpose="openbox" label="Add package photo" count={photos.length} onUploaded={onPhotoUploaded} />
       {photos.some((p) => p.lat != null) && (
-        <Text style={styles.geo}>📍 Photos geotagged for your inspection record</Text>
+        <View style={styles.geoRow}>
+          <Icon name="location" size={14} color={colors.mintPrimary} weight="fill" />
+          <Text style={styles.geo}>Photos geotagged for your inspection record</Text>
+        </View>
       )}
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -90,11 +100,22 @@ const styles = StyleSheet.create({
   title: { ...typography.titleL, color: colors.textPrimary },
   sub: { ...typography.bodyM, color: colors.textSecondary },
   help: { ...typography.bodyM, color: colors.textSecondary },
-  checkRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.xs },
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.card,
+    borderWidth: 0.5,
+    borderColor: colors.borderLight,
+    backgroundColor: colors.bgCard,
+  },
+  checkRowOn: { borderColor: colors.mintBorder, backgroundColor: colors.mintLight },
   box: { width: 24, height: 24, borderRadius: radius.input, borderWidth: 1.5, borderColor: colors.borderLight, alignItems: 'center', justifyContent: 'center' },
   boxOn: { backgroundColor: colors.mintPrimary, borderColor: colors.mintPrimary },
-  tick: { color: colors.white, fontWeight: '800' },
   checkLabel: { ...typography.bodyM, color: colors.textPrimary, flex: 1 },
   error: { ...typography.bodyM, color: colors.dangerRed },
+  geoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   geo: { ...typography.caption, color: colors.mintPrimary, fontWeight: '600' },
 });

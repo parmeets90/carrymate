@@ -209,6 +209,7 @@ export function CreateRequestScreen() {
 
       {error ? (
         <View style={styles.errorBanner}>
+          <Icon name="warning" size={16} color="#921010" weight="fill" />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : null}
@@ -252,8 +253,8 @@ const styles = StyleSheet.create({
   pillActive: { borderColor: colors.skyBlue, backgroundColor: colors.skyLight },
   pillText: { ...typography.bodyM, color: colors.textSecondary },
   pillTextActive: { color: colors.navyMid, fontWeight: '600' },
-  errorBanner: { backgroundColor: colors.dangerLight, borderRadius: radius.input, padding: spacing.md, borderWidth: 0.5, borderColor: '#F2C0C0' },
-  errorText: { ...typography.bodyM, color: '#921010', fontWeight: '600' },
+  errorBanner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.dangerLight, borderRadius: radius.input, padding: spacing.md, borderWidth: 0.5, borderColor: '#F2C0C0' },
+  errorText: { ...typography.bodyM, color: '#921010', fontWeight: '600', flex: 1 },
   declaration: { backgroundColor: colors.bgSecondary, borderRadius: radius.card, padding: spacing.md, gap: 4 },
   declItem: { ...typography.caption, color: colors.textSecondary, lineHeight: 16 },
   declAccept: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },

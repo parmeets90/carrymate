@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { EmptyState } from '@/components/widgets';
+import { FadeInUp } from '@/components/anim';
 import { Pressable3D } from '@/components/ui';
 import { Icon, type IconName } from '@/components/Icon';
 import { api } from '@/lib/api';
@@ -58,7 +59,8 @@ export function NotificationsScreen() {
     if (convId) nav.navigate('ChatThread', { conversationId: convId, title: 'Chat' });
   };
 
-  const renderItem = ({ item }: { item: NotificationDto }) => (
+  const renderItem = ({ item, index }: { item: NotificationDto; index: number }) => (
+    <FadeInUp index={index}>
     <Pressable3D onPress={() => open(item)}>
       <View style={[styles.card, !item.read && styles.cardUnread]}>
         <View style={styles.iconWrap}>
@@ -74,6 +76,7 @@ export function NotificationsScreen() {
         </View>
       </View>
     </Pressable3D>
+    </FadeInUp>
   );
 
   const hasUnread = (data?.items ?? []).some((n) => !n.read);

@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { Card } from '@/components/Card';
 import { Avatar, EmptyState } from '@/components/widgets';
+import { FadeInUp } from '@/components/anim';
 import { Pressable3D } from '@/components/ui';
 import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
@@ -38,7 +39,8 @@ export function ConversationsScreen() {
     refetchInterval: 20_000,
   });
 
-  const renderItem = ({ item }: { item: ConversationSummary }) => (
+  const renderItem = ({ item, index }: { item: ConversationSummary; index: number }) => (
+    <FadeInUp index={index}>
     <Pressable3D
       onPress={() =>
         nav.navigate('ChatThread', {
@@ -76,6 +78,7 @@ export function ConversationsScreen() {
         </View>
       </Card>
     </Pressable3D>
+    </FadeInUp>
   );
 
   return (

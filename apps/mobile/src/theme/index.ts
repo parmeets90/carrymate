@@ -96,6 +96,27 @@ export const shadows = {
   },
 } as const;
 
+/**
+ * Motion vocabulary (CLAUDE.md Animation Spec). Durations in ms; easing names map
+ * to RN `Easing` curves. Premium = ease-out, no bounce/elastic on UI transitions.
+ * Every consumer must still honor `useReducedMotion()` with an instant fallback.
+ */
+export const motion = {
+  duration: {
+    micro: 100, // card / button press
+    fast: 180, // toggles, focus, small state changes
+    base: 240, // most transitions, sheets opening content
+    slow: 320, // milestone pops, screen-level reveals
+    deliberate: 600, // escrow lock stroke-draw, celebratory beats
+  },
+  // Cubic-bezier control points for ease-out-quint (premium decel curve).
+  easeOutQuint: [0.22, 1, 0.36, 1] as const,
+  // Springs tuned for tactile, settle-fast feel (no overshoot).
+  spring: { tactile: { friction: 7, tension: 140 }, soft: { friction: 9, tension: 90 } },
+  // Default per-item stagger for list entrances.
+  stagger: 55,
+} as const;
+
 /** Brand gradients (use with react-native-linear-gradient). */
 export const gradients = {
   brand: ['#0F1629', '#16213E', '#0F3460'], // deep navy header

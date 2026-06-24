@@ -6,8 +6,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing } from '@/theme';
-import { Card, Badge, statusTone } from '@/components/Card';
+import { Card, Badge, TrustBadge, statusTone } from '@/components/Card';
 import { EmptyState } from '@/components/widgets';
+import { FadeInUp } from '@/components/anim';
 import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
 import type { TravelRouteDto } from '@carrymate/shared';
@@ -55,10 +56,11 @@ export function TripsScreen() {
           ListEmptyComponent={
             <EmptyState icon="trips" title="No trips yet" body="Add a flight to start carrying items." />
           }
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const remaining = item.capacityKg - item.capacityUsedKg;
             const manageable = item.status === 'ACTIVE' && item.capacityUsedKg === 0;
             return (
+              <FadeInUp index={index}>
               <Card onPress={() => nav.navigate('Browse', { routeId: item.id })}>
                 <View style={styles.row}>
                   <Text style={styles.cardTitle}>
@@ -68,9 +70,9 @@ export function TripsScreen() {
                 </View>
                 <View style={styles.badgeRow}>
                   {item.ticketVerified ? (
-                    <Badge label="Flight confirmed" tone="gold" />
+                    <TrustBadge variant="flightConfirmed" />
                   ) : (
-                    <Badge label="Verification pending" tone="amber" />
+                    <Badge label="Verification pending" tone="amber" icon="warning" />
                   )}
                 </View>
                 <Text style={styles.meta}>
@@ -91,6 +93,7 @@ export function TripsScreen() {
                   </View>
                 )}
               </Card>
+              </FadeInUp>
             );
           }}
         />

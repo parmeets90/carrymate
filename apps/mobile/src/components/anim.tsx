@@ -1,8 +1,46 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Easing, View, Text, StyleSheet, type LayoutChangeEvent } from 'react-native';
-import { colors, spacing, typography, radius } from '@/theme';
+import { colors, spacing, typography, radius, motion } from '@/theme';
 import { Icon } from './Icon';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+
+/**
+ * Fade + rise entrance for list items. Pass `index` for a subtle stagger so a
+ * fresh list settles in sequence rather than popping all at once. Reduced motion
+ * renders instantly at rest. Built on the native driver (opacity + translateY).
+ */
+export function FadeInUp({
+  children,
+  index = 0,
+  distance = 12,
+}: {
+  children: ReactNode;
+  index?: number;
+  distance?: number;
+}) {
+  const reduced = useReducedMotion();
+  const p = useRef(new Animated.Value(reduced ? 1 : 0)).current;
+  useEffect(() => {
+    if (reduced) return;
+    Animated.timing(p, {
+      toValue: 1,
+      duration: motion.duration.slow,
+      delay: Math.min(index, 8) * motion.stagger,
+      easing: Easing.bezier(...motion.easeOutQuint),
+      useNativeDriver: true,
+    }).start();
+  }, [reduced, p, index]);
+  return (
+    <Animated.View
+      style={{
+        opacity: p,
+        transform: [{ translateY: p.interpolate({ inputRange: [0, 1], outputRange: [distance, 0] }) }],
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
+}
 
 /**
  * Motion primitives from the CLAUDE.md Animation Spec, built on RN's core

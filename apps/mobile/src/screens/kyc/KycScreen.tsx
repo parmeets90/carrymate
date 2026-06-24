@@ -127,7 +127,7 @@ export function KycScreen() {
         </Card>
       ) : status === 'IN_REVIEW' ? (
         <Card style={{ gap: spacing.md }}>
-          <Badge label="Under review" tone="amber" />
+          <Badge label="Under review" tone="amber" icon="identity" />
           <Text style={styles.body}>Our team will confirm your verification shortly.</Text>
           <PrimaryButton label="Check status" onPress={refreshStatus} loading={busy} />
         </Card>
