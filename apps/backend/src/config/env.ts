@@ -83,6 +83,12 @@ const envSchema = z.object({
   // 0 = errors only (no perf tracing). Raise toward 1 to sample transactions.
   SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
 
+  // Email (Brevo transactional API). Blank → emails are logged, not sent (dev).
+  // Sender must be a verified sender/domain in Brevo.
+  BREVO_API_KEY: z.string().optional(),
+  BREVO_SENDER_EMAIL: z.string().email().optional(),
+  BREVO_SENDER_NAME: z.string().default('CarryMate'),
+
   // Feature flags (off by default; flipped per phase)
   ENABLE_REAL_PAYMENTS: z.coerce.boolean().default(false),
   ENABLE_AUTO_KYC: z.coerce.boolean().default(false),
@@ -131,6 +137,9 @@ export const jwtConfig = {
 
 /** True when Sentry error tracking is configured; otherwise capture is a no-op. */
 export const isSentryConfigured = Boolean(env.SENTRY_DSN);
+
+/** True when Brevo email is configured; otherwise emails are logged, not sent. */
+export const isBrevoConfigured = Boolean(env.BREVO_API_KEY && env.BREVO_SENDER_EMAIL);
 
 /** True when Twilio Verify is configured; otherwise OTPs are logged to console (dev). */
 export const isTwilioVerifyConfigured = Boolean(

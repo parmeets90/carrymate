@@ -40,6 +40,13 @@ services:
       # Observability — set to enable Sentry error tracking + alerts (optional).
       - key: SENTRY_DSN
         sync: false
+      # Email (Brevo transactional). Sender must be verified in Brevo.
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: BREVO_SENDER_NAME
+        value: CarryMate
 
   - type: web
     name: carrymate-admin

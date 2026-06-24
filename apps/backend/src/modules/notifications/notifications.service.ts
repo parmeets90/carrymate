@@ -4,6 +4,7 @@ import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import { logger } from '../../utils/logger';
 import { sendPush } from './push.sender';
+import { sendEmail, shouldEmail } from './email.sender';
 
 interface CreateNotificationArgs {
   userId: string;
@@ -33,6 +34,12 @@ export async function createNotification(args: CreateNotificationArgs): Promise<
     void sendPush(args.userId, args.title, args.body, args.data).catch((err) =>
       logger.warn(`[notifications] push dispatch failed: ${(err as Error).message}`),
     );
+    // Email only the high-signal, account-level events (cap-friendly).
+    if (shouldEmail(args.type)) {
+      void sendEmail(args.userId, args.title, args.body).catch((err) =>
+        logger.warn(`[notifications] email dispatch failed: ${(err as Error).message}`),
+      );
+    }
     logger.info(`[notifications] ${args.type} → user ${args.userId} (${notification.id})`);
   } catch (err) {
     // Notifications are non-critical; never let them break the originating action.
