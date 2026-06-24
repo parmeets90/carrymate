@@ -86,6 +86,20 @@ export function ProfileTabScreen() {
         </Pressable>
       )}
 
+      <Text style={styles.sectionLabel}>WALLET</Text>
+      <Pressable onPress={() => nav.navigate('Transactions')}>
+        <Card style={styles.linkRow}>
+          <View style={styles.linkIcon}>
+            <Icon name="wallet" size={20} color={colors.skyBlue} weight="fill" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.linkText}>Transaction history</Text>
+            <Text style={styles.linkHint}>Payments, payouts & escrow activity</Text>
+          </View>
+          <Icon name="chevronRight" size={18} color={colors.textHint} />
+        </Card>
+      </Pressable>
+
       <Text style={styles.sectionLabel}>YOUR ROLE</Text>
       <Card style={{ gap: spacing.sm }}>
         {ROLES.map((r) => {
@@ -130,6 +144,10 @@ const styles = StyleSheet.create({
   sectionLabel: { ...typography.label, color: colors.textSecondary, marginTop: spacing.xl, marginBottom: spacing.sm, marginLeft: spacing.xs },
   phoneRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   phoneText: { ...typography.bodyL, fontWeight: '600', color: colors.textPrimary },
+  linkRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  linkIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.skyLight, alignItems: 'center', justifyContent: 'center' },
+  linkText: { ...typography.bodyL, fontWeight: '600', color: colors.textPrimary },
+  linkHint: { ...typography.caption, color: colors.textSecondary, marginTop: 1 },
   phoneHint: { ...typography.caption, color: colors.textSecondary, marginTop: 1 },
   roleRow: {
     flexDirection: 'row',

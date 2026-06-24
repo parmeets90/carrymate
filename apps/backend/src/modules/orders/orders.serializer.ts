@@ -18,7 +18,11 @@ const CONTACT_VISIBLE = new Set([
 ]);
 
 /** Build the participant view; reveals counterparty phone + OTP per state/role. */
-export function toOrderView(order: OrderWithRelations, viewerId: string): OrderView {
+export function toOrderView(
+  order: OrderWithRelations,
+  viewerId: string,
+  ratedByMe = false,
+): OrderView {
   const isSender = order.senderId === viewerId;
   const counterparty = isSender ? order.traveler : order.sender;
   const contactVisible = CONTACT_VISIBLE.has(order.status);
@@ -47,5 +51,6 @@ export function toOrderView(order: OrderWithRelations, viewerId: string): OrderV
     autoConfirmAt: order.autoConfirmAt ? order.autoConfirmAt.toISOString() : null,
     hasDispute: order.dispute != null && ['OPEN', 'UNDER_REVIEW'].includes(order.dispute.status),
     deliveryOtp: otpVisible ? order.deliveryOtp : null,
+    ratedByMe,
   };
 }

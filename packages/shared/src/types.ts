@@ -227,6 +227,8 @@ export interface OrderView {
   hasDispute: boolean;
   /** Delivery handover code — shown to the sender only, once in transit. */
   deliveryOtp: string | null;
+  /** True once the viewer has rated their counterparty for this order. */
+  ratedByMe: boolean;
 }
 
 /** A dispute as shown to admins, with order/party context. */

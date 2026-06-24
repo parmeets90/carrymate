@@ -52,7 +52,11 @@ export function OrdersScreen() {
 
         {item.requestStatus === 'IN_TRANSIT' && (
           <PlaneTrack
-            label={`${item.counterpartyName ?? (isSender ? 'Your traveler' : 'You')} ${isSender ? 'is on the way to' : 'are carrying this to'} ${item.destinationCity}…`}
+            label={
+              isSender
+                ? `${item.counterpartyName ?? 'Your traveler'} is on the way to ${item.destinationCity}…`
+                : `You're carrying this to ${item.destinationCity}…`
+            }
           />
         )}
 
@@ -103,7 +107,19 @@ export function OrdersScreen() {
                 <Icon name="check" size={16} color="#096438" weight="fill" />
                 <Text style={styles.doneText}>Delivered & released</Text>
               </View>
-              <PrimaryButton label="Rate" onPress={() => nav.navigate('Rate', { orderId: item.id, counterparty: item.counterpartyName ?? 'them' })} />
+              {item.ratedByMe ? (
+                <View style={styles.ratedRow}>
+                  <Icon name="star" size={16} color={colors.goldPrimary} weight="fill" />
+                  <Text style={styles.ratedText}>Rating submitted — thanks for the feedback</Text>
+                </View>
+              ) : (
+                <PrimaryButton
+                  label={`Rate ${item.counterpartyName ?? 'your match'}`}
+                  icon="star"
+                  tone="gold"
+                  onPress={() => nav.navigate('Rate', { orderId: item.id, counterparty: item.counterpartyName ?? 'them' })}
+                />
+              )}
             </SuccessPop>
           )}
           {item.escrowHeldAt && (
@@ -167,5 +183,7 @@ const styles = StyleSheet.create({
   fema: { ...typography.caption, color: colors.textHint, fontSize: 10, lineHeight: 14, marginTop: spacing.xs },
   doneRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: spacing.sm },
   doneText: { ...typography.bodyM, color: '#096438', fontWeight: '700' },
+  ratedRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: spacing.sm, backgroundColor: colors.goldLight, borderRadius: radius.input },
+  ratedText: { ...typography.bodyM, color: colors.goldPrimary, fontWeight: '700' },
 });
 

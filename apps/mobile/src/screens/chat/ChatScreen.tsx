@@ -41,12 +41,14 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
 
   const send = useMutation({
     mutationFn: (body: string) => api.sendMessage(conversationId, body),
-    // Show the message instantly with a "sending" coin loader, then reconcile.
-    onMutate: async (body): Promise<{ prev?: ChatMessage[] }> => {
+    // Show the message instantly, then swap the optimistic copy for the server
+    // record in place — no full refetch, so sending feels immediate.
+    onMutate: async (body): Promise<{ prev?: ChatMessage[]; tempId: string }> => {
       await qc.cancelQueries({ queryKey: ['messages', conversationId] });
       const prev = qc.getQueryData<ChatMessage[]>(['messages', conversationId]);
+      const tempId = `temp-${Date.now()}`;
       const optimistic: ChatMessage = {
-        id: `temp-${Date.now()}`,
+        id: tempId,
         conversationId,
         senderId: 'me',
         mine: true,
@@ -58,15 +60,18 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
       };
       qc.setQueryData<ChatMessage[]>(['messages', conversationId], (old = []) => [...old, optimistic]);
       setText('');
-      return { prev };
+      return { prev, tempId };
+    },
+    onSuccess: (created, _body, ctx) => {
+      // Replace the optimistic row with the real (PII-redacted) server message.
+      qc.setQueryData<ChatMessage[]>(['messages', conversationId], (old = []) =>
+        old.map((m) => (m.id === ctx.tempId ? (created as ChatMessage) : m)),
+      );
+      qc.invalidateQueries({ queryKey: ['conversations'] });
     },
     onError: (_err, _body, ctx) => {
       // Roll back to the pre-send list so a failed message doesn't linger.
       if (ctx?.prev) qc.setQueryData(['messages', conversationId], ctx.prev);
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: ['messages', conversationId] });
-      qc.invalidateQueries({ queryKey: ['conversations'] });
     },
   });
 
@@ -93,7 +98,7 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
           </View>
         )}
         {item.pending ? (
-          <BrandLoader size={14} style={styles.pending} />
+          <Text style={[styles.time, mine && styles.timeMine]}>Sending…</Text>
         ) : (
           <Text style={[styles.time, mine && styles.timeMine]}>{clock(item.createdAt)}</Text>
         )}

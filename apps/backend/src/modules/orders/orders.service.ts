@@ -21,7 +21,13 @@ export async function listMyOrders(userId: string): Promise<OrderView[]> {
     include: withRelations,
     orderBy: { createdAt: 'desc' },
   });
-  return orders.map((o) => toOrderView(o, userId));
+  // Which of these the viewer has already rated → drives the "Rating submitted" UI.
+  const rated = await prisma.rating.findMany({
+    where: { raterId: userId, orderId: { in: orders.map((o) => o.id) } },
+    select: { orderId: true },
+  });
+  const ratedIds = new Set(rated.map((r) => r.orderId));
+  return orders.map((o) => toOrderView(o, userId, ratedIds.has(o.id)));
 }
 
 export async function getOrder(orderId: string, userId: string): Promise<OrderView> {
@@ -29,7 +35,11 @@ export async function getOrder(orderId: string, userId: string): Promise<OrderVi
   if (!order || (order.senderId !== userId && order.travelerId !== userId)) {
     throw AppError.notFound('Order not found');
   }
-  return toOrderView(order, userId);
+  const myRating = await prisma.rating.findUnique({
+    where: { orderId_raterId: { orderId, raterId: userId } },
+    select: { id: true },
+  });
+  return toOrderView(order, userId, myRating != null);
 }
 
 /**

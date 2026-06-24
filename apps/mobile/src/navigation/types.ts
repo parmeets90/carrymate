@@ -24,6 +24,7 @@ export type RootStackParamList = {
   Notifications: undefined;
   AllowedItems: undefined;
   AddPhone: undefined;
+  Transactions: undefined;
 };
 
 export type ScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<
