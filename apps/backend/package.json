@@ -23,6 +23,7 @@
   "dependencies": {
     "@carrymate/shared": "*",
     "@prisma/client": "^5.22.0",
+    "@sentry/node": "^8.55.2",
     "@supabase/supabase-js": "^2.46.1",
     "compression": "^1.7.5",
     "cors": "^2.8.5",

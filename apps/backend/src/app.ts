@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import { healthRouter } from './routes/health.route';
 import { v1Router } from './routes';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
+import { requestId } from './middleware/request-id.middleware';
 import { logger } from './utils/logger';
 import { isProd } from './config/env';
 import { corsOptions } from './lib/cors';
@@ -44,8 +45,12 @@ export function createApp(): Express {
   );
   app.use(express.urlencoded({ extended: true }));
 
+  // Correlation id first so it's available to logs + error reporting.
+  app.use(requestId);
+
+  morgan.token('id', (req) => (req as express.Request).id ?? '-');
   app.use(
-    morgan(isProd ? 'combined' : 'dev', {
+    morgan(isProd ? ':id :method :url :status :response-time ms' : 'dev', {
       stream: { write: (msg) => logger.http?.(msg.trim()) ?? logger.info(msg.trim()) },
     }),
   );

@@ -78,6 +78,11 @@ const envSchema = z.object({
   // Mobile/native and server-to-server clients send no Origin and are always allowed.
   CORS_ORIGINS: z.string().optional(),
 
+  // Observability (Sentry). Blank → error tracking is a no-op (dev/local).
+  SENTRY_DSN: z.string().optional(),
+  // 0 = errors only (no perf tracing). Raise toward 1 to sample transactions.
+  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
+
   // Feature flags (off by default; flipped per phase)
   ENABLE_REAL_PAYMENTS: z.coerce.boolean().default(false),
   ENABLE_AUTO_KYC: z.coerce.boolean().default(false),
@@ -123,6 +128,9 @@ export const jwtConfig = {
   accessExpiry: env.JWT_ACCESS_EXPIRY,
   refreshExpiry: env.JWT_REFRESH_EXPIRY,
 };
+
+/** True when Sentry error tracking is configured; otherwise capture is a no-op. */
+export const isSentryConfigured = Boolean(env.SENTRY_DSN);
 
 /** True when Twilio Verify is configured; otherwise OTPs are logged to console (dev). */
 export const isTwilioVerifyConfigured = Boolean(

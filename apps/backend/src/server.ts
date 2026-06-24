@@ -2,6 +2,7 @@ import { createApp } from './app';
 import { env } from './config/env';
 import { logger } from './utils/logger';
 import { prisma } from './lib/prisma';
+import { initObservability, captureException, flushObservability } from './lib/observability';
 import { runAutoConfirm } from './modules/orders/orders.service';
 import { runPaymentReconciliation } from './jobs/payment-reconciliation';
 import { runKycTimeoutSweep } from './jobs/kyc-timeout';
@@ -17,6 +18,9 @@ const EXPIRY_SWEEP_INTERVAL_MS = 60 * 60_000; // hourly
 const KYC_RETENTION_INTERVAL_MS = 12 * 60 * 60_000; // twice daily
 
 async function bootstrap(): Promise<void> {
+  // Initialise error tracking before anything else can throw.
+  initObservability();
+
   const app = createApp();
 
   // Bind 0.0.0.0 so PaaS load balancers (Render) can reach the container.
@@ -63,6 +67,7 @@ async function bootstrap(): Promise<void> {
   const shutdown = async (signal: string): Promise<void> => {
     logger.info(`${signal} received — shutting down gracefully`);
     server.close(async () => {
+      await flushObservability();
       await prisma.$disconnect();
       process.exit(0);
     });
@@ -72,6 +77,16 @@ async function bootstrap(): Promise<void> {
 
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
   process.on('SIGINT', () => void shutdown('SIGINT'));
+
+  // Last-resort safety net: report (then let the process management restart us).
+  process.on('unhandledRejection', (reason) => {
+    captureException(reason);
+    logger.error('Unhandled promise rejection', reason instanceof Error ? reason : { reason });
+  });
+  process.on('uncaughtException', (err) => {
+    captureException(err);
+    logger.error('Uncaught exception', err);
+  });
 }
 
 bootstrap().catch((err) => {

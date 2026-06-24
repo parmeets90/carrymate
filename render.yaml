@@ -37,6 +37,9 @@ services:
         sync: false
       - key: STORAGE_BUCKET
         value: carrymate
+      # Observability — set to enable Sentry error tracking + alerts (optional).
+      - key: SENTRY_DSN
+        sync: false
 
   - type: web
     name: carrymate-admin
