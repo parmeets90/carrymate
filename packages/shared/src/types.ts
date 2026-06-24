@@ -153,6 +153,7 @@ export interface DeliveryRequestSummary {
   isFragile: boolean;
   status: string;
   createdAt: string;
+  senderId: string;
   senderName: string | null;
   senderRating: number;
 }
@@ -214,6 +215,8 @@ export interface OrderView {
   destinationCity: string;
   /** The viewer's role in this order. */
   role: 'SENDER' | 'TRAVELER';
+  /** The counterparty's user id — used to open their public trust profile. */
+  counterpartyId: string | null;
   counterpartyName: string | null;
   /** Revealed only once escrow is held (anti-disintermediation). */
   counterpartyPhone: string | null;
@@ -374,6 +377,56 @@ export interface FailedPayoutItem {
   requestTitle: string;
   failureReason: string | null;
   payoutInitiatedAt: string | null;
+}
+
+/**
+ * Public "trust profile" — what one party sees about another (a sender vetting
+ * a traveler, or a traveler vetting a sender). Deliberately carries NO personal
+ * contact details (phone/email/address/KYC numbers); only legitimacy signals
+ * and in-app history.
+ */
+export type TrustBadgeKind =
+  | 'KYC_VERIFIED'
+  | 'PHONE_VERIFIED'
+  | 'TRUSTED_CARRIER'
+  | 'TOP_RATED'
+  | 'ESTABLISHED_MEMBER';
+
+/** A single review left for the user, anonymised to initials. */
+export interface TrustProfileReview {
+  stars: number;
+  comment: string | null;
+  /** Reviewer shown as initials only, e.g. "A.S." — never a full name. */
+  raterInitials: string | null;
+  createdAt: string;
+}
+
+export interface TrustProfileStats {
+  /** Completed deliveries carried (as a traveler). */
+  deliveriesCompleted: number;
+  /** Trips/routes posted (as a traveler). */
+  tripsPosted: number;
+  /** Completed requests sent (as a sender). */
+  requestsCompleted: number;
+  /** Requests posted (as a sender). */
+  requestsPosted: number;
+}
+
+export interface TrustProfile {
+  id: string;
+  /** Display name only — no contact details are ever included. */
+  fullName: string | null;
+  role: string; // SENDER | TRAVELER | BOTH
+  /** Account creation time; UI renders "Member since Jun 2026". */
+  memberSince: string;
+  kycVerified: boolean;
+  phoneVerified: boolean;
+  ratingAvg: number;
+  ratingCount: number;
+  badges: TrustBadgeKind[];
+  stats: TrustProfileStats;
+  /** Most recent reviews (capped server-side). */
+  reviews: TrustProfileReview[];
 }
 
 /** Health-check payload. */

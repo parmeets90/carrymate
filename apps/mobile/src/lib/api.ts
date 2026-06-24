@@ -17,6 +17,7 @@ import type {
   RequestInsights,
   MarketplacePulse,
   Paginated,
+  TrustProfile,
 } from '@carrymate/shared';
 import { API_BASE_URL } from '../config';
 import { tokenStorage } from './storage';
@@ -254,4 +255,7 @@ export const api = {
   unreadCount: () => get<{ count: number }>('/v1/notifications/unread-count'),
   markNotificationRead: (id: string) => post<{ ok: boolean }>(`/v1/notifications/${id}/read`),
   markAllNotificationsRead: () => post<{ count: number }>('/v1/notifications/read-all'),
+
+  // Public trust profile (Phase 7) — vet a counterparty; no PII.
+  userProfile: (userId: string) => get<TrustProfile>(`/v1/users/${userId}/profile`),
 };

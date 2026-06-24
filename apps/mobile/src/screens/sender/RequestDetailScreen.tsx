@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { BrandLoader } from '@/components/BrandLoader';
 import { Alert } from '@/components/AlertHost';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -76,6 +76,12 @@ export function RequestDetailScreen({ route, navigation }: ScreenProps<'RequestD
                 bid={item}
                 accepting={accept.isPending}
                 onAccept={() => accept.mutate(item.id)}
+                onViewProfile={() =>
+                  navigation.navigate('UserProfile', {
+                    userId: item.traveler.id,
+                    name: item.traveler.fullName,
+                  })
+                }
               />
             </FadeInUp>
           )}
@@ -89,10 +95,12 @@ function BidCard({
   bid,
   onAccept,
   accepting,
+  onViewProfile,
 }: {
   bid: BidDto;
   onAccept: () => void;
   accepting: boolean;
+  onViewProfile: () => void;
 }) {
   const { traveler, route } = bid;
   const pending = bid.status === 'PENDING';
@@ -101,27 +109,32 @@ function BidCard({
 
   return (
     <Card>
-      {/* Identity + headline price */}
+      {/* Identity + headline price — tap identity to view the trust profile */}
       <View style={styles.head}>
-        <Avatar name={traveler.fullName} size={sizing.avatarLarge} />
-        <View style={styles.headText}>
-          <Text style={styles.name} numberOfLines={1}>
-            {traveler.fullName ?? 'Traveler'}
-          </Text>
-          <View style={styles.ratingRow}>
-            {rated ? (
-              <>
-                <Icon name="star" size={13} color={colors.goldPrimary} weight="fill" />
-                <Text style={styles.ratingText}>{traveler.ratingAvg.toFixed(1)}</Text>
-                <Text style={styles.ratingMeta}>
-                  · {traveler.ratingCount} trip{traveler.ratingCount === 1 ? '' : 's'}
-                </Text>
-              </>
-            ) : (
-              <Text style={styles.ratingMeta}>New traveler</Text>
-            )}
+        <Pressable style={styles.identity} onPress={onViewProfile} hitSlop={6}>
+          <Avatar name={traveler.fullName} size={sizing.avatarLarge} />
+          <View style={styles.headText}>
+            <View style={styles.nameRow}>
+              <Text style={styles.name} numberOfLines={1}>
+                {traveler.fullName ?? 'Traveler'}
+              </Text>
+              <Icon name="chevronRight" size={15} color={colors.textHint} />
+            </View>
+            <View style={styles.ratingRow}>
+              {rated ? (
+                <>
+                  <Icon name="star" size={13} color={colors.goldPrimary} weight="fill" />
+                  <Text style={styles.ratingText}>{traveler.ratingAvg.toFixed(1)}</Text>
+                  <Text style={styles.ratingMeta}>
+                    · {traveler.ratingCount} trip{traveler.ratingCount === 1 ? '' : 's'}
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.ratingMeta}>New traveler</Text>
+              )}
+            </View>
           </View>
-        </View>
+        </Pressable>
         <View style={styles.pricePill}>
           <Text style={styles.priceLabel}>You pay</Text>
           <Text style={styles.priceValue}>₹{bid.carryFeeInr.toLocaleString('en-IN')}</Text>
@@ -184,8 +197,10 @@ const styles = StyleSheet.create({
   insightsText: { ...typography.bodyM, color: '#185FA5', fontWeight: '600', flex: 1 },
   list: { paddingVertical: spacing.lg, gap: spacing.md },
   head: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 },
   headText: { flex: 1, gap: 3 },
-  name: { ...typography.bodyL, fontWeight: '700', color: colors.textPrimary },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  name: { ...typography.bodyL, fontWeight: '700', color: colors.textPrimary, flexShrink: 1 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   ratingText: { ...typography.bodyM, fontWeight: '700', color: colors.textPrimary },
   ratingMeta: { ...typography.bodyM, color: colors.textSecondary },

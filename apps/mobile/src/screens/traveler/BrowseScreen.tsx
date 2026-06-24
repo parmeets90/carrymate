@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { BrandLoader } from '@/components/BrandLoader';
 import { useQuery } from '@tanstack/react-query';
 import { colors, spacing, typography, sizing } from '@/theme';
@@ -49,11 +49,21 @@ export function BrowseScreen({ route, navigation }: ScreenProps<'Browse'>) {
                 <Text style={styles.meta}>
                   {item.originCity} → {item.destinationCity} · {item.weightKg}kg · by {item.deadlineDate}
                 </Text>
-                <View style={styles.senderRow}>
+                <Pressable
+                  style={styles.senderRow}
+                  hitSlop={6}
+                  onPress={() =>
+                    navigation.navigate('UserProfile', {
+                      userId: item.senderId,
+                      name: item.senderName,
+                    })
+                  }
+                >
                   <Text style={styles.sender}>{item.senderName ?? 'Sender'}</Text>
                   <Icon name="star" size={12} color={colors.goldPrimary} weight="fill" />
                   <Text style={styles.sender}>{item.senderRating.toFixed(1)}</Text>
-                </View>
+                  <Icon name="chevronRight" size={13} color={colors.textHint} />
+                </Pressable>
                 <Text style={styles.cta}>Place a bid →</Text>
               </Card>
             </FadeInUp>

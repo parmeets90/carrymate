@@ -41,6 +41,7 @@ export function toOrderView(
     originCity: order.request.originCity,
     destinationCity: order.request.destinationCity,
     role: isSender ? 'SENDER' : 'TRAVELER',
+    counterpartyId: counterparty.id,
     counterpartyName: counterparty.fullName,
     counterpartyPhone: contactVisible ? counterparty.phone : null,
     escrowHeldAt: order.escrowHeldAt ? order.escrowHeldAt.toISOString() : null,

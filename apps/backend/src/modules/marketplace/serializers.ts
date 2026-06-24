@@ -62,6 +62,7 @@ export function toRequestSummary(r: DeliveryRequest & { sender: User }): Deliver
     isFragile: r.isFragile,
     status: r.status,
     createdAt: r.createdAt.toISOString(),
+    senderId: r.senderId,
     senderName: r.sender.fullName,
     senderRating: Number(r.sender.ratingAvg),
   };

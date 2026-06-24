@@ -38,7 +38,18 @@ export function OrdersScreen() {
       <FadeInUp index={index}>
       <Card>
         <View style={styles.row}>
-          <Avatar name={item.counterpartyName} size={40} />
+          {item.counterpartyId ? (
+            <Pressable
+              hitSlop={6}
+              onPress={() =>
+                nav.navigate('UserProfile', { userId: item.counterpartyId!, name: item.counterpartyName })
+              }
+            >
+              <Avatar name={item.counterpartyName} size={40} />
+            </Pressable>
+          ) : (
+            <Avatar name={item.counterpartyName} size={40} />
+          )}
           <View style={{ flex: 1 }}>
             <Text style={styles.title} numberOfLines={1}>{item.requestTitle}</Text>
             <Text style={styles.meta}>{item.originCity} → {item.destinationCity}</Text>
