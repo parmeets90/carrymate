@@ -26,6 +26,7 @@ enum UserStatus {
   ACTIVE
   SUSPENDED
   BANNED
+  DELETED // self-service account deletion (DPDP) — record anonymized, kept for audit
 }
 
 enum KycStatus {
@@ -72,6 +73,10 @@ model User {
   ratingCount  Int        @default(0) @map("rating_count")
   fcmToken     String?    @map("fcm_token")
   lastActiveAt DateTime?  @map("last_active_at") @db.Timestamptz
+  // DPDP: consent captured at signup; deletedAt set on self-service deletion.
+  consentVersion String?  @map("consent_version") @db.VarChar(20)
+  consentedAt    DateTime? @map("consented_at") @db.Timestamptz
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
   createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -499,6 +504,9 @@ enum AuditAction {
   ORDER_HOLD_CLEARED
   USER_STATUS_CHANGED
   USER_AUTO_SUSPENDED
+  ACCOUNT_DELETED // DPDP: user-initiated account deletion + anonymization
+  DATA_EXPORTED // DPDP: user downloaded their data
+  KYC_DOCS_PURGED // DPDP: raw ID images purged after retention window
 }
 
 /// Open-box inspection record (Challenge 01 — the legal firewall). One per order.

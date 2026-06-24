@@ -7,6 +7,16 @@
 /** Platform commission as a fraction of the carry fee. */
 export const COMMISSION_RATE = 0.15;
 
+/** Current Terms/Privacy version users consent to at signup (DPDP). Bump on changes. */
+export const CURRENT_TERMS_VERSION = '2026-06-24';
+
+/**
+ * Days to retain raw KYC ID images after a successful verification (DPDP data
+ * minimization). The verification *status* + masked number are kept for audit;
+ * only the underlying image file is purged after this window.
+ */
+export const KYC_IMAGE_RETENTION_DAYS = 180;
+
 /** Carry fee bounds, in whole INR. */
 export const MIN_CARRY_FEE_INR = 200;
 export const MAX_CARRY_FEE_INR = 3000;

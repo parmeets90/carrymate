@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Share } from 'react-native';
 import { BrandLoader } from '@/components/BrandLoader';
 import { Alert } from '@/components/AlertHost';
 import { useNavigation } from '@react-navigation/native';
@@ -28,8 +28,53 @@ export function ProfileTabScreen() {
   const qc = useQueryClient();
   const { user, setUser, signOut } = useAuth();
   const [saving, setSaving] = useState<Role | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const current = (user?.role as Role) ?? 'SENDER';
+
+  // DPDP — Right to access: fetch everything we hold and hand it to the OS share
+  // sheet so the user can save/forward it.
+  const exportData = async () => {
+    setExporting(true);
+    try {
+      const data = await api.exportMyData();
+      await Share.share({ title: 'My CarryMate data', message: JSON.stringify(data, null, 2) });
+    } catch (e) {
+      Alert.alert('Could not export', (e as Error).message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // DPDP — Right to erasure: anonymize + sign out. Blocked server-side if orders
+  // are in flight.
+  const confirmDelete = () => {
+    Alert.alert(
+      'Delete your account?',
+      'This permanently removes your personal data and ID documents. Anonymized transaction records are kept only as required by law. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete account',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await api.deleteAccount();
+              Alert.alert('Account deleted', 'Your personal data has been removed.', [
+                { text: 'OK', onPress: () => signOut() },
+              ]);
+            } catch (e) {
+              Alert.alert('Could not delete', (e as Error).message);
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const switchRole = async (role: Role) => {
     if (role === current || saving) return;
@@ -126,6 +171,32 @@ export function ProfileTabScreen() {
         })}
       </Card>
       <Text style={styles.note}>Switching changes which tabs and listings you see.</Text>
+
+      <Text style={styles.sectionLabel}>PRIVACY &amp; DATA</Text>
+      <Pressable onPress={exportData} disabled={exporting}>
+        <Card style={styles.linkRow}>
+          <View style={styles.linkIcon}>
+            <Icon name="identity" size={20} color={colors.skyBlue} weight="fill" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.linkText}>Download my data</Text>
+            <Text style={styles.linkHint}>Export everything we hold about you</Text>
+          </View>
+          {exporting ? <BrandLoader size={28} /> : <Icon name="chevronRight" size={18} color={colors.textHint} />}
+        </Card>
+      </Pressable>
+      <Pressable onPress={confirmDelete} disabled={deleting}>
+        <Card style={[styles.linkRow, { marginTop: spacing.sm }]}>
+          <View style={[styles.linkIcon, { backgroundColor: colors.dangerLight }]}>
+            <Icon name="delete" size={20} color={colors.dangerRed} weight="fill" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.linkText, { color: colors.dangerRed }]}>Delete account</Text>
+            <Text style={styles.linkHint}>Permanently remove your personal data</Text>
+          </View>
+          {deleting ? <BrandLoader size={28} /> : <Icon name="chevronRight" size={18} color={colors.textHint} />}
+        </Card>
+      </Pressable>
 
       <View style={{ marginTop: spacing.xl }}>
         <SecondaryButton label="Sign out" onPress={signOut} tone="danger" />

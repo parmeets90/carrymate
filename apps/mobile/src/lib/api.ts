@@ -192,6 +192,10 @@ export const api = {
   me: () => get<PublicUser>('/v1/auth/me'),
   updateProfile: (data: { fullName?: string; email?: string; role?: string }) =>
     patch<PublicUser>('/v1/auth/profile', data),
+
+  // DPDP data rights
+  exportMyData: () => get<Record<string, unknown>>('/v1/account/export'),
+  deleteAccount: () => post<{ deleted: boolean }>('/v1/account/delete'),
   submitKyc: (data: { docType: string; fileKey?: string; docNumber?: string }) =>
     post<KycStatusResult>('/v1/kyc/submit', data),
   kycStatus: () => get<KycStatusResult>('/v1/kyc/status'),

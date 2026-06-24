@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { ok } from '../utils/response';
 import { env } from '../config/env';
 import { authRouter } from '../modules/auth/auth.routes';
+import { accountRouter } from '../modules/account/account.routes';
 import { kycRouter } from '../modules/kyc/kyc.routes';
 import { adminRouter } from '../modules/admin/admin.routes';
 import { routesRouter } from '../modules/routes/routes.routes';
@@ -32,6 +33,7 @@ v1Router.get('/', (_req, res) => {
 });
 
 v1Router.use('/auth', authRouter);
+v1Router.use('/account', accountRouter);
 v1Router.use('/kyc', kycRouter);
 v1Router.use('/routes', routesRouter);
 v1Router.use('/requests', requestsRouter);

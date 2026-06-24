@@ -1,4 +1,5 @@
 import type { AuthResult, AuthTokens } from '@carrymate/shared';
+import { CURRENT_TERMS_VERSION } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import { toPublicUser } from '../users/user.serializer';
@@ -34,7 +35,14 @@ export async function verifyLoginOtp(
   const user = await prisma.user.upsert({
     where: { phone },
     update: { phoneVerified: true, lastActiveAt: new Date(), ...(fcmToken ? { fcmToken } : {}) },
-    create: { phone, phoneVerified: true, lastActiveAt: new Date(), fcmToken: fcmToken ?? null },
+    create: {
+      phone,
+      phoneVerified: true,
+      lastActiveAt: new Date(),
+      fcmToken: fcmToken ?? null,
+      consentVersion: CURRENT_TERMS_VERSION,
+      consentedAt: new Date(),
+    },
   });
 
   const tokens = await issueTokens(user.id);
@@ -76,6 +84,8 @@ export async function googleAuth(idToken: string, fcmToken?: string): Promise<Au
         fullName: identity.name,
         lastActiveAt: new Date(),
         fcmToken: fcmToken ?? null,
+        consentVersion: CURRENT_TERMS_VERSION,
+        consentedAt: new Date(),
       },
     });
   }

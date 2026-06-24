@@ -15,6 +15,8 @@ export interface StorageProvider {
   createDownloadUrl(key: string, expiresInSeconds?: number): Promise<string>;
   /** Server-side upload of raw bytes (used by the multipart upload endpoint). */
   upload(key: string, body: Buffer, contentType: string): Promise<void>;
+  /** Permanently delete objects (KYC purge, account deletion). Best-effort. */
+  remove(keys: string[]): Promise<void>;
 }
 
 class SupabaseStorageProvider implements StorageProvider {
@@ -60,6 +62,12 @@ class SupabaseStorageProvider implements StorageProvider {
       if (e instanceof AppError) throw e;
       throw AppError.internal(`Storage upload error: ${(e as Error).message}`);
     }
+  }
+
+  async remove(keys: string[]) {
+    if (!keys.length) return;
+    const { error } = await this.client.storage.from(this.bucket).remove(keys);
+    if (error) throw AppError.internal(`Storage remove failed: ${error.message}`);
   }
 }
 

@@ -7,12 +7,14 @@ import { runPaymentReconciliation } from './jobs/payment-reconciliation';
 import { runKycTimeoutSweep } from './jobs/kyc-timeout';
 import { runRequestExpirySweep } from './jobs/request-expiry';
 import { runRouteExpirySweep } from './jobs/route-expiry';
+import { runKycRetentionSweep } from './jobs/kyc-retention';
 import { initRealtime } from './realtime/socket';
 
 const AUTO_CONFIRM_INTERVAL_MS = 10 * 60_000; // every 10 min
 const RECONCILIATION_INTERVAL_MS = 15 * 60_000; // every 15 min
 const KYC_TIMEOUT_INTERVAL_MS = 5 * 60_000; // every 5 min
 const EXPIRY_SWEEP_INTERVAL_MS = 60 * 60_000; // hourly
+const KYC_RETENTION_INTERVAL_MS = 12 * 60 * 60_000; // twice daily
 
 async function bootstrap(): Promise<void> {
   const app = createApp();
@@ -51,6 +53,12 @@ async function bootstrap(): Promise<void> {
     runRouteExpirySweep().catch((err) => logger.error('route expiry sweep failed', err));
   }, EXPIRY_SWEEP_INTERVAL_MS);
   expiryTimer.unref();
+
+  // DPDP — purge raw KYC images past the retention window (keeps verification proof).
+  const kycRetentionTimer = setInterval(() => {
+    runKycRetentionSweep().catch((err) => logger.error('kyc retention sweep failed', err));
+  }, KYC_RETENTION_INTERVAL_MS);
+  kycRetentionTimer.unref();
 
   const shutdown = async (signal: string): Promise<void> => {
     logger.info(`${signal} received — shutting down gracefully`);
