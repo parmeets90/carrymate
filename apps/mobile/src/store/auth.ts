@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { PublicUser, AuthResult } from '@carrymate/shared';
 import { tokenStorage } from '../lib/storage';
 import { api, setAccessToken, setOnAuthExpired } from '../lib/api';
+import { disconnectSocket } from '../lib/socket';
 
 interface AuthState {
   hydrated: boolean;
@@ -44,6 +45,7 @@ export const useAuth = create<AuthState>((set) => ({
   setUser: (user) => set({ user }),
 
   signOut: async () => {
+    disconnectSocket();
     await tokenStorage.clear();
     setAccessToken(null);
     set({ user: null });

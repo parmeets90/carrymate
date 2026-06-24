@@ -4,6 +4,7 @@ import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import { scrubPii } from '../../utils/pii';
 import { createNotification } from '../notifications/notifications.service';
+import { emitChatMessage } from '../../realtime/socket';
 
 type Role = 'SENDER' | 'TRAVELER';
 
@@ -176,9 +177,25 @@ export async function sendMessage(
     },
   });
 
+  const recipientId = counterpartyId(conv, userId);
+
+  // Realtime: push to both open threads + the recipient's inbox badge.
+  emitChatMessage(recipientId, {
+    conversationId,
+    message: {
+      id: message.id,
+      conversationId,
+      senderId: message.senderId,
+      type: message.type,
+      body: message.body,
+      piiRedacted: message.piiRedacted,
+      createdAt: message.createdAt.toISOString(),
+    },
+  });
+
   // Notify the other party (best-effort, non-blocking inside createNotification).
   await createNotification({
-    userId: counterpartyId(conv, userId),
+    userId: recipientId,
     type: NotificationType.NEW_MESSAGE,
     title: 'New message',
     body: clean.length > 80 ? `${clean.slice(0, 77)}…` : clean,

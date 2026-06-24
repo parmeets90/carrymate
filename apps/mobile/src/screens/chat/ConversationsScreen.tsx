@@ -1,8 +1,11 @@
+import { useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { BrandLoader } from '@/components/BrandLoader';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getSocket } from '@/lib/socket';
+import type { Socket } from 'socket.io-client';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { Card } from '@/components/Card';
@@ -28,16 +31,34 @@ function timeAgo(iso: string | null): string {
 export function ConversationsScreen() {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
+  const qc = useQueryClient();
+  // Socket-driven now; the intervals are just a slow safety net for missed events.
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['conversations'],
     queryFn: api.conversations,
-    refetchInterval: 15_000,
+    refetchInterval: 60_000,
   });
   const notif = useQuery({
     queryKey: ['notifUnread'],
     queryFn: api.unreadCount,
-    refetchInterval: 20_000,
+    refetchInterval: 60_000,
   });
+
+  // Live inbox: refresh the thread list + unread badge the moment a message lands.
+  useEffect(() => {
+    let sock: Socket | null = null;
+    const onInbox = () => {
+      qc.invalidateQueries({ queryKey: ['conversations'] });
+      qc.invalidateQueries({ queryKey: ['notifUnread'] });
+    };
+    void getSocket().then((s) => {
+      sock = s;
+      s.on('chat:inbox', onInbox);
+    });
+    return () => {
+      sock?.off('chat:inbox', onInbox);
+    };
+  }, [qc]);
 
   const renderItem = ({ item, index }: { item: ConversationSummary; index: number }) => (
     <FadeInUp index={index}>

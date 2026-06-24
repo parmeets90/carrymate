@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -16,8 +16,17 @@ import { colors, spacing, typography, radius, sizing, gradients } from '@/theme'
 import { Icon } from '@/components/Icon';
 import { BrandLoader } from '@/components/BrandLoader';
 import { api } from '@/lib/api';
+import { getSocket } from '@/lib/socket';
+import { useAuth } from '@/store/auth';
+import type { Socket } from 'socket.io-client';
 import type { MessageDto } from '@carrymate/shared';
 import type { ScreenProps } from '@/navigation/types';
+
+/** Perspective-neutral wire payload broadcast by the server. */
+type ChatMessageEvent = {
+  conversationId: string;
+  message: Omit<MessageDto, 'mine'>;
+};
 
 /** A message in the local cache, optionally still being sent (optimistic). */
 type ChatMessage = MessageDto & { pending?: boolean };
@@ -30,14 +39,46 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
   const { conversationId } = route.params;
   const qc = useQueryClient();
   const insets = useSafeAreaInsets();
+  const selfId = useAuth((s) => s.user?.id);
   const listRef = useRef<FlatList<MessageDto>>(null);
   const [text, setText] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['messages', conversationId],
     queryFn: () => api.messages(conversationId),
-    refetchInterval: 4000,
   });
+
+  // Realtime: join this thread's room and append incoming messages live.
+  // Replaces interval polling — the server pushes each message as it lands.
+  useEffect(() => {
+    let sock: Socket | null = null;
+    const onMessage = (evt: ChatMessageEvent) => {
+      if (evt.conversationId !== conversationId) return;
+      const incoming: ChatMessage = { ...evt.message, mine: evt.message.senderId === selfId };
+      qc.setQueryData<ChatMessage[]>(['messages', conversationId], (old = []) =>
+        old.some((m) => m.id === incoming.id) ? old : [...old, incoming],
+      );
+      // Keep the inbox preview + unread badge fresh for the other party's view.
+      qc.invalidateQueries({ queryKey: ['conversations'] });
+    };
+    const onReconnect = () => {
+      sock?.emit('chat:join', conversationId);
+      qc.invalidateQueries({ queryKey: ['messages', conversationId] }); // catch any missed offline
+    };
+    void getSocket().then((s) => {
+      sock = s;
+      s.emit('chat:join', conversationId);
+      s.on('chat:message', onMessage);
+      s.io.on('reconnect', onReconnect);
+    });
+    return () => {
+      if (sock) {
+        sock.off('chat:message', onMessage);
+        sock.io.off('reconnect', onReconnect);
+        sock.emit('chat:leave', conversationId);
+      }
+    };
+  }, [conversationId, selfId, qc]);
 
   const send = useMutation({
     mutationFn: (body: string) => api.sendMessage(conversationId, body),

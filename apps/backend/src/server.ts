@@ -7,6 +7,7 @@ import { runPaymentReconciliation } from './jobs/payment-reconciliation';
 import { runKycTimeoutSweep } from './jobs/kyc-timeout';
 import { runRequestExpirySweep } from './jobs/request-expiry';
 import { runRouteExpirySweep } from './jobs/route-expiry';
+import { initRealtime } from './realtime/socket';
 
 const AUTO_CONFIRM_INTERVAL_MS = 10 * 60_000; // every 10 min
 const RECONCILIATION_INTERVAL_MS = 15 * 60_000; // every 15 min
@@ -22,6 +23,9 @@ async function bootstrap(): Promise<void> {
     logger.info(`   Liveness: /healthz · Readiness: /health`);
     logger.info(`   Env: ${env.NODE_ENV}`);
   });
+
+  // Realtime chat shares the same HTTP server (WebSocket upgrade).
+  initRealtime(server);
 
   // Escrow auto-confirm sweep (releases delivered orders past their window).
   const autoConfirmTimer = setInterval(() => {
