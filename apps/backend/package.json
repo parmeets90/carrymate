@@ -15,6 +15,7 @@
     "migrate:deploy": "prisma migrate deploy",
     "generate": "prisma generate",
     "seed": "ts-node src/prisma/seed.ts",
+    "pilot:seed": "ts-node src/prisma/pilot-seed.ts",
     "studio": "prisma studio"
   },
   "prisma": {
