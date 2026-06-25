@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Activity, TrendingUp, Package, ShieldCheck, IndianRupee, Lock, Scale, ShieldAlert, Clock, Timer, AlarmClock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Activity, TrendingUp, Package, ShieldCheck, IndianRupee, Lock, Scale, ShieldAlert, Clock, Timer, AlarmClock, ArrowUpRight } from 'lucide-react';
 import { api } from '@/lib/api';
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
@@ -18,18 +19,19 @@ export function Dashboard() {
 
   const m = metrics.data;
   const dash = (v: number | string | undefined) => (v === undefined ? '—' : String(v));
-  const KPIS = [
-    { label: 'Completed Deliveries', value: dash(m?.completed), hint: 'North Star (SVD)', icon: TrendingUp },
-    { label: 'Active Requests', value: dash(m ? m.requestsTotal - m.requestsMatched : undefined), hint: 'Awaiting match', icon: Package },
-    { label: 'Pending KYC', value: dash(m?.kycBacklog), hint: 'In review queue', icon: ShieldCheck },
+  // `to` makes a card a launchpad into the queue that needs action (pilot ops flow).
+  const KPIS: { label: string; value: string; hint: string; icon: typeof Activity; to?: string }[] = [
+    { label: 'Completed Deliveries', value: dash(m?.completed), hint: 'North Star (SVD)', icon: TrendingUp, to: '/transactions' },
+    { label: 'Active Requests', value: dash(m ? m.requestsTotal - m.requestsMatched : undefined), hint: 'Awaiting match', icon: Package, to: '/requests' },
+    { label: 'Pending KYC', value: dash(m?.kycBacklog), hint: 'In review queue', icon: ShieldCheck, to: '/kyc' },
     { label: 'Match Rate', value: m ? `${m.matchRate}%` : '—', hint: 'Matched / posted', icon: Activity },
-    { label: 'GMV', value: m ? inr(m.gmvInr) : '—', hint: 'Completed order value', icon: IndianRupee },
-    { label: 'Escrow Held', value: dash(m?.escrowHeld), hint: 'Funds in escrow', icon: Lock },
-    { label: 'Open Disputes', value: m ? `${m.disputesOpen} (${m.disputeRate}%)` : '—', hint: 'Of all orders', icon: Scale },
-    { label: 'Fraud Holds', value: dash(m?.fraudHolds), hint: 'Awaiting review', icon: ShieldAlert },
-    { label: 'Avg KYC Review', value: m ? `${m.avgKycReviewMins}m` : '—', hint: 'Target < 120m', icon: Clock },
-    { label: 'Avg Dispute Resolution', value: m ? `${m.avgDisputeResolutionHours}h` : '—', hint: 'Target < 24h', icon: Timer },
-    { label: 'Oldest Open Dispute', value: m ? `${m.oldestOpenDisputeHours}h` : '—', hint: 'Alert if > 24h', icon: AlarmClock },
+    { label: 'GMV', value: m ? inr(m.gmvInr) : '—', hint: 'Completed order value', icon: IndianRupee, to: '/transactions' },
+    { label: 'Escrow Held', value: dash(m?.escrowHeld), hint: 'Funds in escrow', icon: Lock, to: '/transactions' },
+    { label: 'Open Disputes', value: m ? `${m.disputesOpen} (${m.disputeRate}%)` : '—', hint: 'Of all orders', icon: Scale, to: '/disputes' },
+    { label: 'Fraud Holds', value: dash(m?.fraudHolds), hint: 'Awaiting review', icon: ShieldAlert, to: '/risk' },
+    { label: 'Avg KYC Review', value: m ? `${m.avgKycReviewMins}m` : '—', hint: 'Target < 120m', icon: Clock, to: '/kyc' },
+    { label: 'Avg Dispute Resolution', value: m ? `${m.avgDisputeResolutionHours}h` : '—', hint: 'Target < 24h', icon: Timer, to: '/disputes' },
+    { label: 'Oldest Open Dispute', value: m ? `${m.oldestOpenDisputeHours}h` : '—', hint: 'Alert if > 24h', icon: AlarmClock, to: '/disputes' },
   ];
 
   const dbUp = health.data?.checks.database;
@@ -62,16 +64,31 @@ export function Dashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {KPIS.map(({ label, value, hint, icon: Icon }) => (
-          <div key={label} className="rounded-xl border bg-card p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-muted-foreground">{label}</p>
-              <Icon className="h-4 w-4 text-muted-foreground" />
+        {KPIS.map(({ label, value, hint, icon: Icon, to }) => {
+          const inner = (
+            <>
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-muted-foreground">{label}</p>
+                {to ? <ArrowUpRight className="h-4 w-4 text-muted-foreground" /> : <Icon className="h-4 w-4 text-muted-foreground" />}
+              </div>
+              <p className="mt-3 text-3xl font-bold tracking-tight">{value}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+            </>
+          );
+          return to ? (
+            <Link
+              key={label}
+              to={to}
+              className="rounded-xl border bg-card p-5 shadow-sm transition hover:border-primary/50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {inner}
+            </Link>
+          ) : (
+            <div key={label} className="rounded-xl border bg-card p-5 shadow-sm">
+              {inner}
             </div>
-            <p className="mt-3 text-3xl font-bold tracking-tight">{value}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">
