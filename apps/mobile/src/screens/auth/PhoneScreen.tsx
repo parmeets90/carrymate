@@ -1,17 +1,26 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Pressable, TextInput } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Alert } from '@/components/AlertHost';
-import { colors, spacing, typography, sizing, radius } from '@/theme';
-import { GradientHero } from '@/components/Screen';
+import { colors, spacing, typography, sizing, radius, shadows } from '@/theme';
 import { PrimaryButton } from '@/components/ui';
-import { Badge } from '@/components/Card';
+import { DecorBlobs } from '@/components/DecorBlobs';
+import { OnboardingCarousel, type OnboardingSlide } from '@/components/OnboardingCarousel';
 import { CountryCodePicker, COUNTRIES, type Country } from '@/components/CountryCodePicker';
 import { api } from '@/lib/api';
 import { signInWithGoogle } from '@/lib/googleAuth';
 import { useAuth } from '@/store/auth';
 import type { ScreenProps } from '@/navigation/types';
 
+const SLIDES: OnboardingSlide[] = [
+  { key: 'carry', illustration: 'carry', title: 'Carry Across Borders', description: 'Send gifts, documents and personal items through verified travelers.' },
+  { key: 'earn', illustration: 'earn', title: 'Travel & Earn', description: 'Use your extra luggage space to earn while you travel.' },
+  { key: 'trust', illustration: 'trust', title: 'Safe & Trusted', description: 'Verified travelers, secure payments and transparent tracking.' },
+  { key: 'fast', illustration: 'fast', title: 'Fast & Affordable', description: 'Smarter than traditional courier services.' },
+];
+
 export function PhoneScreen({ navigation }: ScreenProps<'Phone'>) {
+  const insets = useSafeAreaInsets();
   const completeLogin = useAuth((s) => s.completeLogin);
   const [country, setCountry] = useState<Country>(COUNTRIES[0]); // India
   const [national, setNational] = useState('');
@@ -49,19 +58,17 @@ export function PhoneScreen({ navigation }: ScreenProps<'Phone'>) {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
-      <GradientHero
-        eyebrow="CarryMate"
-        title="Send personal items with a traveler heading there."
-        subtitle="Connect with trusted community members flying your route — with trust built into every step."
-      />
-      <View style={styles.body}>
-        <View style={styles.pills}>
-          <Badge label="India → UAE" tone="sky" icon="trips" />
-          <Badge label="Verified travelers" tone="gold" icon="identity" />
-          <Badge label="Escrow protected" tone="mint" icon="lock" />
-        </View>
+      {/* Top ~60% — soft pastel hero with the auto-sliding onboarding carousel */}
+      <View style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}>
+        <DecorBlobs variant="auth" />
+        <Text style={styles.wordmark}>CarryMate</Text>
+        <OnboardingCarousel slides={SLIDES} />
+      </View>
 
-        <Text style={styles.label}>Phone number</Text>
+      {/* Bottom ~40% — existing login form, restyled into a rounded sheet */}
+      <View style={[styles.formCard, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+        <Text style={styles.formTitle}>Get started</Text>
+
         <View style={styles.phoneRow}>
           <CountryCodePicker value={country} onChange={setCountry} />
           <TextInputBox value={national} onChangeText={setNational} />
@@ -111,10 +118,22 @@ function TextInputBox({ value, onChangeText }: { value: string; onChangeText: (v
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.bgApp },
-  body: { paddingHorizontal: sizing.screenPaddingX, paddingTop: spacing.xl, gap: spacing.md },
-  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  label: { ...typography.label, color: colors.textSecondary },
+  flex: { flex: 1, backgroundColor: colors.white },
+  // Top hero (~60%) — soft pastel canvas behind the carousel.
+  hero: { flex: 1, backgroundColor: colors.white, alignItems: 'center' },
+  wordmark: { ...typography.titleM, fontFamily: typography.display.fontFamily, fontWeight: '700', color: colors.navyDark, letterSpacing: 0.2 },
+  // Bottom sheet (~40%) — the login form on a rounded white card.
+  formCard: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    marginTop: -24, // lift the sheet slightly over the hero
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+    gap: spacing.md,
+    ...shadows.lg,
+  },
+  formTitle: { ...typography.titleL, color: colors.textPrimary },
   phoneRow: { flexDirection: 'row', gap: spacing.sm },
   numInput: {
     flex: 1,
@@ -125,7 +144,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     fontSize: 16,
     color: colors.textPrimary,
-    backgroundColor: colors.bgCard,
+    backgroundColor: colors.bgSecondary,
   },
   numInputFocused: { borderColor: colors.skyBlue, backgroundColor: colors.white },
   error: { ...typography.caption, color: colors.dangerRed },

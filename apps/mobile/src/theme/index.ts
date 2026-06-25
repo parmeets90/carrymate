@@ -36,9 +36,10 @@ export const spacing = {
 
 export const radius = {
   chip: 20,
-  button: 10,
-  input: 8,
-  card: 12,
+  button: 12, // softened (UI refresh) — friendlier pill-ish buttons
+  input: 12, // softened to match buttons/cards
+  card: 16, // softened 12→16 for a warmer, more premium feel
+  cardLg: 20, // hero / feature cards
   sheet: 20,
   avatar: 999,
 } as const;

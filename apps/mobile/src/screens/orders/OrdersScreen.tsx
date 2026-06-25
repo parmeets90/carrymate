@@ -121,7 +121,7 @@ export function OrdersScreen() {
               {item.ratedByMe ? (
                 <View style={styles.ratedRow}>
                   <Icon name="star" size={16} color={colors.goldPrimary} weight="fill" />
-                  <Text style={styles.ratedText}>Rating submitted — thanks for the feedback</Text>
+                  <Text style={styles.ratedText} numberOfLines={1}>Rating submitted</Text>
                 </View>
               ) : (
                 <PrimaryButton

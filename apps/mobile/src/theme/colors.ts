@@ -38,4 +38,11 @@ export const colors = {
   textSecondary: '#5E6878',
   textHint: '#8E97A8',
   white: '#FFFFFF',
+
+  // Pastel accents — DECORATIVE ONLY (soft blobs/surfaces, never text or CTAs).
+  // Very low saturation so they read as warmth, not colour. (UI refresh 2026-06.)
+  softBlue: '#EAF1FE',
+  softMint: '#E7F7F1',
+  softPeach: '#FDEFE6',
+  softLavender: '#F0ECFB',
 } as const;
