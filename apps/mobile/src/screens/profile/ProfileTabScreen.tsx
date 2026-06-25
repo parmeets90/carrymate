@@ -181,6 +181,19 @@ export function ProfileTabScreen() {
         </Card>
       </Pressable>
 
+      <Text style={styles.sectionLabel}>LEGAL</Text>
+      <Card style={styles.legalCard}>
+        <Pressable onPress={() => nav.navigate('Legal', { doc: 'terms' })} style={styles.legalRow}>
+          <Text style={[styles.linkText, { flex: 1 }]}>Terms of Service</Text>
+          <Icon name="chevronRight" size={16} color={colors.textHint} />
+        </Pressable>
+        <View style={styles.legalSep} />
+        <Pressable onPress={() => nav.navigate('Legal', { doc: 'privacy' })} style={styles.legalRow}>
+          <Text style={[styles.linkText, { flex: 1 }]}>Privacy Policy</Text>
+          <Icon name="chevronRight" size={16} color={colors.textHint} />
+        </Pressable>
+      </Card>
+
       <View style={{ marginTop: spacing.xl }}>
         <SecondaryButton label="Sign out" onPress={signOut} tone="danger" />
       </View>
@@ -213,6 +226,9 @@ const styles = StyleSheet.create({
   linkHint: { ...typography.caption, color: colors.textSecondary, marginTop: 1 },
   deleteLink: { alignSelf: 'center', marginTop: spacing.lg, paddingVertical: spacing.sm },
   deleteLinkText: { ...typography.bodyM, color: colors.textHint, fontWeight: '600' },
+  legalCard: { paddingVertical: spacing.xs },
+  legalRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm },
+  legalSep: { height: 0.5, backgroundColor: colors.borderLight },
   phoneHint: { ...typography.caption, color: colors.textSecondary, marginTop: 1 },
   roleRow: {
     flexDirection: 'row',

@@ -23,6 +23,7 @@ export type RootStackParamList = {
   UserProfile: { userId: string; name?: string | null };
   ChatThread: { conversationId: string; title: string; counterparty?: string | null };
   Notifications: undefined;
+  Legal: { doc: 'terms' | 'privacy' };
   AllowedItems: undefined;
   AddPhone: undefined;
   Transactions: undefined;

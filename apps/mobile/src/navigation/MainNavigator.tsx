@@ -21,6 +21,7 @@ import { ConversationsScreen } from '@/screens/chat/ConversationsScreen';
 import { ChatScreen } from '@/screens/chat/ChatScreen';
 import { NotificationsScreen } from '@/screens/notifications/NotificationsScreen';
 import { AllowedItemsScreen } from '@/screens/sender/AllowedItemsScreen';
+import { LegalScreen } from '@/screens/legal/LegalScreen';
 import { AddPhoneScreen } from '@/screens/profile/AddPhoneScreen';
 import { ProfileTabScreen } from '@/screens/profile/ProfileTabScreen';
 import { UserProfileScreen } from '@/screens/profile/UserProfileScreen';
@@ -117,6 +118,11 @@ export function MainNavigator() {
       />
       <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
       <Stack.Screen name="AllowedItems" component={AllowedItemsScreen} options={{ title: 'What can I send?' }} />
+      <Stack.Screen
+        name="Legal"
+        component={LegalScreen}
+        options={({ route }) => ({ title: route.params.doc === 'terms' ? 'Terms of Service' : 'Privacy Policy' })}
+      />
       <Stack.Screen name="AddPhone" component={AddPhoneScreen} options={{ title: 'Verify phone' }} />
       <Stack.Screen name="Transactions" component={TransactionsScreen} options={{ headerShown: false }} />
       <Stack.Screen

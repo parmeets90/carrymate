@@ -92,7 +92,15 @@ export function PhoneScreen({ navigation }: ScreenProps<'Phone'>) {
         <Text style={styles.disclaimer}>
           CarryMate is a technology platform connecting individuals. It is not a courier company,
           freight forwarder, or customs agent. The traveler assumes full responsibility for items
-          carried as personal luggage. By continuing you agree to our Terms.
+          carried as personal luggage. By continuing you agree to our{' '}
+          <Text style={styles.link} onPress={() => navigation.navigate('Legal', { doc: 'terms' })}>
+            Terms
+          </Text>{' '}
+          and{' '}
+          <Text style={styles.link} onPress={() => navigation.navigate('Legal', { doc: 'privacy' })}>
+            Privacy Policy
+          </Text>
+          .
         </Text>
       </View>
     </KeyboardAvoidingView>
@@ -165,4 +173,5 @@ const styles = StyleSheet.create({
   googleText: { ...typography.bodyL, fontWeight: '700', color: colors.textPrimary },
   terms: { ...typography.caption, color: colors.textHint, textAlign: 'center' },
   disclaimer: { ...typography.caption, color: colors.textHint, textAlign: 'center', lineHeight: 15, fontSize: 10 },
+  link: { color: colors.skyBlue, fontWeight: '700', textDecorationLine: 'underline' },
 });

@@ -6,7 +6,10 @@ import { PhoneScreen } from '@/screens/auth/PhoneScreen';
 import { OtpScreen } from '@/screens/auth/OtpScreen';
 import { ProfileScreen } from '@/screens/onboarding/ProfileScreen';
 import { KycScreen } from '@/screens/kyc/KycScreen';
+import { LegalScreen } from '@/screens/legal/LegalScreen';
 import { MainNavigator } from './MainNavigator';
+
+const legalTitle = (doc: 'terms' | 'privacy') => (doc === 'terms' ? 'Terms of Service' : 'Privacy Policy');
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -26,6 +29,11 @@ export function RootNavigator() {
       <Stack.Navigator screenOptions={baseOptions}>
         <Stack.Screen name="Phone" component={PhoneScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Otp" component={OtpScreen} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="Legal"
+          component={LegalScreen}
+          options={({ route }) => ({ headerShown: true, title: legalTitle(route.params.doc) })}
+        />
       </Stack.Navigator>
     );
   }
