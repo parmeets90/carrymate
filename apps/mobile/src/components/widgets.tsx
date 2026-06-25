@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, Animated, Easing, Pressable } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, spacing, typography, radius, gradients } from '@/theme';
 import { Icon, type IconName } from './Icon';
@@ -89,10 +89,15 @@ export function EmptyState({
   icon = 'star',
   title,
   body,
+  actionLabel,
+  onAction,
 }: {
   icon?: IconName;
   title: string;
   body?: string;
+  /** A clear next step (CLAUDE.md rule 10 — empty states must offer an action). */
+  actionLabel?: string;
+  onAction?: () => void;
 }) {
   return (
     <View style={styles.empty}>
@@ -101,6 +106,11 @@ export function EmptyState({
       </View>
       <Text style={styles.emptyTitle}>{title}</Text>
       {body ? <Text style={styles.emptyBody}>{body}</Text> : null}
+      {actionLabel && onAction ? (
+        <Pressable onPress={onAction} style={styles.emptyAction}>
+          <Text style={styles.emptyActionText}>{actionLabel}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -151,4 +161,12 @@ const styles = StyleSheet.create({
   emptyGlyph: { fontSize: 26, color: colors.skyBlue },
   emptyTitle: { ...typography.titleM, color: colors.textPrimary, textAlign: 'center' },
   emptyBody: { ...typography.bodyM, color: colors.textSecondary, textAlign: 'center', lineHeight: 21 },
+  emptyAction: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.skyBlue,
+    borderRadius: radius.button,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.xl,
+  },
+  emptyActionText: { ...typography.bodyM, fontWeight: '700', color: colors.white },
 });

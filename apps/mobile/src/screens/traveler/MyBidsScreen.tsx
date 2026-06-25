@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { BrandLoader } from '@/components/BrandLoader';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, typography, sizing } from '@/theme';
 import { Card, Badge, statusTone } from '@/components/Card';
@@ -10,6 +11,7 @@ import { api } from '@/lib/api';
 
 export function MyBidsScreen() {
   const insets = useSafeAreaInsets();
+  const nav = useNavigation();
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['my-bids'],
     queryFn: api.myBids,
@@ -28,7 +30,14 @@ export function MyBidsScreen() {
           refreshing={isRefetching}
           contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.md }}
           ListEmptyComponent={
-            <EmptyState icon="bids" title="No bids yet" body="Browse requests from your trips to place a bid." />
+            <EmptyState
+              icon="bids"
+              title="No bids yet"
+              body="Open one of your trips to browse matching requests and place a bid."
+              actionLabel="Go to my trips"
+              // 'Trips' is a sibling tab; resolves through the tab navigator at runtime.
+              onAction={() => nav.navigate('Trips' as never)}
+            />
           }
           renderItem={({ item, index }) => (
             <FadeInUp index={index}>

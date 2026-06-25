@@ -67,7 +67,14 @@ export function MyRequestsScreen() {
           refreshing={isRefetching}
           contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.md }}
           ListEmptyComponent={
-            <EmptyState icon="package" title="No requests yet" body="Use the Post tab to send your first item." />
+            <EmptyState
+              icon="package"
+              title="No requests yet"
+              body="Post your first item and verified travellers can bid to carry it."
+              actionLabel="Post a request"
+              // 'Post' is a sibling tab; resolves through the tab navigator at runtime.
+              onAction={() => nav.navigate('Post' as never)}
+            />
           }
           renderItem={({ item, index }) => {
             const editable = EDITABLE.includes(item.status);

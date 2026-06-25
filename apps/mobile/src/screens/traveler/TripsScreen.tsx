@@ -54,7 +54,13 @@ export function TripsScreen() {
           refreshing={isRefetching}
           contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.md }}
           ListEmptyComponent={
-            <EmptyState icon="trips" title="No trips yet" body="Add a flight to start carrying items." />
+            <EmptyState
+              icon="trips"
+              title="No trips yet"
+              body="Add a flight to start carrying items."
+              actionLabel="Add a trip"
+              onAction={() => nav.navigate('AddRoute')}
+            />
           }
           renderItem={({ item, index }) => {
             const remaining = item.capacityKg - item.capacityUsedKg;
