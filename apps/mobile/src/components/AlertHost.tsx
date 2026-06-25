@@ -63,7 +63,9 @@ export function AlertHost(): React.JSX.Element {
   };
 
   const buttons: AlertButton[] = opts?.buttons?.length ? opts.buttons : [{ text: 'OK' }];
-  const sideBySide = buttons.length === 2;
+  // Only place two buttons side-by-side when both labels are short enough to fit a
+  // half-width button on one line; otherwise stack them (e.g. "Delete account").
+  const sideBySide = buttons.length === 2 && buttons.every((b) => b.text.length <= 10);
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={() => close()} statusBarTranslucent>
@@ -90,6 +92,7 @@ export function AlertHost(): React.JSX.Element {
                   ]}
                 >
                   <Text
+                    numberOfLines={1}
                     style={[
                       styles.btnText,
                       isPrimary && styles.btnTextPrimary,

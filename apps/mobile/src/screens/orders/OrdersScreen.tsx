@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   fema: { ...typography.caption, color: colors.textHint, fontSize: 10, lineHeight: 14, marginTop: spacing.xs },
   doneRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: spacing.sm },
   doneText: { ...typography.bodyM, color: '#096438', fontWeight: '700' },
-  ratedRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: spacing.sm, backgroundColor: colors.goldLight, borderRadius: radius.input },
-  ratedText: { ...typography.bodyM, color: colors.goldPrimary, fontWeight: '700' },
+  ratedRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, backgroundColor: colors.goldLight, borderRadius: radius.input },
+  ratedText: { ...typography.bodyM, color: colors.goldPrimary, fontWeight: '700', flexShrink: 1 },
 });
 
