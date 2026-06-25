@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Text, Pressable, StyleSheet, View, Linking, Platform, PermissionsAndroid } from 'react-native';
 import { BrandLoader } from './BrandLoader';
+import { Icon } from './Icon';
 import { Alert } from './AlertHost';
 import {
   launchImageLibrary,
@@ -107,18 +108,25 @@ export function PhotoButton({
     ]);
   };
 
+  const added = count > 0;
   return (
-    <Pressable onPress={pick} disabled={busy} style={styles.btn}>
+    <Pressable onPress={pick} disabled={busy} style={({ pressed }) => [styles.btn, pressed && styles.btnPressed]}>
       {busy ? (
         <BrandLoader size={24} />
       ) : (
-        <View style={styles.inner}>
-          <Text style={styles.plus}>＋</Text>
-          <Text style={styles.label}>
-            {label}
-            {count > 0 ? ` · ${count} added` : ''}
-          </Text>
-        </View>
+        <>
+          <View style={[styles.iconCircle, added && styles.iconCircleDone]}>
+            <Icon name={added ? 'check' : 'camera'} size={20} color={added ? colors.mintPrimary : colors.skyBlue} weight="fill" />
+          </View>
+          <View style={styles.textCol}>
+            <Text style={styles.label} numberOfLines={1}>
+              {label}
+              {added ? ` · ${count}` : ''}
+            </Text>
+            <Text style={styles.hint}>Take a photo or choose from gallery</Text>
+          </View>
+          <Icon name="chevronRight" size={16} color={colors.textHint} />
+        </>
       )}
     </Pressable>
   );
@@ -126,15 +134,29 @@ export function PhotoButton({
 
 const styles = StyleSheet.create({
   btn: {
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: colors.skyBlue,
-    borderRadius: radius.input,
-    paddingVertical: spacing.md,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.md,
+    borderRadius: radius.card,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
     backgroundColor: colors.skyLight,
+    borderWidth: 0.5,
+    borderColor: '#CFE0F2',
+    minHeight: 56,
+    justifyContent: 'center',
   },
-  inner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  plus: { ...typography.titleM, color: colors.skyBlue },
-  label: { ...typography.bodyM, color: '#185FA5', fontWeight: '600' },
+  btnPressed: { opacity: 0.85 },
+  iconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconCircleDone: { backgroundColor: colors.mintLight },
+  textCol: { flex: 1 },
+  label: { ...typography.bodyM, color: '#185FA5', fontWeight: '700' },
+  hint: { ...typography.caption, color: colors.textHint, marginTop: 1 },
 });

@@ -8,10 +8,12 @@ import {
   Pressable,
   TextInput,
 } from 'react-native';
-import { colors, spacing, typography, sizing, radius, shadows } from '@/theme';
-import { GradientHero } from '@/components/Screen';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, spacing, typography, radius, shadows } from '@/theme';
 import { PrimaryButton } from '@/components/ui';
 import { Icon } from '@/components/Icon';
+import { DecorBlobs } from '@/components/DecorBlobs';
+import { AuthIllustration } from '@/components/AuthIllustration';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
 import type { ScreenProps } from '@/navigation/types';
@@ -19,6 +21,7 @@ import type { ScreenProps } from '@/navigation/types';
 const CODE_LENGTH = 6;
 
 export function OtpScreen({ route, navigation }: ScreenProps<'Otp'>) {
+  const insets = useSafeAreaInsets();
   const { phone } = route.params;
   const completeLogin = useAuth((s) => s.completeLogin);
   const [code, setCode] = useState('');
@@ -46,13 +49,25 @@ export function OtpScreen({ route, navigation }: ScreenProps<'Otp'>) {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
-      <GradientHero
-        eyebrow="Verify"
-        title="Enter the code"
-        subtitle={`Sent to ${phone}`}
-        onBack={() => navigation.goBack()}
-      />
-      <View style={styles.body}>
+      {/* Hero — same pastel language as the phone screen */}
+      <View style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}>
+        <DecorBlobs variant="auth" />
+        <View style={styles.heroTop}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={10} style={styles.back}>
+            <Icon name="back" size={22} color={colors.navyDark} />
+          </Pressable>
+          <Text style={styles.wordmark}>CarryMate</Text>
+          <View style={styles.backSpacer} />
+        </View>
+        <View style={styles.heroCenter}>
+          <AuthIllustration name="trust" size={170} />
+          <Text style={styles.heroTitle}>Enter the code</Text>
+          <Text style={styles.heroSub}>Sent to {phone}</Text>
+        </View>
+      </View>
+
+      {/* Form sheet */}
+      <View style={[styles.formCard, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
         <OtpBoxes value={code} onChange={onChange} error={!!error} />
         {error ? (
           <View style={styles.errorRow}>
@@ -72,7 +87,7 @@ export function OtpScreen({ route, navigation }: ScreenProps<'Otp'>) {
   );
 }
 
-/** Segmented 6-digit code input: visible boxes over one hidden, focused field. */
+/** Segmented 6-digit code input: visible boxes over one hidden field; taps open the keyboard. */
 function OtpBoxes({
   value,
   onChange,
@@ -83,7 +98,7 @@ function OtpBoxes({
   error?: boolean;
 }) {
   const ref = useRef<TextInput>(null);
-  const [focused, setFocused] = useState(true);
+  const [focused, setFocused] = useState(false);
 
   return (
     <Pressable style={styles.boxes} onPress={() => ref.current?.focus()}>
@@ -109,7 +124,6 @@ function OtpBoxes({
         value={value}
         onChangeText={(v) => onChange(v.replace(/\D/g, '').slice(0, CODE_LENGTH))}
         keyboardType="number-pad"
-        autoFocus
         maxLength={CODE_LENGTH}
         textContentType="oneTimeCode"
         autoComplete="sms-otp"
@@ -123,8 +137,25 @@ function OtpBoxes({
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.bgApp },
-  body: { paddingHorizontal: sizing.screenPaddingX, paddingTop: spacing.xl, gap: spacing.lg },
+  flex: { flex: 1, backgroundColor: colors.white },
+  hero: { flex: 1, backgroundColor: colors.white, alignItems: 'center' },
+  heroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', alignSelf: 'stretch', paddingHorizontal: spacing.lg },
+  back: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  backSpacer: { width: 40 },
+  wordmark: { ...typography.titleM, fontFamily: typography.display.fontFamily, fontWeight: '700', color: colors.navyDark, letterSpacing: 0.2 },
+  heroCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingHorizontal: spacing.xl },
+  heroTitle: { ...typography.titleL, fontSize: 24, color: colors.textPrimary, textAlign: 'center', marginTop: spacing.sm },
+  heroSub: { ...typography.bodyM, fontSize: 15, color: colors.textSecondary, textAlign: 'center' },
+  formCard: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    marginTop: -24,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+    gap: spacing.lg,
+    ...shadows.lg,
+  },
   boxes: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm },
   box: {
     flex: 1,
@@ -132,11 +163,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.input,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    backgroundColor: colors.bgCard,
+    backgroundColor: colors.bgSecondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  boxFilled: { borderColor: colors.skyBlue },
+  boxFilled: { borderColor: colors.skyBlue, backgroundColor: colors.white },
   boxActive: { borderColor: colors.skyBlue, borderWidth: 2, backgroundColor: colors.white, ...shadows.sm },
   boxError: { borderColor: colors.dangerRed },
   boxText: { ...typography.titleL, color: colors.textPrimary, fontWeight: '700' },

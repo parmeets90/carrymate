@@ -121,8 +121,11 @@ const styles = StyleSheet.create({
   line: {
     position: 'absolute',
     top: 11,
+    // Span only the gap between adjacent node circles (inset 14px each side =
+    // node radius + 2) so the connector never paints over a node's tick.
+    left: '-50%',
     right: '50%',
-    width: '100%',
+    marginHorizontal: 14,
     height: 2,
     backgroundColor: colors.borderLight,
   },
@@ -136,6 +139,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderLight,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1, // keep nodes above the connector line
   },
   nodeDone: { backgroundColor: colors.mintPrimary, borderColor: colors.mintPrimary },
   nodeActiveRing: { borderColor: '#0B8C57' },

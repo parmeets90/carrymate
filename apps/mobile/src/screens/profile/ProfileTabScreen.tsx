@@ -174,33 +174,25 @@ export function ProfileTabScreen() {
 
       <Text style={styles.sectionLabel}>PRIVACY &amp; DATA</Text>
       <Pressable onPress={exportData} disabled={exporting}>
-        <Card style={styles.linkRow}>
-          <View style={styles.linkIcon}>
-            <Icon name="identity" size={20} color={colors.skyBlue} weight="fill" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.linkText}>Download my data</Text>
-            <Text style={styles.linkHint}>Export everything we hold about you</Text>
-          </View>
-          {exporting ? <BrandLoader size={28} /> : <Icon name="chevronRight" size={18} color={colors.textHint} />}
-        </Card>
-      </Pressable>
-      <Pressable onPress={confirmDelete} disabled={deleting}>
-        <Card style={[styles.linkRow, { marginTop: spacing.sm }]}>
-          <View style={[styles.linkIcon, { backgroundColor: colors.dangerLight }]}>
-            <Icon name="delete" size={20} color={colors.dangerRed} weight="fill" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.linkText, { color: colors.dangerRed }]}>Delete account</Text>
-            <Text style={styles.linkHint}>Permanently remove your personal data</Text>
-          </View>
-          {deleting ? <BrandLoader size={28} /> : <Icon name="chevronRight" size={18} color={colors.textHint} />}
+        <Card style={styles.compactRow}>
+          <Icon name="identity" size={18} color={colors.skyBlue} weight="fill" />
+          <Text style={[styles.linkText, { flex: 1 }]}>Download my data</Text>
+          {exporting ? <BrandLoader size={20} /> : <Icon name="chevronRight" size={16} color={colors.textHint} />}
         </Card>
       </Pressable>
 
       <View style={{ marginTop: spacing.xl }}>
         <SecondaryButton label="Sign out" onPress={signOut} tone="danger" />
       </View>
+
+      {/* Delete is destructive + rarely used — keep it a small, low-emphasis link. */}
+      <Pressable onPress={confirmDelete} disabled={deleting} hitSlop={8} style={styles.deleteLink}>
+        {deleting ? (
+          <BrandLoader size={16} />
+        ) : (
+          <Text style={styles.deleteLinkText}>Delete account</Text>
+        )}
+      </Pressable>
     </ScrollView>
   );
 }
@@ -215,9 +207,12 @@ const styles = StyleSheet.create({
   phoneRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   phoneText: { ...typography.bodyL, fontWeight: '600', color: colors.textPrimary },
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  compactRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md },
   linkIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.skyLight, alignItems: 'center', justifyContent: 'center' },
   linkText: { ...typography.bodyL, fontWeight: '600', color: colors.textPrimary },
   linkHint: { ...typography.caption, color: colors.textSecondary, marginTop: 1 },
+  deleteLink: { alignSelf: 'center', marginTop: spacing.lg, paddingVertical: spacing.sm },
+  deleteLinkText: { ...typography.bodyM, color: colors.textHint, fontWeight: '600' },
   phoneHint: { ...typography.caption, color: colors.textSecondary, marginTop: 1 },
   roleRow: {
     flexDirection: 'row',

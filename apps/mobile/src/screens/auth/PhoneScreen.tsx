@@ -107,7 +107,6 @@ function TextInputBox({ value, onChangeText }: { value: string; onChangeText: (v
       value={value}
       onChangeText={onChangeText}
       keyboardType="phone-pad"
-      autoFocus
       placeholder="98XXXXXXXX"
       placeholderTextColor={colors.textHint}
       onFocus={() => setFocused(true)}

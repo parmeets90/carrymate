@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, typography, sizing } from '@/theme';
+import { colors, spacing, typography, sizing, listTint } from '@/theme';
 import { Card, Badge, statusTone } from '@/components/Card';
 import { EmptyState } from '@/components/widgets';
 import { FadeInUp } from '@/components/anim';
@@ -80,7 +80,7 @@ export function MyRequestsScreen() {
             const editable = EDITABLE.includes(item.status);
             return (
               <FadeInUp index={index}>
-              <Card onPress={() => nav.navigate('RequestDetail', { requestId: item.id })}>
+              <Card style={{ backgroundColor: listTint(index) }} onPress={() => nav.navigate('RequestDetail', { requestId: item.id })}>
                 <View style={styles.row}>
                   <Text style={styles.cardTitle} numberOfLines={1}>
                     {item.title}

@@ -3,7 +3,7 @@ import { BrandLoader } from '@/components/BrandLoader';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, typography, sizing } from '@/theme';
+import { colors, spacing, typography, sizing, listTint } from '@/theme';
 import { Card, Badge, statusTone } from '@/components/Card';
 import { EmptyState } from '@/components/widgets';
 import { FadeInUp } from '@/components/anim';
@@ -41,7 +41,7 @@ export function MyBidsScreen() {
           }
           renderItem={({ item, index }) => (
             <FadeInUp index={index}>
-              <Card>
+              <Card style={{ backgroundColor: listTint(index) }}>
                 <View style={styles.row}>
                   <Text style={styles.route}>
                     {item.route.originAirport} → {item.route.destinationAirport}

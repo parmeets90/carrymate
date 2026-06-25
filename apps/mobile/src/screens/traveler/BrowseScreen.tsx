@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { BrandLoader } from '@/components/BrandLoader';
 import { useQuery } from '@tanstack/react-query';
-import { colors, spacing, typography, sizing } from '@/theme';
+import { colors, spacing, typography, sizing, radius, listTint } from '@/theme';
 import { Card, Badge } from '@/components/Card';
 import { EmptyState } from '@/components/widgets';
 import { FadeInUp } from '@/components/anim';
@@ -36,6 +36,7 @@ export function BrowseScreen({ route, navigation }: ScreenProps<'Browse'>) {
           renderItem={({ item, index }) => (
             <FadeInUp index={index}>
               <Card
+                style={{ backgroundColor: listTint(index) }}
                 onPress={() =>
                   navigation.navigate('PlaceBid', { requestId: item.id, routeId, title: item.title })
                 }
@@ -59,10 +60,12 @@ export function BrowseScreen({ route, navigation }: ScreenProps<'Browse'>) {
                     })
                   }
                 >
-                  <Text style={styles.sender}>{item.senderName ?? 'Sender'}</Text>
+                  <Icon name="profile" size={16} color={colors.skyBlue} weight="fill" />
+                  <Text style={styles.senderName}>{item.senderName ?? 'Sender'}</Text>
                   <Icon name="star" size={12} color={colors.goldPrimary} weight="fill" />
-                  <Text style={styles.sender}>{item.senderRating.toFixed(1)}</Text>
-                  <Icon name="chevronRight" size={13} color={colors.textHint} />
+                  <Text style={styles.senderRating}>{item.senderRating.toFixed(1)}</Text>
+                  <Text style={styles.viewProfile}>View</Text>
+                  <Icon name="chevronRight" size={14} color={colors.skyBlue} />
                 </Pressable>
                 <Text style={styles.cta}>Place a bid →</Text>
               </Card>
@@ -80,7 +83,21 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
   cardTitle: { ...typography.bodyL, fontWeight: '600', color: colors.textPrimary, flex: 1 },
   meta: { ...typography.bodyM, color: colors.textSecondary, marginTop: spacing.xs },
-  senderRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm },
-  sender: { ...typography.label, color: colors.textSecondary },
+  senderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: spacing.sm,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.white,
+    borderWidth: 0.5,
+    borderColor: '#CFE0F2',
+    borderRadius: radius.chip,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  senderName: { ...typography.label, color: colors.navyMid, fontWeight: '700' },
+  senderRating: { ...typography.label, color: colors.textSecondary },
+  viewProfile: { ...typography.caption, color: colors.skyBlue, fontWeight: '700', marginLeft: 2 },
   cta: { ...typography.label, color: colors.skyBlue, marginTop: spacing.sm, fontWeight: '600' },
 });

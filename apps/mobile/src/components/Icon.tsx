@@ -24,9 +24,11 @@ import {
   MapPin,
   XCircle,
   CaretRight,
+  CaretLeft,
   CalendarBlank,
   PencilSimple,
   Trash,
+  Camera,
   type IconProps,
   type IconWeight,
 } from 'phosphor-react-native';
@@ -62,9 +64,11 @@ const REGISTRY = {
   location: MapPin,
   cross: XCircle,
   chevronRight: CaretRight,
+  back: CaretLeft,
   calendar: CalendarBlank,
   edit: PencilSimple,
   delete: Trash,
+  camera: Camera,
 } as const;
 
 export type IconName = keyof typeof REGISTRY;

@@ -1,7 +1,15 @@
 /**
  * CarryMate mobile design system (see CLAUDE.md). StyleSheet-based.
  */
+import { colors } from './colors';
 export { colors } from './colors';
+
+/**
+ * Soft pastel tints for list rows (UI refresh). Cycle by item index to give list
+ * cards subtle, warm, alternating backgrounds — never for text or interactive fills.
+ */
+export const pastelTints = [colors.softBlue, colors.softMint, colors.softPeach, colors.softLavender] as const;
+export const listTint = (index: number): string => pastelTints[index % pastelTints.length]!;
 
 /**
  * Type scale. Plus Jakarta Sans (display/headings) + Inter (body/UI) are bundled
