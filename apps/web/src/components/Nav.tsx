@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { Button } from './primitives';
-import { GlobeIcon } from './icons';
 
 const LINKS = [
   { href: '#how', label: 'How it works' },
@@ -113,12 +112,11 @@ export function Nav() {
 
 export function Wordmark({ className }: { className?: string }) {
   return (
-    <span className={clsx('flex items-center gap-2 text-ink', className)}>
-      <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-xl bg-navy text-bone">
-        <GlobeIcon className="h-[18px] w-[18px]" />
-        <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-bone bg-mint" />
+    <span className={clsx('flex items-center gap-2.5 text-ink', className)}>
+      <img src="/logo-mark.png" alt="" width={34} height={34} className="h-[34px] w-[34px]" />
+      <span className="text-[20px] font-bold tracking-[-0.02em]">
+        Carry<span className="text-[#E0931A]">Mate</span>
       </span>
-      <span className="text-[19px] font-bold tracking-[-0.02em]">CarryMate</span>
     </span>
   );
 }

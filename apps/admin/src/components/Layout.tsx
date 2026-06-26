@@ -55,8 +55,8 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-muted/30">
       <aside className="hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex items-center gap-2.5 px-6 py-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-sidebar-accent text-white shadow-sm">
-            <Plane className="h-5 w-5" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-sm">
+            <img src="/logo-mark.png" alt="CarryMate" className="h-7 w-7" />
           </div>
           <div className="leading-tight">
             <p className="text-sm font-bold text-white">CarryMate</p>

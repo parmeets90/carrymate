@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, Easing, Dimensions, AccessibilityInfo } from 'react-native';
+import { View, Text, Image, StyleSheet, Animated, Easing, Dimensions, AccessibilityInfo } from 'react-native';
 import { AirplaneTilt, Gift } from 'phosphor-react-native';
 import { colors, typography, spacing } from '@/theme';
 
@@ -129,6 +129,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
       {/* Wordmark */}
       <View style={styles.overlay} pointerEvents="none">
         <Animated.View style={{ opacity: logoO, transform: [{ scale: logoS }], alignItems: 'center' }}>
+          <Image source={require('../assets/splash-logo.png')} style={styles.mark} resizeMode="contain" />
           <Text style={styles.wordmark}>CarryMate</Text>
           <Animated.Text style={[styles.tagline, { opacity: tagO }]}>
             Delivered Through Trusted Travelers
@@ -152,6 +153,7 @@ const styles = StyleSheet.create({
     left: width / 2 - GIFT_SIZE / 2,
   },
   overlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  mark: { width: 92, height: 92, marginBottom: spacing.md },
   wordmark: {
     fontFamily: typography.display.fontFamily,
     fontSize: 40,
