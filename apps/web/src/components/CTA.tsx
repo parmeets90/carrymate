@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Reveal, Button } from './primitives';
 import { ArrowIcon, CheckIcon } from './icons';
+import { useContent } from '@/lib/content';
 
 export function CTA() {
+  const { settings } = useContent();
   return (
     <section id="download" className="relative overflow-hidden bg-bone py-24 md:py-32">
       <div className="wrap">
@@ -28,8 +30,8 @@ export function CTA() {
               </p>
 
               <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-                <StoreButton store="App Store" />
-                <StoreButton store="Google Play" />
+                <StoreButton store="App Store" href={settings.appStoreUrl || '#'} />
+                <StoreButton store="Google Play" href={settings.playStoreUrl || '#'} />
               </div>
 
               <NewsletterForm />
@@ -50,9 +52,9 @@ export function CTA() {
   );
 }
 
-function StoreButton({ store }: { store: string }) {
+function StoreButton({ store, href }: { store: string; href: string }) {
   return (
-    <a href="#" aria-label={`Download on ${store}`}>
+    <a href={href} aria-label={`Download on ${store}`}>
       <motion.span
         whileHover={{ y: -2 }}
         whileTap={{ scale: 0.98 }}

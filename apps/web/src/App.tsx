@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { ContentContext, FALLBACK, fetchContent, type SiteContent } from './lib/content';
 import { Nav } from './components/Nav';
 import { Hero } from './components/Hero';
 import { Stories } from './components/Stories';
@@ -13,7 +15,19 @@ import { CTA } from './components/CTA';
 import { Footer } from './components/Footer';
 
 export default function App() {
+  // Hydrate from the CMS after mount; static fallback renders instantly so
+  // there's never a blank state or layout shift.
+  const [content, setContent] = useState<SiteContent>(FALLBACK);
+  useEffect(() => {
+    let alive = true;
+    fetchContent().then((c) => alive && setContent(c));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return (
+    <ContentContext.Provider value={content}>
     <div className="min-h-screen bg-bone">
       <a
         href="#how"
@@ -37,5 +51,6 @@ export default function App() {
       </main>
       <Footer />
     </div>
+    </ContentContext.Provider>
   );
 }

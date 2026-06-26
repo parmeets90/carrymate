@@ -629,3 +629,70 @@ model ScanRule {
   @@index([active])
   @@map("scan_rules")
 }
+
+// ----- Website CMS (admin-managed marketing-site content) -----
+
+/// A testimonial / quote shown on the marketing site.
+model Testimonial {
+  id        String   @id @default(uuid()) @db.Uuid
+  quote     String   @db.Text
+  name      String   @db.VarChar(80)
+  role      String   @db.VarChar(80) // e.g. "Traveler · 31 deliveries"
+  rating    Int      @default(5) // 1..5 stars
+  accent    String   @default("gold") @db.VarChar(16) // gold | mint | sky | ember
+  sortOrder Int      @default(0) @map("sort_order")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([active, sortOrder])
+  @@map("testimonials")
+}
+
+/// A founder shown in the About section.
+model Founder {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(80)
+  role      String   @db.VarChar(80)
+  initials  String   @db.VarChar(4)
+  accent    String   @default("sky") @db.VarChar(16) // gold | mint | sky | ember
+  sortOrder Int      @default(0) @map("sort_order")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([active, sortOrder])
+  @@map("founders")
+}
+
+/// A FAQ entry shown on the marketing site.
+model FaqItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  question  String   @db.VarChar(200)
+  answer    String   @db.Text
+  sortOrder Int      @default(0) @map("sort_order")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([active, sortOrder])
+  @@map("faq_items")
+}
+
+/// Singleton branding / contact settings for the marketing site (one row).
+model SiteSetting {
+  id           String   @id @default("singleton")
+  brandName    String   @default("CarryMate") @map("brand_name") @db.VarChar(60)
+  tagline      String   @default("") @db.VarChar(200)
+  contactEmail String   @default("") @map("contact_email") @db.VarChar(120)
+  supportEmail String   @default("") @map("support_email") @db.VarChar(120)
+  contactPhone String   @default("") @map("contact_phone") @db.VarChar(40)
+  twitterUrl   String   @default("") @map("twitter_url") @db.VarChar(200)
+  instagramUrl String   @default("") @map("instagram_url") @db.VarChar(200)
+  linkedinUrl  String   @default("") @map("linkedin_url") @db.VarChar(200)
+  appStoreUrl  String   @default("") @map("app_store_url") @db.VarChar(200)
+  playStoreUrl String   @default("") @map("play_store_url") @db.VarChar(200)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("site_settings")
+}

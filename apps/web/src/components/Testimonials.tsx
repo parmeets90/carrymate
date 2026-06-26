@@ -1,31 +1,16 @@
 import { Section, Eyebrow, Reveal } from './primitives';
 import { StarIcon } from './icons';
+import { useContent, type Accent } from '@/lib/content';
 
-const QUOTES = [
-  {
-    quote:
-      'My mother sends pickle and snacks every few weeks now. It actually arrives fresh, and I always know who’s carrying it. It feels like home reaching me.',
-    name: 'Sana K.',
-    role: 'Recipient · Dubai',
-    tint: 'bg-gold-tint',
-  },
-  {
-    quote:
-      'I fly Mumbai–Dubai for work twice a month with half-empty bags. Now those trips pay for themselves, and the open-box step means I’m never carrying anything I haven’t seen.',
-    name: 'Vikram R.',
-    role: 'Traveler · 31 deliveries',
-    tint: 'bg-sky-tint',
-  },
-  {
-    quote:
-      'Transcripts had to reach my university in four days. Courier couldn’t promise it. A verified traveler hand-carried them and I confirmed delivery with a code. Lifesaver.',
-    name: 'Rohan M.',
-    role: 'Sender · Pune',
-    tint: 'bg-mint-tint',
-  },
-];
+const TINT: Record<Accent, string> = {
+  gold: 'bg-gold-tint',
+  sky: 'bg-sky-tint',
+  mint: 'bg-mint-tint',
+  ember: 'bg-ember-tint',
+};
 
 export function Testimonials() {
+  const { testimonials } = useContent();
   return (
     <Section className="bg-bone">
       <div className="wrap">
@@ -47,19 +32,19 @@ export function Testimonials() {
         </div>
 
         <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {QUOTES.map((q, i) => (
-            <Reveal key={q.name} delay={i * 0.08}>
+          {testimonials.map((q, i) => (
+            <Reveal key={q.id} delay={i * 0.08}>
               <figure className="flex h-full flex-col rounded-xl2 border border-line bg-surface p-7 shadow-hair transition-shadow duration-500 hover:shadow-lift">
                 <div className="flex items-center gap-0.5 text-gold">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <StarIcon key={j} className="h-4 w-4" style={{ fill: '#B7791F' }} />
+                  {Array.from({ length: q.rating }).map((_, j) => (
+                    <StarIcon key={j} className="h-4 w-4" style={{ fill: '#A0710E' }} />
                   ))}
                 </div>
                 <blockquote className="mt-5 flex-1 font-serif text-xl leading-snug text-ink">
                   “{q.quote}”
                 </blockquote>
                 <figcaption className="mt-7 flex items-center gap-3">
-                  <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full ${q.tint} font-semibold text-ink`}>
+                  <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full ${TINT[q.accent]} font-semibold text-ink`}>
                     {q.name[0]}
                   </span>
                   <span>

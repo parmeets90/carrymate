@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authenticate, requireAdmin } from '../../middleware/auth.middleware';
 import { validateBody } from '../../middleware/validate';
 import { scanRulesAdminRouter } from '../scanrules/scanrules.routes';
+import { siteAdminRouter } from '../site/site.routes';
 import { rejectKycSchema, setStatusSchema, resolveDisputeSchema } from './admin.validators';
 import {
   getPendingKyc,
@@ -65,3 +66,6 @@ adminRouter.post('/disputes/:disputeId/resolve', validateBody(resolveDisputeSche
 
 // Open-box Smart Scan rule management (list/add/edit/delete).
 adminRouter.use('/scan-rules', scanRulesAdminRouter);
+
+// Website CMS — testimonials, founders, FAQs, branding & contact.
+adminRouter.use('/site', siteAdminRouter);

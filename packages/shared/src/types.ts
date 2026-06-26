@@ -399,6 +399,60 @@ export interface ActiveScanRule {
   category: string | null;
 }
 
+// ----- Website CMS (admin-managed marketing-site content) -----
+
+export type SiteAccent = 'gold' | 'mint' | 'sky' | 'ember';
+
+export interface TestimonialDto {
+  id: string;
+  quote: string;
+  name: string;
+  role: string;
+  rating: number;
+  accent: SiteAccent;
+  sortOrder: number;
+  active: boolean;
+}
+
+export interface FounderDto {
+  id: string;
+  name: string;
+  role: string;
+  initials: string;
+  accent: SiteAccent;
+  sortOrder: number;
+  active: boolean;
+}
+
+export interface FaqItemDto {
+  id: string;
+  question: string;
+  answer: string;
+  sortOrder: number;
+  active: boolean;
+}
+
+export interface SiteSettingsDto {
+  brandName: string;
+  tagline: string;
+  contactEmail: string;
+  supportEmail: string;
+  contactPhone: string;
+  twitterUrl: string;
+  instagramUrl: string;
+  linkedinUrl: string;
+  appStoreUrl: string;
+  playStoreUrl: string;
+}
+
+/** Public aggregate the marketing site fetches (active rows only, sorted). */
+export interface SiteContentDto {
+  settings: SiteSettingsDto;
+  founders: FounderDto[];
+  testimonials: TestimonialDto[];
+  faqs: FaqItemDto[];
+}
+
 /**
  * Public "trust profile" — what one party sees about another (a sender vetting
  * a traveler, or a traveler vetting a sender). Deliberately carries NO personal

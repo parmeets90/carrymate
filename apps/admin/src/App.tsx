@@ -12,6 +12,10 @@ import { Risk } from './pages/Risk';
 import { FailedPayouts } from './pages/FailedPayouts';
 import { Flights } from './pages/Flights';
 import { ScanRules } from './pages/ScanRules';
+import { Testimonials } from './pages/site/Testimonials';
+import { Founders } from './pages/site/Founders';
+import { WebsiteFaq } from './pages/site/WebsiteFaq';
+import { Branding } from './pages/site/Branding';
 import { Placeholder } from './pages/Placeholder';
 import { Login } from './pages/Login';
 import { useAuth } from './lib/auth';
@@ -43,6 +47,10 @@ export function App() {
         <Route path="/payouts" element={<FailedPayouts />} />
         <Route path="/flights" element={<Flights />} />
         <Route path="/scan-rules" element={<ScanRules />} />
+        <Route path="/site/testimonials" element={<Testimonials />} />
+        <Route path="/site/founders" element={<Founders />} />
+        <Route path="/site/faq" element={<WebsiteFaq />} />
+        <Route path="/site/branding" element={<Branding />} />
         <Route path="*" element={<Placeholder title="Not found" phase="—" />} />
       </Routes>
     </Layout>

@@ -16,6 +16,10 @@ import type {
   PendingRouteItem,
   ScanRuleDto,
   ScanRuleKind,
+  TestimonialDto,
+  FounderDto,
+  FaqItemDto,
+  SiteSettingsDto,
 } from '@carrymate/shared';
 
 type AdminOrder = OrderView & { senderName: string | null; travelerName: string | null };
@@ -149,6 +153,63 @@ export const api = {
     authed<ScanRuleDto>(`/v1/admin/scan-rules/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
   deleteScanRule: (id: string) =>
     authed<{ success: boolean }>(`/v1/admin/scan-rules/${id}`, { method: 'DELETE' }),
+
+  // ----- Website CMS -----
+  siteSettings: () => authed<SiteSettingsDto>('/v1/admin/site/settings'),
+  updateSiteSettings: (input: Partial<SiteSettingsDto>) =>
+    authed<SiteSettingsDto>('/v1/admin/site/settings', {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+
+  testimonials: () => authed<TestimonialDto[]>('/v1/admin/site/testimonials'),
+  createTestimonial: (input: TestimonialInput) =>
+    authed<TestimonialDto>('/v1/admin/site/testimonials', { method: 'POST', body: JSON.stringify(input) }),
+  updateTestimonial: (id: string, input: Partial<TestimonialInput>) =>
+    authed<TestimonialDto>(`/v1/admin/site/testimonials/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  deleteTestimonial: (id: string) =>
+    authed<{ success: boolean }>(`/v1/admin/site/testimonials/${id}`, { method: 'DELETE' }),
+
+  founders: () => authed<FounderDto[]>('/v1/admin/site/founders'),
+  createFounder: (input: FounderInput) =>
+    authed<FounderDto>('/v1/admin/site/founders', { method: 'POST', body: JSON.stringify(input) }),
+  updateFounder: (id: string, input: Partial<FounderInput>) =>
+    authed<FounderDto>(`/v1/admin/site/founders/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  deleteFounder: (id: string) =>
+    authed<{ success: boolean }>(`/v1/admin/site/founders/${id}`, { method: 'DELETE' }),
+
+  faqs: () => authed<FaqItemDto[]>('/v1/admin/site/faqs'),
+  createFaq: (input: FaqInput) =>
+    authed<FaqItemDto>('/v1/admin/site/faqs', { method: 'POST', body: JSON.stringify(input) }),
+  updateFaq: (id: string, input: Partial<FaqInput>) =>
+    authed<FaqItemDto>(`/v1/admin/site/faqs/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  deleteFaq: (id: string) =>
+    authed<{ success: boolean }>(`/v1/admin/site/faqs/${id}`, { method: 'DELETE' }),
+};
+
+export type SiteAccentValue = 'gold' | 'mint' | 'sky' | 'ember';
+export type TestimonialInput = {
+  quote: string;
+  name: string;
+  role: string;
+  rating?: number;
+  accent?: SiteAccentValue;
+  sortOrder?: number;
+  active?: boolean;
+};
+export type FounderInput = {
+  name: string;
+  role: string;
+  initials: string;
+  accent?: SiteAccentValue;
+  sortOrder?: number;
+  active?: boolean;
+};
+export type FaqInput = {
+  question: string;
+  answer: string;
+  sortOrder?: number;
+  active?: boolean;
 };
 
 export type ScanRuleInput = {

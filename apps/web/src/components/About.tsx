@@ -1,15 +1,17 @@
 import { Section, Eyebrow, Reveal } from './primitives';
+import { useContent, type Accent } from '@/lib/content';
+
+const TINT: Record<Accent, string> = {
+  gold: 'bg-gold-tint',
+  sky: 'bg-sky-tint',
+  mint: 'bg-mint-tint',
+  ember: 'bg-ember-tint',
+};
 
 const VALUES = [
   ['Trust before scale', 'Every trust mechanism ships before we spend on growth. A marketplace people trust strangers through is the only moat worth building.'],
   ['Personal, not commercial', 'We move personal effects between people — never goods bought to resell. That scope keeps senders, travelers and customs on the same side.'],
   ['Honest by default', 'Open-box declarations, real ratings, plain language. We’d rather under-promise and arrive than over-sell and fail.'],
-];
-
-const FOUNDERS = [
-  { name: 'Aamir Wani', role: 'Trust & Operations', initials: 'AW', tint: 'bg-gold-tint' },
-  { name: 'Rishav Tiwari', role: 'Growth & Community', initials: 'RT', tint: 'bg-ember-tint' },
-  { name: 'Parmeet Singh', role: 'Product & Engineering', initials: 'PS', tint: 'bg-sky-tint' },
 ];
 
 const TIMELINE = [
@@ -19,6 +21,7 @@ const TIMELINE = [
 ];
 
 export function About() {
+  const { founders } = useContent();
   return (
     <Section id="about" className="bg-canvas">
       <div className="wrap grid gap-14 lg:grid-cols-[1fr_1fr]">
@@ -85,13 +88,13 @@ export function About() {
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">Founders</p>
               <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                {FOUNDERS.map((f) => (
+                {founders.map((f) => (
                   <figure
-                    key={f.name}
+                    key={f.id}
                     className="group rounded-xl2 border border-line bg-surface p-6 text-center shadow-hair transition-all duration-500 ease-editorial hover:-translate-y-1 hover:shadow-lift"
                   >
                     <div
-                      className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${f.tint} font-serif text-2xl text-ink ring-1 ring-line`}
+                      className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${TINT[f.accent]} font-serif text-2xl text-ink ring-1 ring-line`}
                     >
                       {f.initials}
                     </div>

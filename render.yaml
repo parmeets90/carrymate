@@ -69,6 +69,11 @@ services:
     branch: main
     buildCommand: npm install --include=dev && npm run web:build
     staticPublishPath: apps/web/dist
+    envVars:
+      # Point the marketing site at the API so it pulls live CMS content.
+      # Set to the carrymate-api URL, e.g. https://carrymate-api.onrender.com
+      - key: VITE_API_BASE_URL
+        sync: false
     routes:
       - type: rewrite
         source: /*

@@ -11,6 +11,10 @@ import {
   Wallet,
   Banknote,
   ScanLine,
+  Quote,
+  UsersRound,
+  HelpCircle,
+  Palette,
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -31,6 +35,20 @@ const NAV = [
   { to: '/scan-rules', label: 'Smart Scan Rules', icon: ScanLine },
 ];
 
+// Marketing-site CMS — content the public website pulls live.
+const WEBSITE_NAV = [
+  { to: '/site/testimonials', label: 'Testimonials', icon: Quote },
+  { to: '/site/founders', label: 'Founders', icon: UsersRound },
+  { to: '/site/faq', label: 'FAQ', icon: HelpCircle },
+  { to: '/site/branding', label: 'Branding & Contact', icon: Palette },
+];
+
+const navItemClass = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+    isActive ? 'bg-white/10 text-white' : 'text-sidebar-foreground hover:bg-white/5 hover:text-white',
+  );
+
 export function Layout({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
   return (
@@ -45,26 +63,26 @@ export function Layout({ children }: { children: ReactNode }) {
             <p className="text-xs text-sidebar-muted">Operations</p>
           </div>
         </div>
-        <nav className="flex-1 space-y-0.5 px-3 py-2">
+        <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-2">
           {NAV.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-white/10 text-white'
-                    : 'text-sidebar-foreground hover:bg-white/5 hover:text-white',
-                )
-              }
-            >
+            <NavLink key={to} to={to} end={end} className={navItemClass}>
               {({ isActive }) => (
                 <>
-                  <Icon
-                    className={cn('h-4 w-4', isActive ? 'text-sidebar-accent' : 'text-sidebar-muted')}
-                  />
+                  <Icon className={cn('h-4 w-4', isActive ? 'text-sidebar-accent' : 'text-sidebar-muted')} />
+                  {label}
+                </>
+              )}
+            </NavLink>
+          ))}
+
+          <p className="px-3 pb-1 pt-5 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-muted">
+            Website
+          </p>
+          {WEBSITE_NAV.map(({ to, label, icon: Icon }) => (
+            <NavLink key={to} to={to} className={navItemClass}>
+              {({ isActive }) => (
+                <>
+                  <Icon className={cn('h-4 w-4', isActive ? 'text-sidebar-accent' : 'text-sidebar-muted')} />
                   {label}
                 </>
               )}
