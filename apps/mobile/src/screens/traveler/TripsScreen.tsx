@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: 999,
   },
-  addBtnText: { ...typography.label, color: '#185FA5', fontWeight: '700' },
+  addBtnText: { ...typography.label, color: colors.primary, fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   badgeRow: { flexDirection: 'row', marginTop: spacing.xs },
   cardTitle: { ...typography.bodyL, fontWeight: '700', color: colors.textPrimary },

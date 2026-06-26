@@ -59,7 +59,7 @@ export function AddPhoneScreen({ navigation }: ScreenProps<'AddPhone'>) {
     <ScrollView style={styles.container} contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.md }}>
       <Text style={styles.title}>Add your phone</Text>
       <View style={styles.trustHint}>
-        <Icon name="verified" size={15} color="#185FA5" weight="fill" />
+        <Icon name="verified" size={15} color={colors.primary} weight="fill" />
         <Text style={styles.trustHintText}>
           A verified phone is required to post, bid, and pay — it keeps the community reachable and accountable.
         </Text>
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },
-  trustHintText: { ...typography.caption, color: '#185FA5', lineHeight: 16, flex: 1, fontWeight: '600' },
+  trustHintText: { ...typography.caption, color: colors.primary, lineHeight: 16, flex: 1, fontWeight: '600' },
   label: { ...typography.label, color: colors.textSecondary },
   phoneRow: { flexDirection: 'row', gap: spacing.sm },
   numInput: {

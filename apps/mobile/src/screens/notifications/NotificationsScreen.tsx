@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
     backgroundColor: colors.bgCard,
-    borderRadius: radius.card + 4,
+    borderRadius: radius.card,
     borderWidth: 0.5,
     borderColor: colors.borderLight,
     padding: spacing.lg,

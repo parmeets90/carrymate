@@ -44,7 +44,7 @@ export function RequestDetailScreen({ route, navigation }: ScreenProps<'RequestD
 
       {insights.data && (
         <View style={styles.insights}>
-          <Icon name="trips" size={16} color="#185FA5" weight="fill" />
+          <Icon name="trips" size={16} color={colors.primary} weight="fill" />
           <Text style={styles.insightsText}>
             {insights.data.activeTravelers} traveler{insights.data.activeTravelers === 1 ? '' : 's'} active to{' '}
             {insights.data.destinationCity} this week
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },
-  insightsText: { ...typography.bodyM, color: '#185FA5', fontWeight: '600', flex: 1 },
+  insightsText: { ...typography.bodyM, color: colors.primary, fontWeight: '600', flex: 1 },
   list: { paddingVertical: spacing.lg, gap: spacing.md },
   head: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 },

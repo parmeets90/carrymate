@@ -11,8 +11,7 @@ import {
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import LinearGradient from 'react-native-linear-gradient';
-import { colors, spacing, typography, radius, sizing, gradients } from '@/theme';
+import { colors, spacing, typography, radius, sizing } from '@/theme';
 import { Icon } from '@/components/Icon';
 import { BrandLoader } from '@/components/BrandLoader';
 import { api } from '@/lib/api';
@@ -171,18 +170,7 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
     return (
       <View>
         <View style={[styles.bubbleRow, mine ? styles.rowMine : styles.rowTheirs]}>
-          {mine ? (
-            <LinearGradient
-              colors={[...gradients.sky]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[styles.bubble, styles.bubbleMine]}
-            >
-              {content}
-            </LinearGradient>
-          ) : (
-            <View style={[styles.bubble, styles.bubbleTheirs]}>{content}</View>
-          )}
+          <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>{content}</View>
         </View>
         {showSeen && (
           <View style={styles.seenRow}>
@@ -212,7 +200,7 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
           ListHeaderComponent={
             <View style={styles.notice}>
-              <Icon name="verified" size={16} color="#185FA5" weight="fill" />
+              <Icon name="verified" size={16} color={colors.primary} weight="fill" />
               <Text style={styles.noticeText}>
                 Keep chat on CarryMate. Phone numbers, emails & payment handles are removed
                 automatically to protect both of you.
@@ -233,14 +221,9 @@ export function ChatScreen({ route }: ScreenProps<'ChatThread'>) {
           maxLength={2000}
         />
         <Pressable onPress={onSend} disabled={!text.trim() || send.isPending}>
-          <LinearGradient
-            colors={!text.trim() || send.isPending ? ['#AEB6C2', '#AEB6C2'] : [...gradients.sky]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.sendBtn}
-          >
+          <View style={[styles.sendBtn, { backgroundColor: !text.trim() || send.isPending ? '#AEB6C2' : colors.primary }]}>
             <Icon name="send" size={20} color={colors.white} weight="fill" />
-          </LinearGradient>
+          </View>
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -259,7 +242,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
-  noticeText: { ...typography.caption, color: '#185FA5', lineHeight: 16, flex: 1 },
+  noticeText: { ...typography.caption, color: colors.primary, lineHeight: 16, flex: 1 },
   bubbleRow: { flexDirection: 'row' },
   rowMine: { justifyContent: 'flex-end' },
   rowTheirs: { justifyContent: 'flex-start' },

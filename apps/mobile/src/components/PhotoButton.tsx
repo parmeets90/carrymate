@@ -157,6 +157,6 @@ const styles = StyleSheet.create({
   },
   iconCircleDone: { backgroundColor: colors.mintLight },
   textCol: { flex: 1 },
-  label: { ...typography.bodyM, color: '#185FA5', fontWeight: '700' },
+  label: { ...typography.bodyM, color: colors.primary, fontWeight: '700' },
   hint: { ...typography.caption, color: colors.textHint, marginTop: 1 },
 });
