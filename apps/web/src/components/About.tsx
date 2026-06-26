@@ -93,11 +93,22 @@ export function About() {
                     key={f.id}
                     className="group rounded-xl2 border border-line bg-surface p-6 text-center shadow-hair transition-all duration-500 ease-editorial hover:-translate-y-1 hover:shadow-lift"
                   >
-                    <div
-                      className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${TINT[f.accent]} font-serif text-2xl text-ink ring-1 ring-line`}
-                    >
-                      {f.initials}
-                    </div>
+                    {f.imageUrl ? (
+                      <img
+                        src={f.imageUrl}
+                        alt={f.name}
+                        loading="lazy"
+                        width={80}
+                        height={80}
+                        className="mx-auto h-20 w-20 rounded-full object-cover ring-1 ring-line"
+                      />
+                    ) : (
+                      <div
+                        className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${TINT[f.accent]} font-display text-2xl font-bold text-ink ring-1 ring-line`}
+                      >
+                        {f.initials}
+                      </div>
+                    )}
                     <figcaption className="mt-4 text-[15px] font-bold text-ink">{f.name}</figcaption>
                     <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">{f.role}</p>
                   </figure>

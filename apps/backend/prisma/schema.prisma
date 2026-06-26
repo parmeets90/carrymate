@@ -655,6 +655,7 @@ model Founder {
   name      String   @db.VarChar(80)
   role      String   @db.VarChar(80)
   initials  String   @db.VarChar(4)
+  imageUrl  String   @default("") @map("image_url") @db.VarChar(400) // photo URL; falls back to initials
   accent    String   @default("sky") @db.VarChar(16) // gold | mint | sky | ember
   sortOrder Int      @default(0) @map("sort_order")
   active    Boolean  @default(true)

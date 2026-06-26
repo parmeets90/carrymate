@@ -419,6 +419,7 @@ export interface FounderDto {
   name: string;
   role: string;
   initials: string;
+  imageUrl: string;
   accent: SiteAccent;
   sortOrder: number;
   active: boolean;

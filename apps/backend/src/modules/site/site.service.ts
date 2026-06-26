@@ -41,6 +41,7 @@ const founderDto = (f: Founder): FounderDto => ({
   name: f.name,
   role: f.role,
   initials: f.initials,
+  imageUrl: f.imageUrl,
   accent: asAccent(f.accent),
   sortOrder: f.sortOrder,
   active: f.active,

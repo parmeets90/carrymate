@@ -53,7 +53,12 @@ export default {
         'clay-tint': '#FAEDE6',
       },
       fontFamily: {
-        serif: ['Fraunces', 'Newsreader', 'Georgia', 'serif'],
+        // `display`/`serif` both map to Bricolage Grotesque — an expressive,
+        // optically-sized grotesque that reads premium without the dated-serif
+        // feel. `serif` is kept as an alias so existing `font-serif` headings
+        // pick it up without a sweep.
+        display: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
+        serif: ['"Bricolage Grotesque"', 'system-ui', 'sans-serif'],
         sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },

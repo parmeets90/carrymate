@@ -83,7 +83,7 @@ function NewsletterForm() {
         e.preventDefault();
         if (email.includes('@')) setSent(true);
       }}
-      className="mx-auto mt-8 flex max-w-md items-center gap-2"
+      className="mx-auto mt-8 flex max-w-md flex-col items-stretch gap-2 sm:flex-row sm:items-center"
     >
       <label htmlFor="cta-email" className="sr-only">
         Email address for early-access updates

@@ -201,6 +201,7 @@ export type FounderInput = {
   name: string;
   role: string;
   initials: string;
+  imageUrl?: string;
   accent?: SiteAccentValue;
   sortOrder?: number;
   active?: boolean;

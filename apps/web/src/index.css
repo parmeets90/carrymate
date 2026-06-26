@@ -12,17 +12,25 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* Mobile safety net — nothing may push the page wider than the viewport. */
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
   body {
     @apply bg-bone text-ink font-sans antialiased;
   }
 
-  /* Fraunces: dial in optical sizing + a touch of soft/wonk for warmth at
-     display sizes. The variable font carries opsz so large headings feel
-     editorial, not generic. */
-  .font-serif {
+  /* Bricolage Grotesque: large optical size + heavy weight gives confident,
+     premium display headings. Applied via the .font-serif/.font-display class. */
+  .font-serif,
+  .font-display {
     font-optical-sizing: auto;
-    font-variation-settings: 'opsz' 120, 'SOFT' 30, 'WONK' 0;
-    font-feature-settings: 'liga', 'dlig';
+    font-variation-settings: 'opsz' 48;
+    font-weight: 640;
+    letter-spacing: -0.022em;
   }
 
   ::selection {
@@ -83,6 +91,49 @@
     text-wrap: balance;
   }
 
+  /* Animated warm gradient clip-text for the hero accent word. */
+  .text-gradient {
+    background-image: linear-gradient(100deg, #bc5b33 0%, #a0710e 38%, #0c7e54 70%, #2e5fc0 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradslide 8s ease-in-out infinite;
+  }
+
+  /* Cinematic aurora used behind the hero — large, soft, slow-drifting blobs. */
+  .aurora::before,
+  .aurora::after {
+    content: '';
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(70px);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .aurora::before {
+    width: 46rem;
+    height: 46rem;
+    top: -16rem;
+    left: -10rem;
+    background: radial-gradient(closest-side, rgba(188, 91, 51, 0.55), transparent);
+    animation: auroraA 22s ease-in-out infinite;
+  }
+  .aurora::after {
+    width: 42rem;
+    height: 42rem;
+    top: -10rem;
+    right: -12rem;
+    background: radial-gradient(closest-side, rgba(46, 95, 192, 0.5), transparent);
+    animation: auroraB 26s ease-in-out infinite;
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.62);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
   .link-underline {
     @apply relative inline-block;
   }
@@ -93,6 +144,19 @@
   .link-underline:hover::after {
     @apply w-full;
   }
+}
+
+@keyframes gradslide {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes auroraA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(8%, 6%) scale(1.12); }
+}
+@keyframes auroraB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-7%, 8%) scale(1.1); }
 }
 
 /* Thin, unobtrusive scrollbar matching the canvas. */

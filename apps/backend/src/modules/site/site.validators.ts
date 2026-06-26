@@ -19,6 +19,7 @@ export const founderCreateSchema = z.object({
   name: z.string().trim().min(2).max(80),
   role: z.string().trim().min(2).max(80),
   initials: z.string().trim().min(1).max(4),
+  imageUrl: z.string().trim().max(400).optional(),
   accent: accent.optional(),
   sortOrder: z.number().int().min(0).max(9999).optional(),
   active: z.boolean().optional(),

@@ -5,7 +5,7 @@ import { api, type FounderInput, type SiteAccentValue } from '@/lib/api';
 import type { FounderDto } from '@carrymate/shared';
 import { Panel, Labelled, TextInput, AccentField, ActiveToggle, accentDot, PageHead } from '@/components/cms';
 
-const EMPTY: FounderInput = { name: '', role: '', initials: '', accent: 'sky', sortOrder: 0, active: true };
+const EMPTY: FounderInput = { name: '', role: '', initials: '', imageUrl: '', accent: 'sky', sortOrder: 0, active: true };
 
 export function Founders() {
   const qc = useQueryClient();
@@ -42,7 +42,7 @@ export function Founders() {
   };
   const openEdit = (f: FounderDto) => {
     setEditing(f);
-    setDraft({ name: f.name, role: f.role, initials: f.initials, accent: f.accent, sortOrder: f.sortOrder, active: f.active });
+    setDraft({ name: f.name, role: f.role, initials: f.initials, imageUrl: f.imageUrl, accent: f.accent, sortOrder: f.sortOrder, active: f.active });
   };
 
   return (
@@ -70,9 +70,17 @@ export function Founders() {
               <span className={`h-2.5 w-2.5 rounded-full ${accentDot(f.accent)}`} />
               <ActiveToggle active={f.active} busy={toggle.isPending} onToggle={(active) => toggle.mutate({ id: f.id, active })} />
             </div>
-            <div className="mx-auto mt-2 flex h-16 w-16 items-center justify-center rounded-full bg-muted text-lg font-bold">
-              {f.initials}
-            </div>
+            {f.imageUrl ? (
+              <img
+                src={f.imageUrl}
+                alt={f.name}
+                className="mx-auto mt-2 h-16 w-16 rounded-full object-cover ring-1 ring-border"
+              />
+            ) : (
+              <div className="mx-auto mt-2 flex h-16 w-16 items-center justify-center rounded-full bg-muted text-lg font-bold">
+                {f.initials}
+              </div>
+            )}
             <p className="mt-3 text-[15px] font-bold">{f.name}</p>
             <p className="text-xs text-muted-foreground">{f.role}</p>
             <div className="mt-4 flex justify-center gap-1">
@@ -120,6 +128,22 @@ export function Founders() {
             </Labelled>
             <Labelled label="Role">
               <TextInput value={draft.role} onChange={(e) => setDraft({ ...draft, role: e.target.value })} placeholder="Trust & Operations" />
+            </Labelled>
+            <Labelled label="Photo URL" hint="Paste a hosted image link. Leave empty to show the initials avatar.">
+              <div className="flex items-center gap-3">
+                {draft.imageUrl ? (
+                  <img src={draft.imageUrl} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-border" />
+                ) : (
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-bold">
+                    {draft.initials || '—'}
+                  </span>
+                )}
+                <TextInput
+                  value={draft.imageUrl ?? ''}
+                  onChange={(e) => setDraft({ ...draft, imageUrl: e.target.value })}
+                  placeholder="https://…/photo.jpg"
+                />
+              </div>
             </Labelled>
             <div className="grid grid-cols-2 gap-3">
               <Labelled label="Initials" hint="1–4 letters">

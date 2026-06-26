@@ -16,6 +16,7 @@ export interface Founder {
   name: string;
   role: string;
   initials: string;
+  imageUrl: string;
   accent: Accent;
 }
 export interface Faq {
@@ -58,9 +59,9 @@ export const FALLBACK: SiteContent = {
     playStoreUrl: '#',
   },
   founders: [
-    { id: 'f1', name: 'Aamir Wani', role: 'Trust & Operations', initials: 'AW', accent: 'gold' },
-    { id: 'f2', name: 'Rishav Tiwari', role: 'Growth & Community', initials: 'RT', accent: 'ember' },
-    { id: 'f3', name: 'Parmeet Singh', role: 'Product & Engineering', initials: 'PS', accent: 'sky' },
+    { id: 'f1', name: 'Aamir Wani', role: 'Trust & Operations', initials: 'AW', imageUrl: '', accent: 'gold' },
+    { id: 'f2', name: 'Rishav Tiwari', role: 'Growth & Community', initials: 'RT', imageUrl: '', accent: 'ember' },
+    { id: 'f3', name: 'Parmeet Singh', role: 'Product & Engineering', initials: 'PS', imageUrl: '', accent: 'sky' },
   ],
   testimonials: [
     {

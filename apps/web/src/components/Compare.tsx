@@ -43,7 +43,8 @@ export function Compare() {
         </div>
 
         <Reveal>
-          <div className="mt-12 overflow-hidden rounded-xl2 border border-line bg-surface shadow-soft">
+          <div className="mt-12 overflow-x-auto rounded-xl2 border border-line bg-surface shadow-soft [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+           <div className="min-w-[660px]">
             {/* header */}
             <div className="grid grid-cols-[1.4fr_1fr_1fr_1fr] items-stretch border-b border-line bg-sunken/50">
               <div className="px-5 py-4" />
@@ -78,7 +79,9 @@ export function Compare() {
                 </div>
               </div>
             ))}
+           </div>
           </div>
+          <p className="mt-3 text-center text-[11px] text-faint sm:hidden">Swipe the table sideways to compare →</p>
         </Reveal>
         <Reveal>
           <p className="mt-4 text-center text-[12px] text-faint">
