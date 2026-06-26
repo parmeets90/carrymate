@@ -9,6 +9,8 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <!-- Push notifications (Android 13+ runtime grant). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Haptic feedback for key confirmations (DS v2). -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
       android:name=".MainApplication"

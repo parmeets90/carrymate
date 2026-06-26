@@ -1,6 +1,7 @@
 /**
  * CarryMate mobile design system (see CLAUDE.md). StyleSheet-based.
  */
+import { StyleSheet } from 'react-native';
 import { colors } from './colors';
 export { colors } from './colors';
 
@@ -24,12 +25,15 @@ export const fonts = {
 
 export const typography = {
   display: { fontFamily: fonts.display, fontSize: 28, fontWeight: '600' as const, letterSpacing: -0.5 },
-  titleL: { fontFamily: fonts.display, fontSize: 22, fontWeight: '600' as const },
-  titleM: { fontFamily: fonts.display, fontSize: 18, fontWeight: '500' as const },
+  titleL: { fontFamily: fonts.display, fontSize: 22, fontWeight: '600' as const, letterSpacing: -0.2 },
+  titleM: { fontFamily: fonts.display, fontSize: 18, fontWeight: '600' as const },
   bodyL: { fontFamily: fonts.body, fontSize: 16, fontWeight: '400' as const, lineHeight: 24 },
   bodyM: { fontFamily: fonts.body, fontSize: 14, fontWeight: '400' as const, lineHeight: 21 },
   label: { fontFamily: fonts.body, fontSize: 12, fontWeight: '500' as const, letterSpacing: 0.5 },
   caption: { fontFamily: fonts.body, fontSize: 11, fontWeight: '400' as const },
+  // Tabular figures for money, timers, ratings, counts — no width shift (DS v2).
+  numeric: { fontFamily: fonts.body, fontSize: 14, fontWeight: '500' as const, fontVariant: ['tabular-nums'] as ['tabular-nums'] },
+  numericLg: { fontFamily: fonts.display, fontSize: 20, fontWeight: '600' as const, fontVariant: ['tabular-nums'] as ['tabular-nums'] },
 } as const;
 
 export const spacing = {
@@ -58,6 +62,45 @@ export const elevation = {
   modal: 16,
   toast: 12,
 } as const;
+
+/**
+ * DS v2 elevation ladder — the canonical surface depth system. Components use
+ * these (not raw `shadows`). Minimalist: ultra-soft, low-opacity; a screen uses
+ * at most two levels. e0 = flat with a hairline border (preferred for list rows).
+ */
+export const elevations = {
+  e0: { borderWidth: StyleSheet.hairlineWidth, borderColor: colors.hairline },
+  e1: {
+    shadowColor: '#0F1629',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  e2: {
+    shadowColor: '#0F1629',
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+  e3: {
+    shadowColor: '#0F1629',
+    shadowOpacity: 0.14,
+    shadowRadius: 30,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 12,
+  },
+} as const;
+
+/** Border tokens — hairline = crisp 1px separators (minimalist default for lists). */
+export const border = {
+  hairline: { borderWidth: StyleSheet.hairlineWidth, borderColor: colors.hairline },
+  default: { borderWidth: 0.5, borderColor: colors.borderLight },
+} as const;
+
+/** Canonical icon sizes — use these tokens, never arbitrary values. */
+export const iconSize = { sm: 16, md: 20, lg: 24, nav: 22, xl: 28 } as const;
 
 /** Standard component sizes from the spec. */
 export const sizing = {
