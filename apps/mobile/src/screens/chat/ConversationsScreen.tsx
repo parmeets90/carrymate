@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
-import { BrandLoader } from '@/components/BrandLoader';
+import { SkeletonList } from '@/components/Skeleton';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -120,7 +120,7 @@ export function ConversationsScreen() {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           isLoading ? (
-            <BrandLoader style={{ marginTop: spacing['3xl'] }} />
+            <SkeletonList />
           ) : (
             <EmptyState
               icon="chat"

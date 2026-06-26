@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
-import { BrandLoader } from '@/components/BrandLoader';
+import { SkeletonList } from '@/components/Skeleton';
 import { Alert } from '@/components/AlertHost';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { colors, spacing, typography, sizing, radius } from '@/theme';
@@ -56,7 +56,7 @@ export function RequestDetailScreen({ route, navigation }: ScreenProps<'RequestD
       )}
 
       {isLoading ? (
-        <BrandLoader style={{ marginTop: spacing.xl }} />
+        <SkeletonList />
       ) : (
         <FlatList
           data={bids ?? []}

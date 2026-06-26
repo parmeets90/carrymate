@@ -1,11 +1,11 @@
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
-import { BrandLoader } from '@/components/BrandLoader';
+import { SkeletonList } from '@/components/Skeleton';
 import { Alert } from '@/components/AlertHost';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, typography, sizing, listTint } from '@/theme';
+import { colors, spacing, typography, sizing } from '@/theme';
 import { Card, Badge, TrustBadge, statusTone } from '@/components/Card';
 import { EmptyState } from '@/components/widgets';
 import { FadeInUp } from '@/components/anim';
@@ -45,7 +45,7 @@ export function TripsScreen() {
       </View>
 
       {isLoading ? (
-        <BrandLoader style={{ marginTop: spacing.xl }} />
+        <SkeletonList />
       ) : (
         <FlatList
           data={data ?? []}
@@ -67,7 +67,7 @@ export function TripsScreen() {
             const manageable = item.status === 'ACTIVE' && item.capacityUsedKg === 0;
             return (
               <FadeInUp index={index}>
-              <Card style={{ backgroundColor: listTint(index) }} onPress={() => nav.navigate('Browse', { routeId: item.id })}>
+              <Card onPress={() => nav.navigate('Browse', { routeId: item.id })}>
                 <View style={styles.row}>
                   <Text style={styles.cardTitle}>
                     {item.originAirport} → {item.destinationAirport}

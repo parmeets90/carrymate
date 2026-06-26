@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
-import { BrandLoader } from '@/components/BrandLoader';
+import { SkeletonList } from '@/components/Skeleton';
 import { useQuery } from '@tanstack/react-query';
-import { colors, spacing, typography, sizing, radius, listTint } from '@/theme';
+import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { Card, Badge } from '@/components/Card';
 import { EmptyState } from '@/components/widgets';
 import { FadeInUp } from '@/components/anim';
@@ -20,7 +20,7 @@ export function BrowseScreen({ route, navigation }: ScreenProps<'Browse'>) {
     <View style={styles.container}>
       <Text style={styles.title}>Requests on this trip</Text>
       {isLoading ? (
-        <BrandLoader style={{ marginTop: spacing.xl }} />
+        <SkeletonList />
       ) : (
         <FlatList
           data={data ?? []}
@@ -36,7 +36,6 @@ export function BrowseScreen({ route, navigation }: ScreenProps<'Browse'>) {
           renderItem={({ item, index }) => (
             <FadeInUp index={index}>
               <Card
-                style={{ backgroundColor: listTint(index) }}
                 onPress={() =>
                   navigation.navigate('PlaceBid', { requestId: item.id, routeId, title: item.title })
                 }

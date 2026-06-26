@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { BrandLoader } from '@/components/BrandLoader';
+import { SkeletonList } from '@/components/Skeleton';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing, typography, sizing, listTint } from '@/theme';
+import { colors, spacing, typography, sizing } from '@/theme';
 import { Card, Badge, statusTone } from '@/components/Card';
 import { EmptyState } from '@/components/widgets';
 import { FadeInUp } from '@/components/anim';
@@ -21,7 +21,7 @@ export function MyBidsScreen() {
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
       <Text style={styles.title}>My bids</Text>
       {isLoading ? (
-        <BrandLoader style={{ marginTop: spacing.xl }} />
+        <SkeletonList />
       ) : (
         <FlatList
           data={data ?? []}
@@ -41,7 +41,7 @@ export function MyBidsScreen() {
           }
           renderItem={({ item, index }) => (
             <FadeInUp index={index}>
-              <Card style={{ backgroundColor: listTint(index) }}>
+              <Card>
                 <View style={styles.row}>
                   <Text style={styles.route}>
                     {item.route.originAirport} → {item.route.destinationAirport}
