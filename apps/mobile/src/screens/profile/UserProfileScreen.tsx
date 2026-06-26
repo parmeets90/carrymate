@@ -44,9 +44,39 @@ function renderBadge(kind: TrustBadgeKind) {
 function Stat({ icon, value, label }: { icon: IconName; value: number; label: string }) {
   return (
     <View style={styles.stat}>
-      <Icon name={icon} size={18} color={colors.skyBlue} weight="fill" />
+      <Icon name={icon} size={18} color={colors.primary} weight="fill" />
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
+/** A derived, presentational trust score (0–100) from verified signals + history. */
+function computeTrust(p: TrustProfile): { score: number; label: string; color: string } {
+  const has = (k: TrustBadgeKind) => p.badges.includes(k);
+  const completed = p.stats.deliveriesCompleted + p.stats.requestsCompleted;
+  let score = 0;
+  if (has('KYC_VERIFIED')) score += 35;
+  if (has('PHONE_VERIFIED')) score += 15;
+  if (p.ratingCount > 0) score += Math.round((p.ratingAvg / 5) * 25);
+  score += Math.min(15, completed * 3);
+  if (has('ESTABLISHED_MEMBER')) score += 10;
+  score = Math.min(100, score);
+  if (score >= 80) return { score, label: 'Highly trusted', color: colors.mintPrimary };
+  if (score >= 55) return { score, label: 'Trusted', color: colors.primary };
+  if (score >= 30) return { score, label: 'Building trust', color: colors.warningText };
+  return { score, label: 'New member', color: colors.inkTertiary };
+}
+
+/** A single verified-facet row with a satisfied/unsatisfied state. */
+function Facet({ ok, label, icon }: { ok: boolean; label: string; icon: IconName }) {
+  return (
+    <View style={styles.facet}>
+      <View style={[styles.facetIcon, { backgroundColor: ok ? colors.successSurface : colors.surfaceSunken }]}>
+        <Icon name={ok ? icon : 'cross'} size={15} color={ok ? colors.mintPrimary : colors.inkTertiary} weight="fill" />
+      </View>
+      <Text style={[styles.facetLabel, !ok && { color: colors.inkTertiary }]}>{label}</Text>
+      {ok ? <Icon name="check" size={15} color={colors.mintPrimary} weight="bold" /> : null}
     </View>
   );
 }
@@ -107,6 +137,7 @@ export function UserProfileScreen({ route }: ScreenProps<'UserProfile'>) {
   const showTravelerStats = p.role === 'TRAVELER' || s.deliveriesCompleted > 0 || s.tripsPosted > 0;
   const showSenderStats = p.role === 'SENDER' || s.requestsPosted > 0 || s.requestsCompleted > 0;
   const rated = p.ratingCount > 0;
+  const trust = computeTrust(p);
 
   return (
     <Screen scroll>
@@ -131,6 +162,25 @@ export function UserProfileScreen({ route }: ScreenProps<'UserProfile'>) {
         <Text style={styles.memberSince}>Member since {memberSinceLabel(p.memberSince)}</Text>
 
         {p.badges.length > 0 && <View style={styles.badges}>{p.badges.map(renderBadge)}</View>}
+      </Card>
+
+      {/* Trust dashboard — derived score + verified facets */}
+      <Card style={{ gap: spacing.md }}>
+        <View style={styles.trustHead}>
+          <Text style={styles.trustLabel}>TRUST SCORE</Text>
+          <Text style={[styles.trustScore, { color: trust.color }]}>{trust.score}</Text>
+        </View>
+        <View style={styles.trustTrack}>
+          <View style={[styles.trustFill, { width: `${trust.score}%`, backgroundColor: trust.color }]} />
+        </View>
+        <Text style={[styles.trustVerdict, { color: trust.color }]}>{trust.label}</Text>
+        <View style={styles.facets}>
+          <Facet ok={p.badges.includes('KYC_VERIFIED')} label="Identity verified" icon="identity" />
+          <Facet ok={p.badges.includes('PHONE_VERIFIED')} label="Phone verified" icon="check" />
+          {p.role === 'TRAVELER' && (
+            <Facet ok={p.badges.includes('TRUSTED_CARRIER')} label="Trusted carrier" icon="verified" />
+          )}
+        </View>
       </Card>
 
       {/* In-app track record */}
@@ -197,6 +247,16 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: -spacing.xs,
   },
+  trustHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  trustLabel: { ...typography.label, color: colors.inkSecondary, letterSpacing: 0.8 },
+  trustScore: { ...typography.numericLg, fontSize: 26 },
+  trustTrack: { height: 8, borderRadius: 4, backgroundColor: colors.surfaceSunken, overflow: 'hidden' },
+  trustFill: { height: 8, borderRadius: 4 },
+  trustVerdict: { ...typography.bodyM, fontWeight: '700', marginTop: -spacing.xs },
+  facets: { gap: spacing.sm, marginTop: spacing.xs },
+  facet: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  facetIcon: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  facetLabel: { ...typography.bodyM, color: colors.ink, fontWeight: '600', flex: 1 },
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', rowGap: spacing.lg },
   stat: { alignItems: 'center', gap: 3, minWidth: 72 },
   statValue: { ...typography.titleL, color: colors.textPrimary, fontWeight: '700' },
