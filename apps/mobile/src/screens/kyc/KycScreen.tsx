@@ -8,8 +8,11 @@ import { Card, Badge } from '@/components/Card';
 import { PhotoButton } from '@/components/PhotoButton';
 import { Icon } from '@/components/Icon';
 import { Alert } from '@/components/AlertHost';
+import { SuccessPop, Pulse } from '@/components/anim';
 import { api } from '@/lib/api';
+import { haptics } from '@/lib/haptics';
 import { useAuth } from '@/store/auth';
+import type { PublicUser } from '@carrymate/shared';
 
 const DOC_OPTIONS: Record<string, { value: string; label: string }[]> = {
   TRAVELER: [{ value: 'PASSPORT', label: 'Passport' }],
@@ -31,7 +34,22 @@ export function KycScreen() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>();
+  const [celebrating, setCelebrating] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Apply a fresh /me. On VERIFIED, play a brief celebratory beat (haptic + check)
+  // before letting the navigator switch to the app — the relief moment matters.
+  const applyMe = (me: PublicUser) => {
+    if (me.kycStatus === 'VERIFIED') {
+      if (pollRef.current) clearInterval(pollRef.current);
+      haptics.success();
+      setCelebrating(true);
+      setTimeout(() => setUser(me), 2000);
+    } else {
+      setUser(me);
+      setStatus(me.kycStatus);
+    }
+  };
 
   useEffect(() => {
     Promise.all([api.kycProvider().catch(() => ({ provider: 'manual' as const })), api.kycStatus().catch(() => null)])
@@ -49,8 +67,7 @@ export function KycScreen() {
       try {
         const me = await api.me();
         if (me.kycStatus !== 'VERIFYING') {
-          setUser(me); // VERIFIED flips the navigator; IN_REVIEW shows the review card
-          setStatus(me.kycStatus);
+          applyMe(me); // VERIFIED → celebrate then flip; IN_REVIEW shows the review card
         }
       } catch {
         /* keep polling */
@@ -92,13 +109,30 @@ export function KycScreen() {
   const refreshStatus = async () => {
     setBusy(true);
     try {
-      const me = await api.me();
-      setUser(me);
-      setStatus(me.kycStatus);
+      applyMe(await api.me());
     } finally {
       setBusy(false);
     }
   };
+
+  if (celebrating) {
+    return (
+      <Screen>
+        <View style={styles.celebrate}>
+          <SuccessPop>
+            <View style={styles.celebrateRing}>
+              <Pulse size={120} color={colors.mintPrimary} />
+              <View style={styles.celebrateBadge}>
+                <Icon name="check" size={56} color={colors.white} weight="bold" />
+              </View>
+            </View>
+          </SuccessPop>
+          <Text style={styles.celebrateTitle}>Identity verified</Text>
+          <Text style={styles.celebrateBody}>You're all set to send and carry on CarryMate.</Text>
+        </View>
+      </Screen>
+    );
+  }
 
   if (loading) {
     return (
@@ -178,6 +212,19 @@ export function KycScreen() {
 }
 
 const styles = StyleSheet.create({
+  celebrate: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, paddingHorizontal: spacing.xl },
+  celebrateRing: { width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
+  celebrateBadge: {
+    position: 'absolute',
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: colors.mintPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  celebrateTitle: { ...typography.display, color: colors.ink, marginTop: spacing.lg, textAlign: 'center' },
+  celebrateBody: { ...typography.bodyL, color: colors.inkSecondary, textAlign: 'center', maxWidth: 300, lineHeight: 24 },
   body: { ...typography.bodyM, color: colors.textSecondary },
   center: { ...typography.bodyM, color: colors.textSecondary, textAlign: 'center', lineHeight: 21 },
   sectionLabel: { ...typography.label, color: colors.textSecondary },
