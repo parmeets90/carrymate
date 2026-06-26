@@ -6,6 +6,12 @@ const VALUES = [
   ['Honest by default', 'Open-box declarations, real ratings, plain language. We’d rather under-promise and arrive than over-sell and fail.'],
 ];
 
+const FOUNDERS = [
+  { name: 'Aamir Wani', role: 'Trust & Operations', initials: 'AW', tint: 'bg-gold-tint' },
+  { name: 'Rishav Tiwari', role: 'Growth & Community', initials: 'RT', tint: 'bg-ember-tint' },
+  { name: 'Parmeet Singh', role: 'Product & Engineering', initials: 'PS', tint: 'bg-sky-tint' },
+];
+
 const TIMELINE = [
   ['Phase 1', 'India → UAE', 'Highest route density, lowest customs friction. Prove delivery success, disputes and liquidity on one corridor.'],
   ['Phase 2', 'India → Canada', 'Add CBSA/CFIA rules and stronger automated risk scoring before higher-scrutiny lanes.'],
@@ -76,17 +82,24 @@ export function About() {
         {/* founders + timeline */}
         <div className="lg:pt-16">
           <Reveal>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[
-                ['Founder & CEO', 'Product, trust & ops', 'bg-sky-tint'],
-                ['Founding Engineer', 'Platform & payments', 'bg-mint-tint'],
-              ].map(([role, focus, tint]) => (
-                <div key={role} className="rounded-xl2 border border-line bg-surface p-6 text-center shadow-hair">
-                  <div className={`mx-auto h-20 w-20 rounded-full ${tint} ring-1 ring-line`} />
-                  <p className="mt-4 text-[15px] font-bold text-ink">{role}</p>
-                  <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">{focus}</p>
-                </div>
-              ))}
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">Founders</p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                {FOUNDERS.map((f) => (
+                  <figure
+                    key={f.name}
+                    className="group rounded-xl2 border border-line bg-surface p-6 text-center shadow-hair transition-all duration-500 ease-editorial hover:-translate-y-1 hover:shadow-lift"
+                  >
+                    <div
+                      className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${f.tint} font-serif text-2xl text-ink ring-1 ring-line`}
+                    >
+                      {f.initials}
+                    </div>
+                    <figcaption className="mt-4 text-[15px] font-bold text-ink">{f.name}</figcaption>
+                    <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">{f.role}</p>
+                  </figure>
+                ))}
+              </div>
             </div>
           </Reveal>
 

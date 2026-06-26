@@ -23,7 +23,7 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section id={id} className={clsx('relative scroll-mt-24 py-24 md:py-32', className)}>
+    <section id={id} className={clsx('relative scroll-mt-24 py-28 md:py-36 lg:py-40', className)}>
       {children}
     </section>
   );

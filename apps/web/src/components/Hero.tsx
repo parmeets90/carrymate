@@ -7,13 +7,13 @@ import { StarIcon } from './icons';
 export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden pt-28 md:pt-36">
-      {/* ambient radial light — fixed, never scrolls, ultra low opacity */}
+      {/* warm editorial mesh — fixed, never scrolls, soft drift */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-[-10%] h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(47,111,208,0.10),transparent)]" />
-        <div className="absolute inset-0 grain opacity-60" />
+        <div className="mesh-warm absolute inset-0 animate-drift opacity-90" />
+        <div className="absolute inset-0 grain opacity-50" />
       </div>
 
-      <div className="wrap grid items-center gap-14 pb-20 lg:grid-cols-[1.05fr_0.95fr] lg:pb-28">
+      <div className="wrap grid items-center gap-16 pb-24 lg:grid-cols-[1.08fr_0.92fr] lg:pb-32">
         <motion.div variants={stagger(0.1)} initial="hidden" animate="show">
           <motion.div variants={child}>
             <Tag tone="sky" className="mb-6">
@@ -24,18 +24,16 @@ export function Hero() {
 
           <motion.h1
             variants={child}
-            className="font-serif text-display-xl text-ink"
+            className="font-serif text-display-2xl text-ink text-balance"
           >
-            Send the things that
-            <br />
-            <span className="italic text-navy">mean something</span> — carried
-            <br />
-            by people you can trust.
+            Send the things that{' '}
+            <span className="italic text-ember">mean&nbsp;something</span> — carried by people you
+            can trust.
           </motion.h1>
 
           <motion.p
             variants={child}
-            className="mt-7 max-w-prose2 text-lg leading-relaxed text-ink-soft"
+            className="mt-8 max-w-prose2 text-[19px] leading-[1.65] text-ink-soft"
           >
             Homemade food before it spoils. Documents before the deadline. A Rakhi that has to
             arrive on time. CarryMate moves your personal items along flights travelers are already

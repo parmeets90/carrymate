@@ -14,24 +14,27 @@
 
   body {
     @apply bg-bone text-ink font-sans antialiased;
-    font-feature-settings: 'ss01', 'cv01';
   }
 
-  /* Editorial serif loves a little extra optical size at display sizes. */
+  /* Fraunces: dial in optical sizing + a touch of soft/wonk for warmth at
+     display sizes. The variable font carries opsz so large headings feel
+     editorial, not generic. */
   .font-serif {
+    font-optical-sizing: auto;
+    font-variation-settings: 'opsz' 120, 'SOFT' 30, 'WONK' 0;
     font-feature-settings: 'liga', 'dlig';
   }
 
   ::selection {
-    background: #d9e6fa;
-    color: #0f1b33;
+    background: #f6e6db;
+    color: #1b1a16;
   }
 
   /* Visible, on-brand focus ring for keyboard users only. */
   :focus-visible {
-    outline: 2px solid #2f6fd0;
+    outline: 2px solid #2e5fc0;
     outline-offset: 3px;
-    border-radius: 4px;
+    border-radius: 6px;
   }
 
   /* Respect reduced-motion globally as a safety net (framer-motion also checks). */
@@ -49,7 +52,7 @@
 
 @layer components {
   .wrap {
-    @apply mx-auto w-full max-w-wrap px-6 md:px-10;
+    @apply mx-auto w-full max-w-wrap px-6 md:px-10 lg:px-14;
   }
 
   .eyebrow {
@@ -62,8 +65,22 @@
 
   /* Soft grain/texture overlay token — applied to large surfaces for depth. */
   .grain {
-    background-image: radial-gradient(rgba(26, 34, 51, 0.035) 1px, transparent 1px);
+    background-image: radial-gradient(rgba(27, 26, 22, 0.04) 1px, transparent 1px);
     background-size: 4px 4px;
+  }
+
+  /* Warm editorial mesh — layered radial washes for the hero/CTA backdrops. */
+  .mesh-warm {
+    background-image:
+      radial-gradient(40% 50% at 12% 18%, rgba(188, 91, 51, 0.10), transparent 70%),
+      radial-gradient(38% 46% at 88% 14%, rgba(46, 95, 192, 0.10), transparent 70%),
+      radial-gradient(44% 52% at 78% 88%, rgba(12, 126, 84, 0.09), transparent 72%),
+      radial-gradient(40% 44% at 22% 92%, rgba(160, 113, 14, 0.08), transparent 72%);
+  }
+
+  /* Hairline gradient text for restrained emphasis. */
+  .text-balance {
+    text-wrap: balance;
   }
 
   .link-underline {
@@ -84,7 +101,7 @@
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #dad8d0;
+  background: #d9d2c2;
   border-radius: 999px;
-  border: 3px solid #fbfbfa;
+  border: 3px solid #fbf9f5;
 }
