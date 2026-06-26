@@ -9,6 +9,7 @@ import { api } from '@/lib/api';
 import { haptics } from '@/lib/haptics';
 import { toast } from '@/components/Toast';
 import { getCurrentCoords } from '@/lib/location';
+import { smartScanImage, type ScanVerdict } from '@/lib/smartScan';
 import type { ScreenProps } from '@/navigation/types';
 
 interface InspectionPhoto {
@@ -30,10 +31,23 @@ export function OpenBoxScreen({ route, navigation }: ScreenProps<'OpenBox'>) {
   const qc = useQueryClient();
   const [checks, setChecks] = useState({ inspected: false, contentsMatch: false, noProhibited: false, sealed: false });
   const [photos, setPhotos] = useState<InspectionPhoto[]>([]);
+  const [scans, setScans] = useState<ScanVerdict[]>([]);
+  const [scanning, setScanning] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
 
   const allChecked = ITEMS.every((i) => checks[i.key]);
+  const flagged = scans.filter((s) => !s.ok);
+  const flaggedMessages = [...new Set(flagged.map((f) => f.message))];
+
+  // On-device AI Smart Scan runs the moment a photo is captured (offline, private).
+  const onPhotoPicked = async (uri: string) => {
+    setScanning(true);
+    const verdict = await smartScanImage(uri);
+    setScans((s) => [...s, verdict]);
+    setScanning(false);
+    if (!verdict.ok) haptics.warning();
+  };
 
   // Geotag + timestamp each photo as it's captured (best-effort location).
   const onPhotoUploaded = async (key: string) => {
@@ -86,7 +100,42 @@ export function OpenBoxScreen({ route, navigation }: ScreenProps<'OpenBox'>) {
         );
       })}
 
-      <PhotoButton purpose="openbox" label="Add package photo" count={photos.length} onUploaded={onPhotoUploaded} />
+      <Text style={styles.scanHint}>
+        <Text style={{ fontWeight: '700' }}>AI Smart Scan</Text> checks each photo on your device for obvious prohibited
+        items. It’s a helper, not a guarantee — always inspect the contents yourself.
+      </Text>
+      <PhotoButton
+        purpose="openbox"
+        label="Add & scan package photo"
+        count={photos.length}
+        onUploaded={onPhotoUploaded}
+        onPicked={onPhotoPicked}
+      />
+
+      {scanning && (
+        <View style={styles.scanRow}>
+          <Icon name="search" size={15} color={colors.primary} />
+          <Text style={styles.scanText}>Smart Scan: checking photo…</Text>
+        </View>
+      )}
+      {!scanning && flagged.length > 0 ? (
+        <View style={styles.scanWarn}>
+          <Icon name="alert" size={18} color={colors.dangerRed} weight="fill" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.scanWarnTitle}>Smart Scan flagged a photo</Text>
+            {flaggedMessages.map((m, i) => (
+              <Text key={i} style={styles.scanWarnText}>{m}</Text>
+            ))}
+            <Text style={styles.scanWarnHint}>If the contents really are prohibited, do not accept this package.</Text>
+          </View>
+        </View>
+      ) : !scanning && scans.length > 0 ? (
+        <View style={styles.scanOk}>
+          <Icon name="verified" size={16} color={colors.mintPrimary} weight="fill" />
+          <Text style={styles.scanOkText}>Smart Scan: nothing prohibited detected.</Text>
+        </View>
+      ) : null}
+
       {photos.some((p) => p.lat != null) && (
         <View style={styles.geoRow}>
           <Icon name="location" size={14} color={colors.mintPrimary} weight="fill" />
@@ -123,4 +172,29 @@ const styles = StyleSheet.create({
   error: { ...typography.bodyM, color: colors.dangerRed },
   geoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   geo: { ...typography.caption, color: colors.mintPrimary, fontWeight: '600' },
+  scanHint: { ...typography.caption, color: colors.inkTertiary, lineHeight: 16 },
+  scanRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  scanText: { ...typography.bodyM, color: colors.primary, fontWeight: '600' },
+  scanWarn: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    backgroundColor: colors.dangerSurface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#F2C0C0',
+    borderRadius: radius.card,
+    padding: spacing.md,
+  },
+  scanWarnTitle: { ...typography.bodyM, fontWeight: '700', color: '#921010' },
+  scanWarnText: { ...typography.bodyM, color: '#921010', marginTop: 2, lineHeight: 19 },
+  scanWarnHint: { ...typography.caption, color: '#921010', marginTop: spacing.xs, fontWeight: '600' },
+  scanOk: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.successSurface,
+    borderRadius: radius.card,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  scanOkText: { ...typography.bodyM, color: '#096438', fontWeight: '600', flex: 1 },
 });

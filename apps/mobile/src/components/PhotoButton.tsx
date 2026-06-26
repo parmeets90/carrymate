@@ -26,11 +26,14 @@ export function PhotoButton({
   label = 'Add photo',
   count = 0,
   onUploaded,
+  onPicked,
 }: {
   purpose: string;
   label?: string;
   count?: number;
   onUploaded: (key: string) => void;
+  /** Local image URI as soon as it's picked (before upload) — for on-device analysis. */
+  onPicked?: (uri: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
 
@@ -54,6 +57,7 @@ export function PhotoButton({
     }
     const asset = res.assets?.[0];
     if (!asset?.uri) return;
+    onPicked?.(asset.uri); // hand the local URI to any on-device analysis
 
     setBusy(true);
     try {
