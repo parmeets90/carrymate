@@ -5,6 +5,8 @@ import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
 import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
+import { haptics } from '@/lib/haptics';
+import { toast } from '@/components/Toast';
 import type { ScreenProps } from '@/navigation/types';
 
 const REASONS = [
@@ -32,9 +34,12 @@ export function DisputeScreen({ route, navigation }: ScreenProps<'Dispute'>) {
     setError(undefined);
     try {
       await api.disputeOrder(orderId, { reason, description: description.trim() });
+      haptics.warning();
+      toast.info('Dispute opened — our team will review');
       qc.invalidateQueries({ queryKey: ['orders'] });
       navigation.goBack();
     } catch (e) {
+      haptics.error();
       setError((e as Error).message);
     } finally {
       setBusy(false);

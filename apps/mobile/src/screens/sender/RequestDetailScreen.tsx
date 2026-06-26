@@ -9,6 +9,7 @@ import { FadeInUp } from '@/components/anim';
 import { Icon } from '@/components/Icon';
 import { PrimaryButton } from '@/components/ui';
 import { api } from '@/lib/api';
+import { haptics } from '@/lib/haptics';
 import type { BidDto } from '@carrymate/shared';
 import type { ScreenProps } from '@/navigation/types';
 
@@ -27,12 +28,16 @@ export function RequestDetailScreen({ route, navigation }: ScreenProps<'RequestD
   const accept = useMutation({
     mutationFn: (bidId: string) => api.acceptBid(requestId, bidId),
     onSuccess: () => {
+      haptics.success();
       qc.invalidateQueries({ queryKey: ['my-requests'] });
       Alert.alert('Bid accepted', 'Payment & escrow arrive in the next update.', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     },
-    onError: (e) => Alert.alert('Could not accept', (e as Error).message),
+    onError: (e) => {
+      haptics.error();
+      Alert.alert('Could not accept', (e as Error).message);
+    },
   });
 
   return (

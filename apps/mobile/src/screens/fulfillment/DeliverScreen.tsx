@@ -6,6 +6,8 @@ import { PrimaryButton, Field } from '@/components/ui';
 import { PhotoButton } from '@/components/PhotoButton';
 import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
+import { haptics } from '@/lib/haptics';
+import { toast } from '@/components/Toast';
 import type { ScreenProps } from '@/navigation/types';
 
 export function DeliverScreen({ route, navigation }: ScreenProps<'Deliver'>) {
@@ -25,9 +27,12 @@ export function DeliverScreen({ route, navigation }: ScreenProps<'Deliver'>) {
     setError(undefined);
     try {
       await api.deliverOrder(orderId, { otp: otp.trim(), photos });
+      haptics.success();
+      toast.success('Delivery confirmed');
       qc.invalidateQueries({ queryKey: ['orders'] });
       navigation.goBack();
     } catch (e) {
+      haptics.error();
       setError((e as Error).message);
     } finally {
       setBusy(false);

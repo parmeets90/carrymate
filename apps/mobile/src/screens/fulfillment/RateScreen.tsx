@@ -5,6 +5,8 @@ import { colors, spacing, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
 import { Icon } from '@/components/Icon';
 import { api } from '@/lib/api';
+import { haptics } from '@/lib/haptics';
+import { toast } from '@/components/Toast';
 import type { ScreenProps } from '@/navigation/types';
 
 const STAR_WORDS = ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'];
@@ -22,9 +24,12 @@ export function RateScreen({ route, navigation }: ScreenProps<'Rate'>) {
     setError(undefined);
     try {
       await api.rateOrder(orderId, { stars, comment: comment.trim() || undefined });
+      haptics.success();
+      toast.success('Thanks for your rating');
       qc.invalidateQueries({ queryKey: ['orders'] });
       navigation.goBack();
     } catch (e) {
+      haptics.error();
       setError((e as Error).message);
     } finally {
       setBusy(false);

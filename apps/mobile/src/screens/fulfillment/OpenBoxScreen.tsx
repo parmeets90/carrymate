@@ -6,6 +6,8 @@ import { PrimaryButton } from '@/components/ui';
 import { Icon } from '@/components/Icon';
 import { PhotoButton } from '@/components/PhotoButton';
 import { api } from '@/lib/api';
+import { haptics } from '@/lib/haptics';
+import { toast } from '@/components/Toast';
 import { getCurrentCoords } from '@/lib/location';
 import type { ScreenProps } from '@/navigation/types';
 
@@ -50,9 +52,12 @@ export function OpenBoxScreen({ route, navigation }: ScreenProps<'OpenBox'>) {
     setError(undefined);
     try {
       await api.openBox(orderId, { checklist: checks, photos });
+      haptics.success();
+      toast.success('Open-box recorded');
       qc.invalidateQueries({ queryKey: ['orders'] });
       navigation.goBack();
     } catch (e) {
+      haptics.error();
       setError((e as Error).message);
     } finally {
       setBusy(false);
