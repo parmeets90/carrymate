@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { colors, spacing, typography, sizing, radius } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
@@ -11,8 +11,18 @@ import { toast } from '@/components/Toast';
 import type { ScreenProps } from '@/navigation/types';
 
 export function DeliverScreen({ route, navigation }: ScreenProps<'Deliver'>) {
-  const { orderId, title } = route.params;
+  const { orderId, title, senderName, senderPhone } = route.params;
   const qc = useQueryClient();
+
+  const callSender = async () => {
+    if (!senderPhone) return;
+    const url = `tel:${senderPhone.replace(/[^+\d]/g, '')}`;
+    try {
+      await Linking.openURL(url);
+    } catch {
+      toast.error('Could not start the call');
+    }
+  };
   const [otp, setOtp] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -44,6 +54,13 @@ export function DeliverScreen({ route, navigation }: ScreenProps<'Deliver'>) {
       <Text style={styles.title}>Confirm delivery</Text>
       <Text style={styles.sub}>{title}</Text>
       <Text style={styles.help}>Ask the recipient for the 6-digit handover code shown in the sender's app.</Text>
+
+      {senderPhone ? (
+        <Pressable style={styles.callBtn} onPress={callSender} accessibilityRole="button">
+          <Icon name="phone" size={18} color={colors.primary} weight="fill" />
+          <Text style={styles.callText}>Call {senderName ?? 'sender'} for the code</Text>
+        </Pressable>
+      ) : null}
 
       <Field
         label="Handover code"
@@ -82,6 +99,19 @@ const styles = StyleSheet.create({
   sub: { ...typography.bodyM, color: colors.textSecondary, marginBottom: spacing.md },
   help: { ...typography.bodyM, color: colors.textSecondary, marginBottom: spacing.lg },
   note: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.sm },
+  callBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+    height: 44,
+    borderRadius: radius.button,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: colors.skyLight,
+  },
+  callText: { ...typography.bodyM, color: colors.primary, fontWeight: '700' },
   escrow: {
     flexDirection: 'row',
     alignItems: 'center',

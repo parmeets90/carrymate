@@ -22,17 +22,29 @@ export interface ScanVerdict {
 // These ship as a built-in fallback; the live list is managed by admins and
 // pulled from GET /v1/scan-rules (see setScanRules below).
 const DEFAULT_PROHIBITED: { match: string; reason: string }[] = [
-  // Electronics
+  // Electronics — includes the generic labels the base ML Kit model emits for
+  // a laptop/phone/TV (it often returns "Technology"/"Output device" instead of
+  // the specific object name).
   { match: 'mobile phone', reason: 'electronics' },
   { match: 'telephone', reason: 'electronics' },
   { match: 'smartphone', reason: 'electronics' },
-  { match: 'tablet computer', reason: 'electronics' },
+  { match: 'phone', reason: 'electronics' },
+  { match: 'tablet', reason: 'electronics' },
   { match: 'laptop', reason: 'electronics' },
+  { match: 'netbook', reason: 'electronics' },
   { match: 'computer', reason: 'electronics' },
+  { match: 'touchpad', reason: 'electronics' },
+  { match: 'keyboard', reason: 'electronics' },
+  { match: 'monitor', reason: 'electronics' },
+  { match: 'output device', reason: 'electronics' },
+  { match: 'display', reason: 'electronics' },
+  { match: 'screen', reason: 'electronics' },
   { match: 'camera', reason: 'electronics' },
   { match: 'television', reason: 'electronics' },
   { match: 'headphones', reason: 'electronics' },
   { match: 'gadget', reason: 'electronics' },
+  { match: 'technology', reason: 'electronics' },
+  { match: 'electronic', reason: 'electronics' },
   // Liquids / alcohol
   { match: 'bottle', reason: 'liquids' },
   { match: 'perfume', reason: 'liquids' },

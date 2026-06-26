@@ -107,7 +107,7 @@ export function OrdersScreen() {
             <PrimaryButton label="Open-box & pick up" onPress={() => nav.navigate('OpenBox', { orderId: item.id, title: item.requestTitle, category: item.category })} />
           )}
           {!isSender && item.requestStatus === 'IN_TRANSIT' && (
-            <PrimaryButton label="Enter handover code & deliver" onPress={() => nav.navigate('Deliver', { orderId: item.id, title: item.requestTitle })} />
+            <PrimaryButton label="Enter handover code & deliver" onPress={() => nav.navigate('Deliver', { orderId: item.id, title: item.requestTitle, senderName: item.counterpartyName, senderPhone: item.counterpartyPhone })} />
           )}
           {isSender && item.status === 'DELIVERY_PROOF_UPLOADED' && (
             <PrimaryButton label="Confirm receipt & release" onPress={() => release.mutate(item.id)} loading={release.isPending} />

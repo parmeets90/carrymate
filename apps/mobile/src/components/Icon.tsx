@@ -29,6 +29,7 @@ import {
   PencilSimple,
   Trash,
   Camera,
+  Phone,
   type IconProps,
   type IconWeight,
 } from 'phosphor-react-native';
@@ -69,6 +70,7 @@ const REGISTRY = {
   edit: PencilSimple,
   delete: Trash,
   camera: Camera,
+  phone: Phone,
 } as const;
 
 export type IconName = keyof typeof REGISTRY;

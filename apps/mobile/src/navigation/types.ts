@@ -17,7 +17,7 @@ export type RootStackParamList = {
   Browse: { routeId: string };
   PlaceBid: { requestId: string; routeId: string; title: string };
   OpenBox: { orderId: string; title: string; category?: string };
-  Deliver: { orderId: string; title: string };
+  Deliver: { orderId: string; title: string; senderName?: string | null; senderPhone?: string | null };
   Dispute: { orderId: string; title: string };
   Rate: { orderId: string; counterparty: string };
   UserProfile: { userId: string; name?: string | null };

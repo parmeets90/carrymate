@@ -48,6 +48,9 @@ export function OpenBoxScreen({ route, navigation }: ScreenProps<'OpenBox'>) {
   const allChecked = ITEMS.every((i) => checks[i.key]);
   const flagged = scans.filter((s) => !s.ok);
   const flaggedMessages = [...new Set(flagged.map((f) => f.message))];
+  // Top labels the on-device model saw across all photos (transparency + lets
+  // you spot a miss and add that exact label in the admin Smart Scan tab).
+  const detectedLabels = [...new Set(scans.flatMap((s) => s.labels))].slice(0, 6);
 
   // On-device AI Smart Scan runs the moment a photo is captured (offline, private).
   const onPhotoPicked = async (uri: string) => {
@@ -144,6 +147,9 @@ export function OpenBoxScreen({ route, navigation }: ScreenProps<'OpenBox'>) {
           <Text style={styles.scanOkText}>Smart Scan: nothing prohibited detected.</Text>
         </View>
       ) : null}
+      {!scanning && detectedLabels.length > 0 && (
+        <Text style={styles.detected}>Detected: {detectedLabels.join(', ')}</Text>
+      )}
 
       {photos.some((p) => p.lat != null) && (
         <View style={styles.geoRow}>
@@ -182,6 +188,7 @@ const styles = StyleSheet.create({
   geoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   geo: { ...typography.caption, color: colors.mintPrimary, fontWeight: '600' },
   scanHint: { ...typography.caption, color: colors.inkTertiary, lineHeight: 16 },
+  detected: { ...typography.caption, color: colors.inkTertiary, fontStyle: 'italic' },
   scanRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   scanText: { ...typography.bodyM, color: colors.primary, fontWeight: '600' },
   scanWarn: {
