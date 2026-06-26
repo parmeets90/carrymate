@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate, requireAdmin } from '../../middleware/auth.middleware';
 import { validateBody } from '../../middleware/validate';
+import { scanRulesAdminRouter } from '../scanrules/scanrules.routes';
 import { rejectKycSchema, setStatusSchema, resolveDisputeSchema } from './admin.validators';
 import {
   getPendingKyc,
@@ -61,3 +62,6 @@ adminRouter.post('/orders/:orderId/refund', postRefundOrder);
 
 adminRouter.get('/disputes', getDisputes);
 adminRouter.post('/disputes/:disputeId/resolve', validateBody(resolveDisputeSchema), postResolveDispute);
+
+// Open-box Smart Scan rule management (list/add/edit/delete).
+adminRouter.use('/scan-rules', scanRulesAdminRouter);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
@@ -9,7 +9,7 @@ import { api } from '@/lib/api';
 import { haptics } from '@/lib/haptics';
 import { toast } from '@/components/Toast';
 import { getCurrentCoords } from '@/lib/location';
-import { smartScanImage, type ScanVerdict } from '@/lib/smartScan';
+import { smartScanImage, setScanRules, type ScanVerdict } from '@/lib/smartScan';
 import type { ScreenProps } from '@/navigation/types';
 
 interface InspectionPhoto {
@@ -35,6 +35,15 @@ export function OpenBoxScreen({ route, navigation }: ScreenProps<'OpenBox'>) {
   const [scanning, setScanning] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
+
+  // Pull the latest admin-managed scan rules once; ignore failure (built-in
+  // defaults stay active so the scan always works offline).
+  useEffect(() => {
+    api
+      .scanRules()
+      .then(setScanRules)
+      .catch(() => {});
+  }, []);
 
   const allChecked = ITEMS.every((i) => checks[i.key]);
   const flagged = scans.filter((s) => !s.ok);

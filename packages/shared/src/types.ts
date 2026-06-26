@@ -381,6 +381,24 @@ export interface FailedPayoutItem {
   payoutInitiatedAt: string | null;
 }
 
+/** Admin-managed open-box Smart Scan rule. */
+export type ScanRuleKind = 'PROHIBITED' | 'ALLOWED';
+export interface ScanRuleDto {
+  id: string;
+  label: string;
+  kind: ScanRuleKind;
+  category: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+/** Compact rule the mobile app pulls to drive the on-device scan. */
+export interface ActiveScanRule {
+  label: string;
+  kind: ScanRuleKind;
+  category: string | null;
+}
+
 /**
  * Public "trust profile" — what one party sees about another (a sender vetting
  * a traveler, or a traveler vetting a sender). Deliberately carries NO personal

@@ -11,6 +11,7 @@ import { Disputes } from './pages/Disputes';
 import { Risk } from './pages/Risk';
 import { FailedPayouts } from './pages/FailedPayouts';
 import { Flights } from './pages/Flights';
+import { ScanRules } from './pages/ScanRules';
 import { Placeholder } from './pages/Placeholder';
 import { Login } from './pages/Login';
 import { useAuth } from './lib/auth';
@@ -41,6 +42,7 @@ export function App() {
         <Route path="/risk" element={<Risk />} />
         <Route path="/payouts" element={<FailedPayouts />} />
         <Route path="/flights" element={<Flights />} />
+        <Route path="/scan-rules" element={<ScanRules />} />
         <Route path="*" element={<Placeholder title="Not found" phase="—" />} />
       </Routes>
     </Layout>

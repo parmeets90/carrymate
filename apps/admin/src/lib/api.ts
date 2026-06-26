@@ -14,6 +14,8 @@ import type {
   FailedPayoutItem,
   AdminQueueItem,
   PendingRouteItem,
+  ScanRuleDto,
+  ScanRuleKind,
 } from '@carrymate/shared';
 
 type AdminOrder = OrderView & { senderName: string | null; travelerName: string | null };
@@ -139,6 +141,21 @@ export const api = {
   failedPayouts: () => authed<FailedPayoutItem[]>('/v1/admin/payouts/failed'),
   retryPayout: (orderId: string) =>
     authed<{ success: boolean }>(`/v1/admin/orders/${orderId}/retry-payout`, { method: 'POST' }),
+
+  scanRules: () => authed<ScanRuleDto[]>('/v1/admin/scan-rules'),
+  createScanRule: (input: ScanRuleInput) =>
+    authed<ScanRuleDto>('/v1/admin/scan-rules', { method: 'POST', body: JSON.stringify(input) }),
+  updateScanRule: (id: string, input: Partial<ScanRuleInput>) =>
+    authed<ScanRuleDto>(`/v1/admin/scan-rules/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  deleteScanRule: (id: string) =>
+    authed<{ success: boolean }>(`/v1/admin/scan-rules/${id}`, { method: 'DELETE' }),
+};
+
+export type ScanRuleInput = {
+  label: string;
+  kind: ScanRuleKind;
+  category?: string | null;
+  active?: boolean;
 };
 
 /** Fetch a short-lived signed URL for a private file key and open it in a new tab. */

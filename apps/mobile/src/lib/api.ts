@@ -198,6 +198,7 @@ export const api = {
   deleteAccount: () => post<{ deleted: boolean }>('/v1/account/delete'),
   submitKyc: (data: { docType: string; fileKey?: string; docNumber?: string }) =>
     post<KycStatusResult>('/v1/kyc/submit', data),
+  scanRules: () => get<import('@carrymate/shared').ActiveScanRule[]>('/v1/scan-rules'),
   kycStatus: () => get<KycStatusResult>('/v1/kyc/status'),
   kycProvider: () => get<{ provider: 'didit' | 'manual' }>('/v1/kyc/provider'),
   startKycVerification: () => post<{ url: string }>('/v1/kyc/verify/start'),

@@ -1,4 +1,5 @@
 import ImageLabeling from '@react-native-ml-kit/image-labeling';
+import type { ActiveScanRule } from '@carrymate/shared';
 
 /**
  * On-device AI "Smart Scan" for the Open-Box flow. Runs Google ML Kit image
@@ -18,7 +19,9 @@ export interface ScanVerdict {
 }
 
 // ML Kit base-model label (lowercased substring) → prohibited category.
-const PROHIBITED: { match: string; reason: string }[] = [
+// These ship as a built-in fallback; the live list is managed by admins and
+// pulled from GET /v1/scan-rules (see setScanRules below).
+const DEFAULT_PROHIBITED: { match: string; reason: string }[] = [
   // Electronics
   { match: 'mobile phone', reason: 'electronics' },
   { match: 'telephone', reason: 'electronics' },
@@ -58,6 +61,33 @@ const PROHIBITED: { match: string; reason: string }[] = [
   { match: 'syringe', reason: 'medicine' },
 ];
 
+// Live admin-managed rules, hydrated at runtime via setScanRules(). Until then
+// (offline / first launch) the built-in DEFAULT_PROHIBITED list is used.
+let prohibitedRules: { match: string; reason: string }[] = DEFAULT_PROHIBITED;
+let allowedLabels: string[] = [];
+
+/**
+ * Replace the active scan ruleset with the admin-managed list pulled from the
+ * API. Prohibited rules flag a match; allowed rules whitelist a label so it is
+ * never flagged (an admin escape hatch for benign look-alikes). Passing an empty
+ * or undefined list falls back to the built-in defaults so the scan still works.
+ */
+export function setScanRules(rules: ActiveScanRule[] | undefined): void {
+  if (!rules || rules.length === 0) {
+    prohibitedRules = DEFAULT_PROHIBITED;
+    allowedLabels = [];
+    return;
+  }
+  prohibitedRules = rules
+    .filter((r) => r.kind === 'PROHIBITED')
+    .map((r) => ({ match: r.label.toLowerCase(), reason: (r.category ?? 'prohibited').toLowerCase() }));
+  allowedLabels = rules
+    .filter((r) => r.kind === 'ALLOWED')
+    .map((r) => r.label.toLowerCase());
+  // Guard against an admin clearing every prohibited rule — keep defaults then.
+  if (prohibitedRules.length === 0) prohibitedRules = DEFAULT_PROHIBITED;
+}
+
 const REASON_COPY: Record<string, string> = {
   electronics: 'This looks like an electronic device — electronics aren’t allowed. Don’t accept if the contents are electronic.',
   liquids: 'This looks like a bottle or liquid — liquids, alcohol and perfume aren’t allowed.',
@@ -96,12 +126,16 @@ export async function smartScanImage(uri: string, declaredCategory?: string): Pr
     const declared = declaredCategory?.toUpperCase();
     const declaredCtx = declaredCategory ? `You declared ${declaredCategory.toLowerCase()}, but ` : '';
 
-    // 1. Prohibited object (highest priority).
+    // 1. Prohibited object (highest priority). Skip anything an admin whitelisted.
     for (const l of labels) {
       const lower = l.text.toLowerCase();
-      const hit = PROHIBITED.find((p) => lower.includes(p.match));
+      if (allowedLabels.some((a) => lower.includes(a))) continue;
+      const hit = prohibitedRules.find((p) => lower.includes(p.match));
       if (hit) {
-        return { ok: false, reason: hit.reason, message: declaredCtx + REASON_COPY[hit.reason], matchedLabel: l.text, labels: labelTexts };
+        const copy =
+          REASON_COPY[hit.reason] ??
+          `This looks like a prohibited item (${hit.reason}). Don’t accept it.`;
+        return { ok: false, reason: hit.reason, message: declaredCtx + copy, matchedLabel: l.text, labels: labelTexts };
       }
     }
 

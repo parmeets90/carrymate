@@ -10,6 +10,7 @@ import {
   Plane,
   Wallet,
   Banknote,
+  ScanLine,
   LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ const NAV = [
   { to: '/risk', label: 'Risk & Fraud', icon: AlertTriangle },
   { to: '/flights', label: 'Flight Verify', icon: Plane },
   { to: '/payouts', label: 'Failed Payouts', icon: Banknote },
+  { to: '/scan-rules', label: 'Smart Scan Rules', icon: ScanLine },
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
