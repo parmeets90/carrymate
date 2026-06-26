@@ -42,6 +42,7 @@ apps/mobile/ios/*.xcworkspace
 
 # Vite / Admin
 apps/admin/dist/
+apps/web/dist/
 
 # Editor / OS
 .DS_Store
