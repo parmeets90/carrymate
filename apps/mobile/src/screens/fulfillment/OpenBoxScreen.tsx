@@ -27,7 +27,7 @@ const ITEMS: { key: 'inspected' | 'contentsMatch' | 'noProhibited' | 'sealed'; l
 ];
 
 export function OpenBoxScreen({ route, navigation }: ScreenProps<'OpenBox'>) {
-  const { orderId, title } = route.params;
+  const { orderId, title, category } = route.params;
   const qc = useQueryClient();
   const [checks, setChecks] = useState({ inspected: false, contentsMatch: false, noProhibited: false, sealed: false });
   const [photos, setPhotos] = useState<InspectionPhoto[]>([]);
@@ -43,7 +43,7 @@ export function OpenBoxScreen({ route, navigation }: ScreenProps<'OpenBox'>) {
   // On-device AI Smart Scan runs the moment a photo is captured (offline, private).
   const onPhotoPicked = async (uri: string) => {
     setScanning(true);
-    const verdict = await smartScanImage(uri);
+    const verdict = await smartScanImage(uri, category);
     setScans((s) => [...s, verdict]);
     setScanning(false);
     if (!verdict.ok) haptics.warning();

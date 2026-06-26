@@ -16,7 +16,7 @@ export type RootStackParamList = {
   AddRoute: { route: TravelRouteDto } | undefined;
   Browse: { routeId: string };
   PlaceBid: { requestId: string; routeId: string; title: string };
-  OpenBox: { orderId: string; title: string };
+  OpenBox: { orderId: string; title: string; category?: string };
   Deliver: { orderId: string; title: string };
   Dispute: { orderId: string; title: string };
   Rate: { orderId: string; counterparty: string };

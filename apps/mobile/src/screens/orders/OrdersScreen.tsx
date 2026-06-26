@@ -104,7 +104,7 @@ export function OrdersScreen() {
             </>
           )}
           {!isSender && item.status === 'ESCROW_HELD' && item.requestStatus === 'MATCHED' && (
-            <PrimaryButton label="Open-box & pick up" onPress={() => nav.navigate('OpenBox', { orderId: item.id, title: item.requestTitle })} />
+            <PrimaryButton label="Open-box & pick up" onPress={() => nav.navigate('OpenBox', { orderId: item.id, title: item.requestTitle, category: item.category })} />
           )}
           {!isSender && item.requestStatus === 'IN_TRANSIT' && (
             <PrimaryButton label="Enter handover code & deliver" onPress={() => nav.navigate('Deliver', { orderId: item.id, title: item.requestTitle })} />

@@ -211,6 +211,8 @@ export interface OrderView {
   status: string;
   createdAt: string;
   requestTitle: string;
+  /** Declared item category (FOOD/DOCUMENTS/CLOTHING/GIFTS/OTHER) — used by open-box Smart Scan. */
+  category: string;
   originCity: string;
   destinationCity: string;
   /** The viewer's role in this order. */

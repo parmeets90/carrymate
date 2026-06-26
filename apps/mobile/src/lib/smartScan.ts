@@ -68,19 +68,56 @@ const REASON_COPY: Record<string, string> = {
 
 const MIN_CONFIDENCE = 0.5;
 
-/** Scan a local image URI; returns a verdict. Never throws (ML errors → inconclusive). */
-export async function smartScanImage(uri: string): Promise<ScanVerdict> {
+// Concrete declared categories we can sanity-check a photo against (catch-alls
+// like GIFTS/OTHER are too broad to flag a mismatch reliably).
+const CATEGORY_LABELS: Record<string, string[]> = {
+  FOOD: ['food', 'fruit', 'vegetable', 'snack', 'dish', 'meal', 'dessert', 'produce', 'baked', 'sweetness', 'cuisine'],
+  DOCUMENTS: ['paper', 'document', 'book', 'envelope', 'text', 'letter', 'newspaper', 'handwriting'],
+  CLOTHING: ['clothing', 'textile', 'shirt', 'dress', 'footwear', 'shoe', 'jacket', 'outerwear', 'fashion', 'jeans', 'sleeve'],
+};
+
+function inferCategory(lowerLabels: string[]): string | null {
+  for (const [cat, keys] of Object.entries(CATEGORY_LABELS)) {
+    if (lowerLabels.some((t) => keys.some((k) => t.includes(k)))) return cat;
+  }
+  return null;
+}
+
+/**
+ * Scan a local image URI; returns a verdict. Never throws (ML errors → inconclusive).
+ * Pass the declared category to also flag a category mismatch.
+ */
+export async function smartScanImage(uri: string, declaredCategory?: string): Promise<ScanVerdict> {
   try {
     const result = await ImageLabeling.label(uri);
     const labels = result.filter((l) => l.confidence >= MIN_CONFIDENCE);
     const labelTexts = labels.map((l) => l.text);
+    const lowers = labelTexts.map((t) => t.toLowerCase());
+    const declared = declaredCategory?.toUpperCase();
+    const declaredCtx = declaredCategory ? `You declared ${declaredCategory.toLowerCase()}, but ` : '';
+
+    // 1. Prohibited object (highest priority).
     for (const l of labels) {
       const lower = l.text.toLowerCase();
       const hit = PROHIBITED.find((p) => lower.includes(p.match));
       if (hit) {
-        return { ok: false, reason: hit.reason, message: REASON_COPY[hit.reason], matchedLabel: l.text, labels: labelTexts };
+        return { ok: false, reason: hit.reason, message: declaredCtx + REASON_COPY[hit.reason], matchedLabel: l.text, labels: labelTexts };
       }
     }
+
+    // 2. Category mismatch — only for concrete declared categories.
+    if (declared && CATEGORY_LABELS[declared]) {
+      const inferred = inferCategory(lowers);
+      if (inferred && inferred !== declared) {
+        return {
+          ok: false,
+          reason: 'mismatch',
+          message: `You declared ${declaredCategory!.toLowerCase()}, but this photo looks like ${inferred.toLowerCase()}. Make sure the contents match the declaration.`,
+          labels: labelTexts,
+        };
+      }
+    }
+
     return { ok: true, labels: labelTexts };
   } catch {
     // Inconclusive (model unavailable / bad image) — never block on this.

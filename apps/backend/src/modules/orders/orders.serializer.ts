@@ -38,6 +38,7 @@ export function toOrderView(
     status: order.status,
     createdAt: order.createdAt.toISOString(),
     requestTitle: order.request.title,
+    category: order.request.category,
     originCity: order.request.originCity,
     destinationCity: order.request.destinationCity,
     role: isSender ? 'SENDER' : 'TRAVELER',
