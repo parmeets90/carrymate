@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, Modal, Pressable, StyleSheet, Animated, Easing } from 'react-native';
-import { colors, spacing, radius, typography, shadows } from '@/theme';
+import { colors, spacing, radius, typography, elevations } from '@/theme';
 
 /**
  * Premium in-app alert — a themed replacement for React Native's OS-styled
@@ -114,7 +114,7 @@ export function AlertHost(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(15,22,41,0.55)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl },
-  card: { width: '100%', maxWidth: 360, backgroundColor: colors.bgCard, borderRadius: radius.sheet, padding: spacing.xl, gap: spacing.sm, ...shadows.lg },
+  card: { width: '100%', maxWidth: 360, backgroundColor: colors.surface, borderRadius: radius.sheet, padding: spacing.xl, gap: spacing.sm, ...elevations.e3 },
   title: { ...typography.titleM, fontWeight: '700', color: colors.textPrimary },
   message: { ...typography.bodyM, color: colors.textSecondary, lineHeight: 21 },
   actions: { marginTop: spacing.md },
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   col: { flexDirection: 'column', gap: spacing.sm },
   btn: { height: 46, borderRadius: radius.button, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
   btnFlex: { flex: 1 },
-  btnPrimary: { backgroundColor: colors.skyBlue },
+  btnPrimary: { backgroundColor: colors.primary },
   btnDestructive: { backgroundColor: colors.dangerLight, borderWidth: 0.5, borderColor: '#F2C0C0' },
   btnGhost: { backgroundColor: colors.bgSecondary },
   btnText: { ...typography.bodyL, fontWeight: '700' },

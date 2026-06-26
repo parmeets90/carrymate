@@ -102,7 +102,7 @@ export function EmptyState({
   return (
     <View style={styles.empty}>
       <View style={styles.emptyIcon}>
-        <Icon name={icon} size={28} color={colors.skyBlue} />
+        <Icon name={icon} size={28} color={colors.primary} />
       </View>
       <Text style={styles.emptyTitle}>{title}</Text>
       {body ? <Text style={styles.emptyBody}>{body}</Text> : null}
@@ -158,16 +158,16 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: colors.skyLight,
+    backgroundColor: colors.primarySurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyGlyph: { fontSize: 26, color: colors.skyBlue },
+  emptyGlyph: { fontSize: 26, color: colors.primary },
   emptyTitle: { ...typography.titleM, color: colors.textPrimary, textAlign: 'center' },
   emptyBody: { ...typography.bodyM, color: colors.textSecondary, textAlign: 'center', lineHeight: 21 },
   emptyAction: {
     marginTop: spacing.sm,
-    backgroundColor: colors.skyBlue,
+    backgroundColor: colors.primary,
     borderRadius: radius.button,
     paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.xl,

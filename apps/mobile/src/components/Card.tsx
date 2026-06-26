@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
 import type { ReactNode } from 'react';
-import { colors, spacing, radius, typography, shadows } from '@/theme';
+import { colors, spacing, radius, typography, elevations } from '@/theme';
 import { Pressable3D } from './ui';
 import { Icon, type IconName } from './Icon';
 
@@ -14,19 +14,24 @@ export function Card({
   style?: StyleProp<ViewStyle>;
 }) {
   const content = <View style={[styles.card, style]}>{children}</View>;
-  if (onPress) return <Pressable3D onPress={onPress}>{content}</Pressable3D>;
+  if (onPress)
+    return (
+      <Pressable3D onPress={onPress} haptic>
+        {content}
+      </Pressable3D>
+    );
   return content;
 }
 
 type Tone = 'neutral' | 'gold' | 'mint' | 'amber' | 'danger' | 'sky';
 
 const TONES: Record<Tone, { bg: string; fg: string; dot: string; border: string }> = {
-  neutral: { bg: colors.bgSecondary, fg: colors.textSecondary, dot: colors.textHint, border: colors.borderLight },
-  gold: { bg: colors.goldLight, fg: colors.goldPrimary, dot: colors.goldPrimary, border: colors.goldBorder },
-  mint: { bg: colors.mintLight, fg: '#096438', dot: colors.mintPrimary, border: colors.mintBorder },
-  amber: { bg: colors.cautionLight, fg: '#946A00', dot: colors.cautionAmber, border: '#FFE066' },
-  danger: { bg: colors.dangerLight, fg: '#921010', dot: colors.dangerRed, border: '#FF9090' },
-  sky: { bg: colors.skyLight, fg: '#185FA5', dot: colors.skyBlue, border: '#80BBED' },
+  neutral: { bg: colors.surfaceSunken, fg: colors.inkSecondary, dot: colors.inkTertiary, border: colors.hairline },
+  gold: { bg: colors.goldSurface, fg: colors.goldPrimary, dot: colors.goldPrimary, border: colors.goldBorder },
+  mint: { bg: colors.successSurface, fg: '#096438', dot: colors.mintPrimary, border: colors.mintBorder },
+  amber: { bg: colors.warningSurface, fg: colors.warningText, dot: colors.cautionAmber, border: '#F2D88A' },
+  danger: { bg: colors.dangerSurface, fg: '#921010', dot: colors.dangerRed, border: '#FF9090' },
+  sky: { bg: colors.primarySurface, fg: colors.primary, dot: colors.primary, border: '#BBD2F4' },
 };
 
 /**
@@ -108,12 +113,12 @@ export function statusTone(status: string): Tone {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.bgCard,
-    borderRadius: radius.card + 4,
-    borderWidth: 0.5,
-    borderColor: colors.borderLight,
+    backgroundColor: colors.surface,
+    borderRadius: radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.hairline,
     padding: spacing.lg,
-    ...shadows.sm,
+    ...elevations.e1,
   },
   badge: {
     flexDirection: 'row',
