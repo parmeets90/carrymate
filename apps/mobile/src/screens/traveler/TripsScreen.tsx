@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { View, Text, StyleSheet, SectionList, Pressable } from 'react-native';
 import { SkeletonList } from '@/components/Skeleton';
 import { Alert } from '@/components/AlertHost';
 import { useNavigation } from '@react-navigation/native';
@@ -35,6 +35,15 @@ export function TripsScreen() {
       { text: 'Delete', style: 'destructive', onPress: () => del.mutate(item.id) },
     ]);
 
+  // Active trips up top; departed/cancelled/completed grouped under "Past trips".
+  const all = data ?? [];
+  const active = all.filter((r) => r.status === 'ACTIVE' || r.status === 'FULL');
+  const past = all.filter((r) => r.status !== 'ACTIVE' && r.status !== 'FULL');
+  const sections = [
+    ...(active.length ? [{ title: 'Active', data: active }] : []),
+    ...(past.length ? [{ title: 'Past trips', data: past }] : []),
+  ];
+
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
       <View style={styles.headerRow}>
@@ -46,59 +55,69 @@ export function TripsScreen() {
 
       {isLoading ? (
         <SkeletonList />
+      ) : (data ?? []).length === 0 ? (
+        <EmptyState
+          icon="trips"
+          title="No trips yet"
+          body="Add a flight to start carrying items."
+          actionLabel="Add a trip"
+          onAction={() => nav.navigate('AddRoute')}
+        />
       ) : (
-        <FlatList
-          data={data ?? []}
+        <SectionList
+          sections={sections}
           keyExtractor={(r) => r.id}
           onRefresh={refetch}
           refreshing={isRefetching}
-          contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.md }}
-          ListEmptyComponent={
-            <EmptyState
-              icon="trips"
-              title="No trips yet"
-              body="Add a flight to start carrying items."
-              actionLabel="Add a trip"
-              onAction={() => nav.navigate('AddRoute')}
-            />
+          stickySectionHeadersEnabled={false}
+          contentContainerStyle={{ paddingVertical: spacing.lg }}
+          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+          renderSectionHeader={({ section }) =>
+            sections.length > 1 ? <Text style={styles.sectionHeader}>{section.title}</Text> : null
           }
-          renderItem={({ item, index }) => {
+          renderItem={({ item, index, section }) => {
+            const isPast = section.title !== 'Active';
             const remaining = item.capacityKg - item.capacityUsedKg;
             const manageable = item.status === 'ACTIVE' && item.capacityUsedKg === 0;
             return (
               <FadeInUp index={index}>
-              <Card onPress={() => nav.navigate('Browse', { routeId: item.id })}>
-                <View style={styles.row}>
-                  <Text style={styles.cardTitle}>
-                    {item.originAirport} → {item.destinationAirport}
-                  </Text>
-                  <Badge label={item.status} tone={statusTone(item.status)} />
-                </View>
-                <View style={styles.badgeRow}>
-                  {item.ticketVerified ? (
-                    <TrustBadge variant="flightConfirmed" />
-                  ) : (
-                    <Badge label="Verification pending" tone="amber" icon="warning" />
-                  )}
-                </View>
-                <Text style={styles.meta}>
-                  {item.departureDate} · {item.flightNumber ?? 'flight'} · {remaining.toFixed(1)}kg free
-                </Text>
-                <Text style={styles.cta}>Browse matching requests →</Text>
-
-                {manageable && (
-                  <View style={styles.actions}>
-                    <Pressable style={styles.action} onPress={() => nav.navigate('AddRoute', { route: item })}>
-                      <Icon name="edit" size={16} color={colors.skyBlue} />
-                      <Text style={styles.actionText}>Edit</Text>
-                    </Pressable>
-                    <Pressable style={styles.action} onPress={() => confirmDelete(item)}>
-                      <Icon name="delete" size={16} color={colors.dangerRed} />
-                      <Text style={[styles.actionText, { color: colors.dangerRed }]}>Delete</Text>
-                    </Pressable>
+                <Card
+                  style={isPast ? styles.pastCard : undefined}
+                  onPress={isPast ? undefined : () => nav.navigate('Browse', { routeId: item.id })}
+                >
+                  <View style={styles.row}>
+                    <Text style={styles.cardTitle}>
+                      {item.originAirport} → {item.destinationAirport}
+                    </Text>
+                    <Badge label={item.status} tone={statusTone(item.status)} />
                   </View>
-                )}
-              </Card>
+                  {!isPast && (
+                    <View style={styles.badgeRow}>
+                      {item.ticketVerified ? (
+                        <TrustBadge variant="flightConfirmed" />
+                      ) : (
+                        <Badge label="Verification pending" tone="amber" icon="warning" />
+                      )}
+                    </View>
+                  )}
+                  <Text style={styles.meta}>
+                    {item.departureDate} · {item.flightNumber ?? 'flight'} · {remaining.toFixed(1)}kg free
+                  </Text>
+                  {!isPast && <Text style={styles.cta}>Browse matching requests →</Text>}
+
+                  {manageable && (
+                    <View style={styles.actions}>
+                      <Pressable style={styles.action} onPress={() => nav.navigate('AddRoute', { route: item })}>
+                        <Icon name="edit" size={16} color={colors.skyBlue} />
+                        <Text style={styles.actionText}>Edit</Text>
+                      </Pressable>
+                      <Pressable style={styles.action} onPress={() => confirmDelete(item)}>
+                        <Icon name="delete" size={16} color={colors.dangerRed} />
+                        <Text style={[styles.actionText, { color: colors.dangerRed }]}>Delete</Text>
+                      </Pressable>
+                    </View>
+                  )}
+                </Card>
               </FadeInUp>
             );
           }}
@@ -121,6 +140,8 @@ const styles = StyleSheet.create({
   addBtnText: { ...typography.label, color: colors.primary, fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   badgeRow: { flexDirection: 'row', marginTop: spacing.xs },
+  sectionHeader: { ...typography.label, color: colors.inkSecondary, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: spacing.sm, marginTop: spacing.sm },
+  pastCard: { opacity: 0.6 },
   cardTitle: { ...typography.bodyL, fontWeight: '700', color: colors.textPrimary },
   meta: { ...typography.bodyM, color: colors.textSecondary, marginTop: spacing.xs },
   cta: { ...typography.label, color: colors.skyBlue, marginTop: spacing.sm, fontWeight: '600' },

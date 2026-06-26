@@ -145,7 +145,10 @@ export function CreateRequestScreen() {
           <Autocomplete
             label="Origin city"
             value={form.originCity}
-            onChangeText={set('originCity')}
+            // Clearing the city clears its linked airport too (no stale pairing).
+            onChangeText={(v) =>
+              setForm((f) => ({ ...f, originCity: v, ...(v.trim() === '' ? { originAirport: '' } : {}) }))
+            }
             suggestions={CITY_SUGGESTIONS}
             onPick={(s) => {
               const airport = IN_AIRPORTS.find((a) => a.city === s.value);

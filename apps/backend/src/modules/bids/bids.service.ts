@@ -26,6 +26,18 @@ export async function createBid(travelerId: string, input: CreateBidInput): Prom
   if (route.status !== 'ACTIVE') {
     throw new AppError(409, 'ROUTE_INACTIVE', 'This route is not active.');
   }
+  // Defense in depth: reject bids on a trip whose departure has passed, even if
+  // the hourly expiry sweep hasn't flipped it to EXPIRED yet.
+  const startToday = new Date();
+  startToday.setHours(0, 0, 0, 0);
+  if (route.departureDate < startToday) {
+    throw new AppError(409, 'ROUTE_DEPARTED', 'This trip has already departed.');
+  }
+  // Date compatibility: the item must be deliverable by its deadline (the trip
+  // departs on/before the deadline). Mirrors the browse filter at write time.
+  if (request.deadlineDate < route.departureDate) {
+    throw new AppError(409, 'DEADLINE_BEFORE_DEPARTURE', 'This item’s deadline is before your departure.');
+  }
 
   const remaining = Number(route.capacityKg) - Number(route.capacityUsedKg);
   if (Number(request.weightKg) > remaining) {

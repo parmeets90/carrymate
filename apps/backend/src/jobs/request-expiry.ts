@@ -12,10 +12,18 @@ const REMINDER_WINDOW_MS = 48 * 3_600_000;
 
 export async function runRequestExpirySweep(): Promise<{ expired: number; reminded: number }> {
   const now = new Date();
+  const startToday = new Date();
+  startToday.setHours(0, 0, 0, 0);
 
-  // 1. Expire past-due requests that never matched.
+  // 1. Expire un-matched requests past their listing life (expiresAt) OR whose
+  //    delivery deadline has already passed. A past-deadline request can never
+  //    match (matching requires deadline >= departure), so it must not linger as
+  //    a "live" OPEN listing.
   const due = await prisma.deliveryRequest.findMany({
-    where: { status: { in: ['OPEN', 'BIDDING'] }, expiresAt: { lt: now } },
+    where: {
+      status: { in: ['OPEN', 'BIDDING'] },
+      OR: [{ expiresAt: { lt: now } }, { deadlineDate: { lt: startToday } }],
+    },
     select: { id: true, senderId: true, title: true },
   });
   for (const r of due) {

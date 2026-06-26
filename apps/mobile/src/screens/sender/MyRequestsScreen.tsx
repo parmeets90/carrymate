@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { View, Text, StyleSheet, SectionList, Pressable } from 'react-native';
 import { SkeletonList } from '@/components/Skeleton';
 import { Alert } from '@/components/AlertHost';
 import { useNavigation } from '@react-navigation/native';
@@ -47,6 +47,16 @@ export function MyRequestsScreen() {
       { text: 'Delete', style: 'destructive', onPress: () => del.mutate(item.id) },
     ]);
 
+  // Live/in-progress requests up top; expired/cancelled/completed grouped below.
+  const all = data ?? [];
+  const TERMINAL = ['EXPIRED', 'CANCELLED', 'CONFIRMED'];
+  const active = all.filter((r) => !TERMINAL.includes(r.status));
+  const past = all.filter((r) => TERMINAL.includes(r.status));
+  const sections = [
+    ...(active.length ? [{ title: 'Active', data: active }] : []),
+    ...(past.length ? [{ title: 'Past requests', data: past }] : []),
+  ];
+
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.lg }]}>
       <Text style={styles.title}>My requests</Text>
@@ -59,22 +69,26 @@ export function MyRequestsScreen() {
 
       {isLoading ? (
         <SkeletonList />
+      ) : all.length === 0 ? (
+        <EmptyState
+          icon="package"
+          title="No requests yet"
+          body="Post your first item and verified travellers can bid to carry it."
+          actionLabel="Post a request"
+          // 'Post' is a sibling tab; resolves through the tab navigator at runtime.
+          onAction={() => nav.navigate('Post' as never)}
+        />
       ) : (
-        <FlatList
-          data={data ?? []}
+        <SectionList
+          sections={sections}
           keyExtractor={(r) => r.id}
           onRefresh={refetch}
           refreshing={isRefetching}
-          contentContainerStyle={{ paddingVertical: spacing.lg, gap: spacing.md }}
-          ListEmptyComponent={
-            <EmptyState
-              icon="package"
-              title="No requests yet"
-              body="Post your first item and verified travellers can bid to carry it."
-              actionLabel="Post a request"
-              // 'Post' is a sibling tab; resolves through the tab navigator at runtime.
-              onAction={() => nav.navigate('Post' as never)}
-            />
+          stickySectionHeadersEnabled={false}
+          contentContainerStyle={{ paddingVertical: spacing.lg }}
+          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+          renderSectionHeader={({ section }) =>
+            sections.length > 1 ? <Text style={styles.sectionHeader}>{section.title}</Text> : null
           }
           renderItem={({ item, index }) => {
             const editable = EDITABLE.includes(item.status);
@@ -129,6 +143,7 @@ export function MyRequestsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgApp, paddingHorizontal: sizing.screenPaddingX },
   title: { ...typography.titleL, color: colors.textPrimary },
+  sectionHeader: { ...typography.label, color: colors.inkSecondary, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: spacing.sm, marginTop: spacing.sm },
   pulse: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm, backgroundColor: colors.mintLight, borderRadius: 8, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, alignSelf: 'flex-start' },
   pulseText: { ...typography.bodyM, color: '#096438', fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm },
