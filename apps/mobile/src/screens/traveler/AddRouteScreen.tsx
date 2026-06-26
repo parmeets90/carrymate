@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Alert } from '@/components/AlertHost';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
+import { Chip, ChipRow } from '@/components/Chip';
 import { DateField } from '@/components/DateField';
 import { PhotoButton } from '@/components/PhotoButton';
 import { Icon } from '@/components/Icon';
@@ -107,16 +108,11 @@ export function AddRouteScreen({ navigation, route }: ScreenProps<'AddRoute'>) {
 
 function Pills({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
   return (
-    <View style={styles.pills}>
-      {options.map((o) => {
-        const active = value === o;
-        return (
-          <Pressable key={o} onPress={() => onChange(o)} style={[styles.pill, active && styles.pillActive]}>
-            <Text style={[styles.pillText, active && styles.pillTextActive]}>{o}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
+    <ChipRow>
+      {options.map((o) => (
+        <Chip key={o} label={o} selected={value === o} onPress={() => onChange(o)} />
+      ))}
+    </ChipRow>
   );
 }
 

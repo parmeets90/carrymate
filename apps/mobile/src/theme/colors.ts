@@ -10,8 +10,11 @@ export const colors = {
   // Brand
   navyDark: '#0F1629', // app header, nav bar bg, primary dark bg
   navyMid: '#0F3460', // secondary surfaces, dark cards
-  skyBlue: '#4FA3E0', // primary CTA, active tab, links
-  skyLight: '#E8F3FC', // blue tint backgrounds
+  // DS v2: legacy `skyBlue` now resolves to the deep brand blue (= primary) so
+  // every accent/link/active-state is one cohesive, premium, AA-contrast blue,
+  // unified with the logo. (Was the lighter, lower-contrast #4FA3E0.)
+  skyBlue: '#1E40AF', // primary CTA, active tab, links
+  skyLight: '#EAF1FE', // blue tint backgrounds (aligned to primarySurface)
 
   // Trust signals (Gold = identity/flight trust)
   goldPrimary: '#E0931A',

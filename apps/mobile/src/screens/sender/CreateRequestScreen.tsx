@@ -8,6 +8,7 @@ import type { DeliveryRequestDto } from '@carrymate/shared';
 import { ITEM_DECLARATIONS } from '@carrymate/shared';
 import { colors, spacing, radius, typography, sizing } from '@/theme';
 import { PrimaryButton, Field } from '@/components/ui';
+import { Chip, ChipRow } from '@/components/Chip';
 import { Autocomplete, type Suggestion } from '@/components/Autocomplete';
 import { IN_AIRPORTS } from '@/data/airports';
 import { DateField } from '@/components/DateField';
@@ -221,16 +222,11 @@ export function CreateRequestScreen() {
 
 function Pills({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
   return (
-    <View style={styles.pills}>
-      {options.map((o) => {
-        const active = value === o;
-        return (
-          <Pressable key={o} onPress={() => onChange(o)} style={[styles.pill, active && styles.pillActive]}>
-            <Text style={[styles.pillText, active && styles.pillTextActive]}>{o}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
+    <ChipRow>
+      {options.map((o) => (
+        <Chip key={o} label={o} selected={value === o} onPress={() => onChange(o)} />
+      ))}
+    </ChipRow>
   );
 }
 
