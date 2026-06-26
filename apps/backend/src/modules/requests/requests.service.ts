@@ -4,9 +4,10 @@ import type {
   RequestInsights,
   MarketplacePulse,
 } from '@carrymate/shared';
-import { MAX_ACTIVE_REQUESTS_PER_SENDER, MIN_DEADLINE_DAYS, REQUEST_EXPIRY_DAYS } from '@carrymate/shared';
+import { MAX_ACTIVE_REQUESTS_PER_SENDER, MIN_DEADLINE_DAYS, REQUEST_EXPIRY_DAYS, NotificationType } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
+import { createNotification } from '../notifications/notifications.service';
 import {
   checkProhibited,
   assertDestinationCity,
@@ -131,6 +132,29 @@ export async function updateRequest(
     throw new AppError(409, 'NOT_EDITABLE', 'Only open requests can be edited.');
   }
 
+  // Once travellers have bid, only cosmetic edits are allowed — changing the
+  // weight/value/category/deadline/route would silently invalidate bids placed
+  // on the old terms. To change those, the sender deletes and re-posts.
+  const pendingBids = await prisma.bid.count({ where: { requestId, status: 'PENDING' } });
+  if (pendingBids > 0) {
+    const materialChanged =
+      (input.category !== undefined && input.category !== request.category) ||
+      (input.weightKg !== undefined && Number(input.weightKg) !== Number(request.weightKg)) ||
+      (input.declaredValueInr !== undefined && input.declaredValueInr !== request.declaredValueInr) ||
+      (input.deadlineDate !== undefined &&
+        input.deadlineDate.toISOString().slice(0, 10) !== request.deadlineDate.toISOString().slice(0, 10)) ||
+      (input.originAirport !== undefined && input.originAirport !== request.originAirport) ||
+      (input.originCity !== undefined && input.originCity.trim() !== request.originCity) ||
+      (input.destinationCity !== undefined && input.destinationCity !== request.destinationCity);
+    if (materialChanged) {
+      throw new AppError(
+        409,
+        'BIDS_EXIST',
+        'Travellers have already bid — you can only edit the title, description or photos. To change the item details, delete this request and post a new one.',
+      );
+    }
+  }
+
   const title = input.title ?? request.title;
   const description = input.description ?? request.description;
   const prohibited = checkProhibited(title, description, input.category ?? request.category);
@@ -237,7 +261,20 @@ export async function deleteRequest(requestId: string, senderId: string): Promis
   if (!(EDITABLE_STATUSES as readonly string[]).includes(request.status)) {
     throw new AppError(409, 'NOT_DELETABLE', 'A matched request cannot be deleted — cancel it from the order.');
   }
+  // Capture bidders before the cascade removes their bids, so we can tell them.
+  const bidders = await prisma.bid.findMany({
+    where: { requestId, status: 'PENDING' },
+    select: { travelerId: true },
+  });
   await prisma.deliveryRequest.delete({ where: { id: requestId } });
+  for (const b of bidders) {
+    await createNotification({
+      userId: b.travelerId,
+      type: NotificationType.SYSTEM,
+      title: 'Request withdrawn',
+      body: `“${request.title}” was removed by the sender, so your bid was cancelled.`,
+    });
+  }
 }
 
 export async function getMyRequest(

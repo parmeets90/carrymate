@@ -1,7 +1,9 @@
 import type { TravelRouteDto } from '@carrymate/shared';
+import { NotificationType } from '@carrymate/shared';
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../utils/errors';
 import { assertCorridor } from '../../utils/marketplace';
+import { createNotification } from '../notifications/notifications.service';
 import { verifyFlight } from './aviationstack';
 import { toRouteDto } from '../marketplace/serializers';
 import type { CreateRouteInput, UpdateRouteInput } from './routes.validators';
@@ -95,6 +97,27 @@ export async function updateRoute(
     throw new AppError(409, 'ROUTE_COMMITTED', 'You’ve already accepted cargo on this trip — it can’t be edited.');
   }
 
+  // While the traveller holds pending bids on this trip, only cosmetic edits are
+  // allowed — changing dates/route/capacity would invalidate those bids.
+  const pendingBids = await prisma.bid.count({ where: { routeId, status: 'PENDING' } });
+  if (pendingBids > 0) {
+    const dateChanged = (a?: Date | null, b?: Date | null) =>
+      (a ? a.toISOString().slice(0, 10) : null) !== (b ? b.toISOString().slice(0, 10) : null);
+    const materialChanged =
+      (input.departureDate !== undefined && dateChanged(input.departureDate, route.departureDate)) ||
+      (input.arrivalDate !== undefined && dateChanged(input.arrivalDate, route.arrivalDate)) ||
+      (input.originAirport !== undefined && input.originAirport !== route.originAirport) ||
+      (input.destinationAirport !== undefined && input.destinationAirport !== route.destinationAirport) ||
+      (input.capacityKg !== undefined && Number(input.capacityKg) !== Number(route.capacityKg));
+    if (materialChanged) {
+      throw new AppError(
+        409,
+        'BIDS_EXIST',
+        'You have active bids on this trip — you can only edit the flight number, airline or notes. To change dates, route or capacity, withdraw your bids or delete the trip.',
+      );
+    }
+  }
+
   const origin = input.originAirport ?? route.originAirport;
   const destination = input.destinationAirport ?? route.destinationAirport;
   assertCorridor(origin, destination);
@@ -118,5 +141,19 @@ export async function deleteRoute(routeId: string, travelerId: string): Promise<
   if (route.status !== 'ACTIVE' || Number(route.capacityUsedKg) > 0) {
     throw new AppError(409, 'NOT_DELETABLE', 'This trip has committed cargo and can’t be deleted.');
   }
+  // Capture the senders whose requests this traveller bid on, so we can tell them
+  // their bid was withdrawn before the cascade removes it.
+  const bids = await prisma.bid.findMany({
+    where: { routeId, status: 'PENDING' },
+    select: { request: { select: { senderId: true, title: true } } },
+  });
   await prisma.travelRoute.delete({ where: { id: routeId } });
+  for (const b of bids) {
+    await createNotification({
+      userId: b.request.senderId,
+      type: NotificationType.SYSTEM,
+      title: 'A bid was withdrawn',
+      body: `A traveller removed their trip, so their bid on “${b.request.title}” was cancelled.`,
+    });
+  }
 }
